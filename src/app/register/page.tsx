@@ -3,6 +3,15 @@
 import { FormEvent, useState } from 'react';
 import { authApi } from '@/lib/auth';
 import { ApiError } from '@/lib/api';
+import {
+  dangerText,
+  fieldInput,
+  formStack,
+  mutedText,
+  pageWrap,
+  primaryButton,
+  textLink,
+} from '@/components/formStyles';
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -27,45 +36,59 @@ export default function RegisterPage() {
   }
 
   if (done) {
+    const verifyHref = `/verify-email?email=${encodeURIComponent(email)}`;
     return (
-      <main style={wrap}>
+      <main style={pageWrap}>
         <h1 style={{ color: 'var(--primary)' }}>Check your email</h1>
-        <p style={{ color: 'var(--muted)' }}>
+        <p style={mutedText}>
           We&apos;ve sent a verification code to <strong>{email}</strong>. Verify it to unlock account
           features — you can still shop as a guest meanwhile.
         </p>
-        <a href="/login" style={{ color: 'var(--primary)' }}>Back to sign in</a>
+        <a href={verifyHref} style={textLink}>
+          Enter verification code
+        </a>
+        <p style={{ ...mutedText, marginTop: '1rem' }}>
+          <a href="/login" style={textLink}>
+            Back to sign in
+          </a>
+        </p>
       </main>
     );
   }
 
   return (
-    <main style={wrap}>
+    <main style={pageWrap}>
       <h1 style={{ color: 'var(--primary)' }}>Create account</h1>
-      <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>
-        Optional — you can check out as a guest without an account.
-      </p>
-      <form onSubmit={onSubmit} style={form}>
-        <input style={input} placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
-        <input style={input} type="email" placeholder="Email" value={email}
-          onChange={(e) => setEmail(e.target.value)} required />
-        <input style={input} type="password" placeholder="Password (min 8 chars)" value={password}
-          onChange={(e) => setPassword(e.target.value)} minLength={8} required />
-        {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
-        <button style={button} type="submit" disabled={busy}>
+      <p style={mutedText}>Optional — you can check out as a guest without an account.</p>
+      <form onSubmit={onSubmit} style={formStack}>
+        <input
+          style={fieldInput}
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          style={fieldInput}
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          style={fieldInput}
+          type="password"
+          placeholder="Password (min 8 chars)"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          minLength={8}
+          required
+        />
+        {error && <p style={dangerText}>{error}</p>}
+        <button style={primaryButton} type="submit" disabled={busy}>
           {busy ? 'Creating…' : 'Create account'}
         </button>
       </form>
     </main>
   );
 }
-
-const wrap = { maxWidth: 400, margin: '3rem auto', padding: '0 1.5rem' } as const;
-const form = { display: 'flex', flexDirection: 'column', gap: '0.75rem' } as const;
-const input = {
-  padding: '0.6rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '1rem',
-} as const;
-const button = {
-  padding: '0.65rem', background: 'var(--primary)', color: 'var(--primary-contrast)', border: 'none',
-  borderRadius: 'var(--radius)', fontSize: '1rem', cursor: 'pointer',
-} as const;

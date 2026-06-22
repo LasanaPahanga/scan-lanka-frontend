@@ -8,6 +8,7 @@ interface AuthState {
   loading: boolean;
   refresh: () => Promise<void>;
   setUser: (u: Me | null) => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -20,9 +21,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       setUser(await authApi.me());
     } catch {
-      setUser(null); // not authenticated
+      try {
+        await authApi.refresh();
+        setUser(await authApi.me());
+      } catch {
+        setUser(null);
+      }
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const logout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      setUser(null);
     }
   }, []);
 
@@ -30,8 +44,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  // Silent refresh before access token expiry (~15 min).
+  useEffect(() => {
+    if (!user) return;
+    const id = window.setInterval(() => {
+      void authApi.refresh().catch(() => setUser(null));
+    }, 12 * 60 * 1000);
+    return () => window.clearInterval(id);
+  }, [user]);
+
   return (
-    <AuthContext.Provider value={{ user, loading, refresh, setUser }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ user, loading, refresh, setUser, logout }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 

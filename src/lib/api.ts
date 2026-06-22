@@ -13,12 +13,42 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+let refreshInFlight: Promise<boolean> | null = null;
+
+function shouldAttemptRefresh(path: string, retried: boolean): boolean {
+  if (retried) return false;
+  return !path.startsWith('/api/auth/login')
+    && !path.startsWith('/api/auth/register')
+    && !path.startsWith('/api/auth/refresh')
+    && !path.startsWith('/api/auth/password/');
+}
+
+async function silentRefresh(): Promise<boolean> {
+  if (!refreshInFlight) {
+    refreshInFlight = fetch(`${API_BASE}/api/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    })
+      .then((res) => res.ok)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
+export async function api<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     ...init,
-    credentials: 'include', // send httpOnly auth cookie
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
   });
+
+  if (res.status === 401 && shouldAttemptRefresh(path, retried)) {
+    const refreshed = await silentRefresh();
+    if (refreshed) return api<T>(path, init, true);
+  }
 
   if (!res.ok) {
     let code = 'ERROR';
@@ -31,6 +61,33 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
       /* non-JSON error body */
     }
     throw new ApiError(res.status, code, message);
+  }
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+/** Multipart upload (bank slip, etc.) — no JSON Content-Type. */
+export async function apiForm<T>(path: string, form: FormData, retried = false): Promise<T> {
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+
+  if (res.status === 401 && shouldAttemptRefresh(path, retried)) {
+    const refreshed = await silentRefresh();
+    if (refreshed) return apiForm<T>(path, form, true);
+  }
+
+  if (!res.ok) {
+    let message = res.statusText;
+    try {
+      const body = await res.json();
+      message = body.message ?? message;
+    } catch {
+      /* ignore */
+    }
+    throw new ApiError(res.status, 'ERROR', message);
   }
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;

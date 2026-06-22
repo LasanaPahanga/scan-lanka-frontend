@@ -1,10 +1,10 @@
 'use client';
 
 import { Suspense } from 'react';
-import LoginForm from './LoginForm';
+import VerifyEmailForm from './VerifyEmailForm';
 import { mutedText, pageWrap } from '@/components/formStyles';
 
-export default function LoginPage() {
+export default function VerifyEmailPage() {
   return (
     <Suspense
       fallback={
@@ -13,7 +13,7 @@ export default function LoginPage() {
         </main>
       }
     >
-      <LoginForm />
+      <VerifyEmailForm />
     </Suspense>
   );
 }

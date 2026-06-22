@@ -1,10 +1,10 @@
 'use client';
 
 import { Suspense } from 'react';
-import LoginForm from './LoginForm';
+import ResetPasswordForm from './ResetPasswordForm';
 import { mutedText, pageWrap } from '@/components/formStyles';
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   return (
     <Suspense
       fallback={
@@ -13,7 +13,7 @@ export default function LoginPage() {
         </main>
       }
     >
-      <LoginForm />
+      <ResetPasswordForm />
     </Suspense>
   );
 }
