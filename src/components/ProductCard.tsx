@@ -21,6 +21,9 @@ export function ProductCard({ product }: { product: ProductChip }) {
         {product.availability === 'OUT_OF_STOCK' && (
           <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Out of stock</div>
         )}
+        {product.availability === 'LOW_STOCK' && (
+          <div style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Low stock</div>
+        )}
       </div>
     </Link>
   );

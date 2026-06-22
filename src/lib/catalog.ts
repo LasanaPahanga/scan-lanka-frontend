@@ -41,6 +41,7 @@ export interface ProductDetail {
   singlePriceCents: number | null;
   priceMinCents: number | null;
   priceMaxCents: number | null;
+  availability: string;
   imageUrls: string[];
   specGroups: SpecGroup[];
   variants: Variant[];
@@ -52,22 +53,80 @@ export interface ResolvedVariant {
   availability: string;
 }
 
+export interface ParentFacet {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+export interface CatalogFacets {
+  parents: ParentFacet[];
+  categories: string[];
+}
+
+export interface ProductPage {
+  content: ProductChip[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+}
+
+export interface ProductListParams {
+  q?: string;
+  category?: string;
+  parentId?: number;
+  sort?: 'newest' | 'price_asc' | 'price_desc' | 'name';
+  page?: number;
+  size?: number;
+}
+
 /** Prefix backend-served media paths with the API base for <img src>. */
 export function mediaUrl(path: string | null): string | null {
   if (!path) return null;
   return path.startsWith('/') ? `${API_BASE}${path}` : path;
 }
 
+function buildQuery(params: ProductListParams): string {
+  const sp = new URLSearchParams();
+  if (params.q) sp.set('q', params.q);
+  if (params.category) sp.set('category', params.category);
+  if (params.parentId != null) sp.set('parentId', String(params.parentId));
+  if (params.sort) sp.set('sort', params.sort);
+  if (params.page != null) sp.set('page', String(params.page));
+  if (params.size != null) sp.set('size', String(params.size));
+  const qs = sp.toString();
+  return qs ? `?${qs}` : '';
+}
+
+const emptyPage = (): ProductPage => ({
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  number: 0,
+  size: 24,
+});
+
 // Server-side reads (SSG/ISR — revalidated; global/03 §3b, 13 SEO).
-// Resilient to the backend being down at build time → empty page now, real data on revalidation.
-export async function listProducts(): Promise<ProductChip[]> {
+export async function listProducts(params: ProductListParams = {}): Promise<ProductPage> {
   try {
-    const res = await fetch(`${API_BASE}/api/products`, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    const page = await res.json();
-    return page.content ?? [];
+    const res = await fetch(`${API_BASE}/api/products${buildQuery({ size: 24, ...params })}`, {
+      next: { revalidate: 60 },
+    });
+    if (!res.ok) return emptyPage();
+    return res.json();
   } catch {
-    return [];
+    return emptyPage();
+  }
+}
+
+export async function getFacets(): Promise<CatalogFacets> {
+  try {
+    const res = await fetch(`${API_BASE}/api/catalog/facets`, { next: { revalidate: 60 } });
+    if (!res.ok) return { parents: [], categories: [] };
+    return res.json();
+  } catch {
+    return { parents: [], categories: [] };
   }
 }
 

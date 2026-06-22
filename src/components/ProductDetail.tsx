@@ -5,12 +5,20 @@ import { ProductDetail, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/
 import { formatLkr, formatRange } from '@/lib/money';
 import { useCart } from '@/components/CartProvider';
 
+function stockLabel(availability: string): string | null {
+  if (availability === 'OUT_OF_STOCK') return 'Out of stock';
+  if (availability === 'LOW_STOCK') return 'Low stock — order soon';
+  return null;
+}
+
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { add } = useCart();
   const [added, setAdded] = useState(false);
   const images = product.imageUrls.map(mediaUrl).filter(Boolean) as string[];
-  const [activeImage, setActiveImage] = useState(images[0] ?? null);
-  const [selected, setSelected] = useState<Record<number, number>>({}); // groupId -> optionId
+  const [imageIndex, setImageIndex] = useState(0);
+  const activeImage = images[imageIndex] ?? null;
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
+  const [selected, setSelected] = useState<Record<number, number>>({});
   const [resolved, setResolved] = useState<ResolvedVariant | null>(null);
   const [resolveError, setResolveError] = useState(false);
 
@@ -42,15 +50,32 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         ? formatLkr(resolved.priceCents)
         : formatRange(product.priceMinCents, product.priceMaxCents);
 
-  const inStock =
-    product.priceMode === 'SINGLE' ? true : resolved ? resolved.availability !== 'OUT_OF_STOCK' : false;
+  const currentAvailability =
+    product.priceMode === 'SINGLE' ? product.availability : resolved?.availability ?? '';
+  const inStock = currentAvailability !== 'OUT_OF_STOCK';
+  const stockMsg = stockLabel(currentAvailability);
   const canAddToCart = product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock);
+
+  const showPrev = () => setImageIndex((i) => Math.max(0, i - 1));
+  const showNext = () => setImageIndex((i) => Math.min(images.length - 1, i + 1));
 
   return (
     <main style={{ maxWidth: 1000, margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={layout}>
         <div>
-          <div style={mainImg}>
+          <div
+            style={mainImg}
+            onTouchStart={(e) => setTouchStartX(e.changedTouches[0]?.clientX ?? null)}
+            onTouchEnd={(e) => {
+              if (touchStartX == null || images.length < 2) return;
+              const dx = touchStartX - (e.changedTouches[0]?.clientX ?? touchStartX);
+              if (Math.abs(dx) > 40) {
+                if (dx > 0) showNext();
+                else showPrev();
+              }
+              setTouchStartX(null);
+            }}
+          >
             {activeImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={activeImage} alt={product.name} style={{ width: '100%', borderRadius: 'var(--radius)' }} />
@@ -60,14 +85,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           </div>
           {images.length > 1 && (
             <div style={thumbs}>
-              {images.map((src) => (
+              {images.map((src, idx) => (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   key={src}
                   src={src}
                   alt=""
-                  onClick={() => setActiveImage(src)}
-                  style={{ ...thumb, outline: src === activeImage ? '2px solid var(--primary)' : 'none' }}
+                  onClick={() => setImageIndex(idx)}
+                  style={{ ...thumb, outline: idx === imageIndex ? '2px solid var(--primary)' : 'none' }}
                 />
               ))}
             </div>
@@ -76,9 +101,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
         <div>
           <h1 style={{ marginTop: 0 }}>{product.name}</h1>
-          <div style={{ fontSize: '1.4rem', color: 'var(--primary)', marginBottom: '1rem' }}>
+          <div style={{ fontSize: '1.4rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
             {priceLabel || '—'}
           </div>
+          {stockMsg && (
+            <p style={{ color: currentAvailability === 'LOW_STOCK' ? 'var(--accent)' : 'var(--danger)', marginTop: 0 }}>
+              {stockMsg}
+            </p>
+          )}
 
           {product.specGroups.map((g) => (
             <div key={g.id} style={{ marginBottom: '1rem' }}>
@@ -105,9 +135,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           ))}
 
           {resolveError && <p style={{ color: 'var(--danger)' }}>That combination isn&apos;t available.</p>}
-          {!inStock && allSelected && product.priceMode === 'VARIANT' && (
-            <p style={{ color: 'var(--danger)' }}>Out of stock.</p>
-          )}
 
           <button
             type="button"
