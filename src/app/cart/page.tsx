@@ -71,9 +71,9 @@ export default function CartPage() {
         Subtotal: <strong>{priced ? formatLkr(priced.subtotalCents) : '…'}</strong>
       </div>
       <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-        <button type="button" onClick={() => alert('Checkout is coming in the next build phase.')} style={checkout}>
+        <Link href="/checkout" style={checkout}>
           Checkout
-        </button>
+        </Link>
       </div>
     </main>
   );
@@ -82,11 +82,11 @@ export default function CartPage() {
 const wrap = { maxWidth: 800, margin: '0 auto', padding: '2rem 1.5rem' } as const;
 const td = { padding: '0.75rem 0.5rem', verticalAlign: 'middle' } as const;
 const checkout = {
+  display: 'inline-block',
   padding: '0.7rem 1.6rem',
   background: 'var(--accent)',
   color: 'var(--primary-contrast)',
-  border: 'none',
   borderRadius: 'var(--radius)',
   fontSize: '1rem',
-  cursor: 'pointer',
+  textDecoration: 'none',
 } as const;

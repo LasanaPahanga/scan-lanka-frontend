@@ -10,6 +10,7 @@ interface CartState {
   add: (item: GuestCartItem) => void;
   setQuantity: (productId: number, variantId: number | null, quantity: number) => void;
   remove: (productId: number, variantId: number | null) => void;
+  clear: () => void;
 }
 
 const CartContext = createContext<CartState | undefined>(undefined);
@@ -62,10 +63,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((prev) => prev.filter((i) => !sameLine(i, productId, variantId)));
   }, []);
 
+  const clear = useCallback(() => setItems([]), []);
+
   const count = items.reduce((n, i) => n + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, priced, count, add, setQuantity, remove }}>
+    <CartContext.Provider value={{ items, priced, count, add, setQuantity, remove, clear }}>
       {children}
     </CartContext.Provider>
   );
