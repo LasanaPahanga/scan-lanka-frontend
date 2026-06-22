@@ -1,0 +1,29 @@
+/* Design tokens — match scanlanka.com (global/11_UIUX_DESIGN_PLAN.md).
+   Confirm exact brand hex from the logo/brand kit. */
+:root {
+  --bg: #ffffff;
+  --bg-muted: #f5f7fa;
+  --text: #1f2a37; /* navy / dark slate */
+  --muted: #6b7280;
+  --primary: #0e76a8; /* brand blue/teal — confirm from logo */
+  --primary-contrast: #ffffff;
+  --accent: #17a2b8; /* CTA teal */
+  --border: #e5e7eb;
+  --danger: #b42318;
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(16, 24, 40, 0.08);
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  line-height: 1.5;
+}

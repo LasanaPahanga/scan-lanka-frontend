@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Production build logs and env profiles
+build/
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and system files
+.idea/
+.vscode/
+.DS_Store
