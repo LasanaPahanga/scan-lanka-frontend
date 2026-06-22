@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { ProductChip, mediaUrl } from '@/lib/catalog';
 import { formatLkr, formatRange } from '@/lib/money';
+import { WishlistToggle } from '@/components/WishlistToggle';
 
 export function ProductCard({ product }: { product: ProductChip }) {
   const img = mediaUrl(product.previewImageUrl);
@@ -11,7 +12,8 @@ export function ProductCard({ product }: { product: ProductChip }) {
 
   return (
     <Link href={`/products/${product.slug}`} style={card}>
-      <div style={imgWrap}>
+      <div style={{ ...imgWrap, position: 'relative' }}>
+        <WishlistToggle product={product} />
         {/* eslint-disable-next-line @next/next/no-img-element */}
         {img ? <img src={img} alt={product.name} style={imgStyle} /> : <div style={imgPlaceholder}>No image</div>}
       </div>

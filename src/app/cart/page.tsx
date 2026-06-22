@@ -5,9 +5,18 @@ import { useCart } from '@/components/CartProvider';
 import { formatLkr } from '@/lib/money';
 
 export default function CartPage() {
-  const { items, priced, setQuantity, remove } = useCart();
+  const { lines, priced, loading, setQuantity, remove } = useCart();
 
-  if (items.length === 0) {
+  if (loading && lines.length === 0) {
+    return (
+      <main style={wrap}>
+        <h1>Your cart</h1>
+        <p style={{ color: 'var(--muted)' }}>Loading cart…</p>
+      </main>
+    );
+  }
+
+  if (lines.length === 0) {
     return (
       <main style={wrap}>
         <h1>Your cart</h1>
@@ -24,46 +33,43 @@ export default function CartPage() {
       <h1>Your cart</h1>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
         <tbody>
-          {items.map((item) => {
-            const line = priced?.lines.find(
-              (l) => l.productId === item.productId && (l.variantId ?? null) === (item.variantId ?? null),
-            );
-            return (
-              <tr key={`${item.productId}-${item.variantId}`} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={td}>
-                  <div style={{ fontWeight: 600 }}>{line?.name ?? item.name}</div>
-                  {line?.status === 'CAPPED' && (
-                    <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Limited to available stock</div>
-                  )}
-                  {line?.status === 'OUT_OF_STOCK' && (
-                    <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Out of stock</div>
-                  )}
-                  {line?.status === 'UNAVAILABLE' && (
-                    <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>No longer available</div>
-                  )}
-                </td>
-                <td style={td}>
-                  <input
-                    type="number"
-                    min={1}
-                    value={item.quantity}
-                    onChange={(e) => setQuantity(item.productId, item.variantId, Number(e.target.value))}
-                    style={{ width: 60, padding: '0.3rem' }}
-                  />
-                </td>
-                <td style={{ ...td, textAlign: 'right' }}>{line ? formatLkr(line.lineTotalCents) : '—'}</td>
-                <td style={{ ...td, textAlign: 'right' }}>
-                  <button
-                    type="button"
-                    onClick={() => remove(item.productId, item.variantId)}
-                    style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}
-                  >
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          {lines.map((line) => (
+            <tr key={line.key} style={{ borderBottom: '1px solid var(--border)' }}>
+              <td style={td}>
+                <div style={{ fontWeight: 600 }}>{line.name}</div>
+                {line.status === 'CAPPED' && (
+                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Limited to available stock</div>
+                )}
+                {line.status === 'OUT_OF_STOCK' && (
+                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Out of stock</div>
+                )}
+                {line.status === 'UNAVAILABLE' && (
+                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>No longer available</div>
+                )}
+              </td>
+              <td style={td}>
+                <input
+                  type="number"
+                  min={1}
+                  value={line.quantity}
+                  onChange={(e) => void setQuantity(line, Number(e.target.value))}
+                  style={{ width: 60, padding: '0.3rem' }}
+                />
+              </td>
+              <td style={{ ...td, textAlign: 'right' }}>
+                {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '—'}
+              </td>
+              <td style={{ ...td, textAlign: 'right' }}>
+                <button
+                  type="button"
+                  onClick={() => void remove(line)}
+                  style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}
+                >
+                  Remove
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 

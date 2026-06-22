@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '../styles/tokens.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CartProvider } from '@/components/CartProvider';
+import { WishlistProvider } from '@/components/WishlistProvider';
 import { Header } from '@/components/Header';
 
 export const metadata: Metadata = {
@@ -16,8 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthProvider>
           <CartProvider>
-            <Header />
-            {children}
+            <WishlistProvider>
+              <Header />
+              {children}
+            </WishlistProvider>
           </CartProvider>
         </AuthProvider>
       </body>

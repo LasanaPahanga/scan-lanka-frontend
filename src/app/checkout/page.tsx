@@ -1,8 +1,9 @@
 'use client';
 
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useCart } from '@/components/CartProvider';
+import { GuestCartItem } from '@/lib/cart';
 import { formatLkr } from '@/lib/money';
 import {
   DeliveryPayment,
@@ -20,7 +21,17 @@ import { savePendingOrder } from '@/lib/orders';
 type PaymentMethod = 'CARD' | 'BANK';
 
 export default function CheckoutPage() {
-  const { items, clear } = useCart();
+  const { lines, clear } = useCart();
+  const items: GuestCartItem[] = useMemo(
+    () =>
+      lines.map((l) => ({
+        productId: l.productId,
+        variantId: l.variantId,
+        quantity: l.quantity,
+        name: l.name,
+      })),
+    [lines],
+  );
   const [fulfilment, setFulfilment] = useState<FulfilmentType>('DELIVERY');
   const [payment, setPayment] = useState<DeliveryPayment>('PREPAID');
   const [method, setMethod] = useState<PaymentMethod>('CARD');
@@ -75,7 +86,7 @@ export default function CheckoutPage() {
         contactEmail: form.contactEmail,
       });
       savePendingOrder(result.orderNumber, form.contactEmail);
-      clear();
+      await clear();
 
       if (method === 'CARD') {
         // Hand off to PayHere when configured; otherwise show confirmation (dev / no creds).

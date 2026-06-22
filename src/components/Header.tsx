@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useCart } from '@/components/CartProvider';
 import { useAuth } from '@/components/AuthProvider';
+import { useWishlist } from '@/components/WishlistProvider';
 
 export function Header() {
-  const { count } = useCart();
+  const { count: cartCount } = useCart();
+  const { count: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
 
   return (
@@ -18,7 +20,10 @@ export function Header() {
           Products
         </Link>
         <Link href="/cart" style={link}>
-          Cart{count > 0 ? ` (${count})` : ''}
+          Cart{cartCount > 0 ? ` (${cartCount})` : ''}
+        </Link>
+        <Link href="/wishlist" style={link}>
+          Wishlist{wishlistCount > 0 ? ` (${wishlistCount})` : ''}
         </Link>
         {user ? (
           <>

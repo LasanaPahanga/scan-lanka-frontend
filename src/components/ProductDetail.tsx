@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ProductDetail, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
 import { formatLkr, formatRange } from '@/lib/money';
 import { useCart } from '@/components/CartProvider';
+import { WishlistToggle } from '@/components/WishlistToggle';
 
 function stockLabel(availability: string): string | null {
   if (availability === 'OUT_OF_STOCK') return 'Out of stock';
@@ -56,6 +57,18 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const stockMsg = stockLabel(currentAvailability);
   const canAddToCart = product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock);
 
+  const chip = {
+    id: product.id,
+    slug: product.slug,
+    name: product.name,
+    previewImageUrl: product.imageUrls[0] ?? null,
+    priceMode: product.priceMode,
+    priceCents: product.singlePriceCents,
+    priceMinCents: product.priceMinCents,
+    priceMaxCents: product.priceMaxCents,
+    availability: product.availability,
+  };
+
   const showPrev = () => setImageIndex((i) => Math.max(0, i - 1));
   const showNext = () => setImageIndex((i) => Math.min(images.length - 1, i + 1));
 
@@ -64,7 +77,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       <div style={layout}>
         <div>
           <div
-            style={mainImg}
+            style={{ ...mainImg, position: 'relative' }}
             onTouchStart={(e) => setTouchStartX(e.changedTouches[0]?.clientX ?? null)}
             onTouchEnd={(e) => {
               if (touchStartX == null || images.length < 2) return;
@@ -76,6 +89,9 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               setTouchStartX(null);
             }}
           >
+            <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
+              <WishlistToggle product={chip} />
+            </div>
             {activeImage ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={activeImage} alt={product.name} style={{ width: '100%', borderRadius: 'var(--radius)' }} />
@@ -140,7 +156,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             type="button"
             disabled={!canAddToCart}
             onClick={() => {
-              add({
+              void add({
                 productId: product.id,
                 variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
                 quantity: 1,
