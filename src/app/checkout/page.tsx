@@ -21,12 +21,15 @@ import {
 } from '@/lib/checkout';
 import { savePendingOrder } from '@/lib/orders';
 import { fetchPaymentMethods, PaymentMethods } from '@/lib/payments';
+import { useGeo } from '@/components/GeoProvider';
+import { t } from '@/lib/i18n';
 
 type PaymentMethod = 'CARD' | 'BANK';
 
 export default function CheckoutPage() {
   const { lines, clear } = useCart();
   const { user } = useAuth();
+  const { geo } = useGeo();
   const items: GuestCartItem[] = useMemo(
     () =>
       lines.map((l) => ({
@@ -247,6 +250,24 @@ export default function CheckoutPage() {
         <Link href="/products" style={{ color: 'var(--primary)' }}>
           Browse products
         </Link>
+      </main>
+    );
+  }
+
+  if (!geo.loading && !geo.canCheckout) {
+    return (
+      <main style={wrap}>
+        <h1>Checkout</h1>
+        <p style={{ color: 'var(--muted)' }}>{t('geo.noCheckout')}</p>
+        <p style={{ marginTop: '1rem' }}>
+          <Link href="/quote" style={{ color: 'var(--primary)' }}>
+            Request a quote
+          </Link>
+          {' · '}
+          <Link href="/contact" style={{ color: 'var(--primary)' }}>
+            Contact us
+          </Link>
+        </p>
       </main>
     );
   }

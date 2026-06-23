@@ -1,8 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { ProductDetail, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
-import { formatLkr, formatRange } from '@/lib/money';
+import { formatDisplayPrice } from '@/lib/displayMoney';
+import { useGeo } from '@/components/GeoProvider';
+import { t } from '@/lib/i18n';
 import { useCart } from '@/components/CartProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
 
@@ -14,6 +17,7 @@ function stockLabel(availability: string): string | null {
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { add } = useCart();
+  const { geo } = useGeo();
   const [added, setAdded] = useState(false);
   const images = product.imageUrls.map(mediaUrl).filter(Boolean) as string[];
   const [imageIndex, setImageIndex] = useState(0);
@@ -46,16 +50,17 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
   const priceLabel =
     product.priceMode === 'SINGLE'
-      ? formatLkr(product.singlePriceCents)
+      ? formatDisplayPrice(product.singlePriceCents, geo)
       : resolved
-        ? formatLkr(resolved.priceCents)
-        : formatRange(product.priceMinCents, product.priceMaxCents);
+        ? formatDisplayPrice(resolved.priceCents, geo)
+        : `${formatDisplayPrice(product.priceMinCents, geo)} – ${formatDisplayPrice(product.priceMaxCents, geo)}`;
 
   const currentAvailability =
     product.priceMode === 'SINGLE' ? product.availability : resolved?.availability ?? '';
   const inStock = currentAvailability !== 'OUT_OF_STOCK';
   const stockMsg = stockLabel(currentAvailability);
-  const canAddToCart = product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock);
+  const canAddToCart =
+    geo.canCheckout && (product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock));
 
   const chip = {
     id: product.id,
@@ -120,6 +125,22 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           <div style={{ fontSize: '1.4rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
             {priceLabel || '—'}
           </div>
+          {geo.indicativePricing && (
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('geo.indicative')}</p>
+          )}
+          {!geo.canCheckout && (
+            <p style={{ marginTop: '0.75rem' }}>
+              {t('geo.noCheckout')}{' '}
+              <Link href="/quote" style={{ color: 'var(--primary)' }}>
+                Request a quote
+              </Link>{' '}
+              or{' '}
+              <Link href="/contact" style={{ color: 'var(--primary)' }}>
+                contact us
+              </Link>
+              .
+            </p>
+          )}
           {stockMsg && (
             <p style={{ color: currentAvailability === 'LOW_STOCK' ? 'var(--accent)' : 'var(--danger)', marginTop: 0 }}>
               {stockMsg}
@@ -167,7 +188,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             }}
             style={{ ...addBtn, opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
           >
-            {added ? 'Added ✓' : 'Add to cart'}
+            {added ? 'Added ✓' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
           </button>
 
           {product.description && <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>{product.description}</p>}

@@ -9,6 +9,8 @@ const nav = [
   { href: '/admin/delivery', label: 'Delivery' },
   { href: '/admin/settings', label: 'Settings' },
   { href: '/admin/notifications', label: 'Emails' },
+  { href: '/admin/inquiries', label: 'Inquiries' },
+  { href: '/admin/quotes', label: 'Quotes' },
   { href: '/admin/2fa', label: '2FA' },
 ];
 

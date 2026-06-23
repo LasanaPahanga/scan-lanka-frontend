@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useCart } from '@/components/CartProvider';
 import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
+import { CountrySelector } from '@/components/CountrySelector';
 
 export function Header() {
   const { count: cartCount } = useCart();
@@ -31,6 +32,13 @@ export function Header() {
         <Link href="/returns" style={link}>
           Returns
         </Link>
+        <Link href="/contact" style={link}>
+          Contact
+        </Link>
+        <Link href="/quote" style={link}>
+          Quote
+        </Link>
+        <CountrySelector />
         {user ? (
           <>
             <Link href="/account" style={link}>
