@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
+import { ContactReturnsCta } from '@/components/ContactReturnsCta';
+import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { getMyOrder, OrderDetail } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
 import { downloadMyReceiptPdf, saveBlob } from '@/lib/admin-notifications';
@@ -46,8 +48,15 @@ function OrderDetailView() {
       </p>
       <h1 style={{ color: 'var(--primary)' }}>{order.orderNumber}</h1>
       <p style={mutedText}>
-        Status: <strong>{order.status}</strong> · {order.fulfilmentType.replace('_', ' ')}
+        Status:{' '}
+        <strong>
+          <OrderStatusBadge status={order.status} refundTotalCents={order.refundTotalCents} />
+        </strong>{' '}
+        · {order.fulfilmentType.replace('_', ' ')}
       </p>
+      {order.refundTotalCents > 0 && (
+        <p style={mutedText}>Refunded online: {formatLkr(order.refundTotalCents)}</p>
+      )}
       {['PAID', 'CONFIRMED', 'PACKED', 'SHIPPED', 'READY_FOR_PICKUP', 'COMPLETED'].includes(order.status) && (
         <p>
           <button
@@ -106,6 +115,8 @@ function OrderDetailView() {
           </ul>
         </section>
       )}
+
+      <ContactReturnsCta compact />
     </main>
   );
 }

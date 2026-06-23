@@ -28,6 +28,9 @@ export function Header() {
         <Link href="/delivery" style={link}>
           Delivery
         </Link>
+        <Link href="/returns" style={link}>
+          Returns
+        </Link>
         {user ? (
           <>
             <Link href="/account" style={link}>

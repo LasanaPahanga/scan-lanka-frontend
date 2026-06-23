@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AuthGuard } from '@/components/AuthGuard';
+import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { listMyOrders, OrderSummary } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
 import { mutedText, pageWrap } from '@/components/formStyles';
@@ -36,7 +37,8 @@ function OrdersList() {
                   {o.orderNumber}
                 </Link>
                 <div style={mutedText}>
-                  {o.status} · {new Date(o.createdAt).toLocaleDateString()}
+                  <OrderStatusBadge status={o.status} refundTotalCents={o.refundTotalCents} /> ·{' '}
+                  {new Date(o.createdAt).toLocaleDateString()}
                 </div>
               </div>
               <div>{formatLkr(o.totalCents)}</div>

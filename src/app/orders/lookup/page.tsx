@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { lookupOrderDetail } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
 import { ApiError } from '@/lib/api';
+import { ContactReturnsCta } from '@/components/ContactReturnsCta';
+import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { dangerText, fieldInput, formStack, mutedText, pageWrap, primaryButton } from '@/components/formStyles';
 
 export default function OrderLookupPage() {
@@ -59,7 +61,11 @@ export default function OrderLookupPage() {
         <section style={{ marginTop: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem' }}>
           <h2 style={{ fontSize: '1.1rem' }}>{detail.orderNumber}</h2>
           <p style={mutedText}>
-            Status: <strong>{detail.status}</strong> · Total: {formatLkr(detail.totalCents)}
+            Status:{' '}
+            <strong>
+              <OrderStatusBadge status={detail.status} refundTotalCents={detail.refundTotalCents} />
+            </strong>{' '}
+            · Total: {formatLkr(detail.totalCents)}
           </p>
           {detail.trackingRef && (
             <p>
@@ -85,8 +91,11 @@ export default function OrderLookupPage() {
               </ul>
             </>
           )}
+          <ContactReturnsCta compact />
         </section>
       )}
+
+      <ContactReturnsCta />
 
       <p style={{ ...mutedText, marginTop: '1.5rem' }}>
         <Link href="/account">Signed in?</Link> View orders in your account.

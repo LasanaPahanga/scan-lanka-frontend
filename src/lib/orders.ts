@@ -10,6 +10,7 @@ export interface OrderSummary {
   orderNumber: string;
   status: string;
   totalCents: number;
+  refundTotalCents: number;
   createdAt: string;
 }
 
@@ -34,6 +35,7 @@ export interface OrderDetail {
   deliveryCents: number;
   taxCents: number;
   totalCents: number;
+  refundTotalCents: number;
   deliveryCodCents: number;
   fulfilmentType: string;
   deliveryPayment: string;

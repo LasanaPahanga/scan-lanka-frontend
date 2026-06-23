@@ -162,3 +162,44 @@ export async function downloadAdminReceipt(orderNumber: string): Promise<Blob> {
   if (!res.ok) throw new Error('Download failed');
   return res.blob();
 }
+
+export interface RefundView {
+  id: number;
+  amountCents: number;
+  method: string;
+  reason: string | null;
+  gatewayRef: string | null;
+  status: string;
+  createdAt: string;
+  lines: { itemId: number; quantity: number; disposition: string }[];
+}
+
+export interface StepUpBody {
+  password?: string;
+  totp?: string;
+}
+
+export const cancelOrder = (orderNumber: string, body: StepUpBody & { reason?: string; note?: string }) =>
+  api<void>(`/api/admin/orders/${encodeURIComponent(orderNumber)}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+
+export const listRefunds = (orderNumber: string) =>
+  api<RefundView[]>(`/api/admin/orders/${encodeURIComponent(orderNumber)}/refunds`);
+
+export const recordRefund = (
+  orderNumber: string,
+  body: StepUpBody & {
+    amountCents: number;
+    method: string;
+    reason?: string;
+    gatewayRef?: string;
+    idempotencyKey?: string;
+    items?: { itemId: number; quantity: number; disposition: string }[];
+  },
+) =>
+  api<RefundView>(`/api/admin/orders/${encodeURIComponent(orderNumber)}/refunds`, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
