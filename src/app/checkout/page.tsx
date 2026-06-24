@@ -204,7 +204,7 @@ export default function CheckoutPage() {
 
         {method === 'BANK' && !slipUploaded && (
           <section style={card}>
-            <h3>Pay by bank transfer</h3>
+            <h3 style={ch3}>Pay by bank transfer</h3>
             <p style={{ color: 'var(--muted)' }}>
               Transfer <strong>{formatLkr(placed.totalCents)}</strong> to our account, then upload your
               slip below. We&apos;ll confirm it and email your receipt.
@@ -245,7 +245,7 @@ export default function CheckoutPage() {
   if (items.length === 0) {
     return (
       <main style={wrap}>
-        <h1>Checkout</h1>
+        <h1 className="page-title">Checkout</h1>
         <p style={{ color: 'var(--muted)' }}>Your cart is empty.</p>
         <Link href="/products" style={{ color: 'var(--primary)' }}>
           Browse products
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
   if (!geo.loading && !geo.canCheckout) {
     return (
       <main style={wrap}>
-        <h1>Checkout</h1>
+        <h1 className="page-title">Checkout</h1>
         <p style={{ color: 'var(--muted)' }}>{t('geo.noCheckout')}</p>
         <p style={{ marginTop: '1rem' }}>
           <Link href="/quote" style={{ color: 'var(--primary)' }}>
@@ -276,10 +276,10 @@ export default function CheckoutPage() {
 
   return (
     <main style={wrap}>
-      <h1>Checkout</h1>
+      <h1 className="page-title">Checkout</h1>
       <form onSubmit={onSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
         <section style={card}>
-          <h3>Contact</h3>
+          <h3 style={ch3}>Contact</h3>
           <input style={input} placeholder="Full name" value={form.contactName}
             onChange={(e) => set('contactName', e.target.value)} required />
           <input style={input} placeholder="Phone" value={form.contactPhone}
@@ -289,7 +289,7 @@ export default function CheckoutPage() {
         </section>
 
         <section style={card}>
-          <h3>Fulfilment</h3>
+          <h3 style={ch3}>Fulfilment</h3>
           <select style={input} value={fulfilment} onChange={(e) => setFulfilment(e.target.value as FulfilmentType)}>
             <option value="DELIVERY">Delivery</option>
             <option value="PICKUP_SHOP">Pick up from shop</option>
@@ -349,7 +349,7 @@ export default function CheckoutPage() {
         </section>
 
         <section style={card}>
-          <h3>Billing (optional)</h3>
+          <h3 style={ch3}>Billing (optional)</h3>
           <label style={{ display: 'block' }}>
             <input type="checkbox" checked={showBilling} onChange={(e) => setShowBilling(e.target.checked)} />
             {' '}Add business / invoice details
@@ -369,7 +369,7 @@ export default function CheckoutPage() {
         </section>
 
         <section style={card}>
-          <h3>Delivery payment</h3>
+          <h3 style={ch3}>Delivery payment</h3>
           <label style={{ display: 'block' }}>
             <input type="radio" checked={payment === 'PREPAID'} onChange={() => setPayment('PREPAID')} /> Pay
             delivery now
@@ -383,7 +383,7 @@ export default function CheckoutPage() {
         </section>
 
         <section style={card}>
-          <h3>Payment method</h3>
+          <h3 style={ch3}>Payment method</h3>
           {(methods?.payhere ?? true) && (
             <label style={{ display: 'block' }}>
               <input type="radio" checked={method === 'CARD'} onChange={() => setMethod('CARD')} /> Card (PayHere)
@@ -401,7 +401,7 @@ export default function CheckoutPage() {
         </section>
 
         <section style={card}>
-          <h3>Summary</h3>
+          <h3 style={ch3}>Summary</h3>
           {quote ? (
             <>
               <Row label="Subtotal" value={formatLkr(quote.subtotalCents)} />
@@ -440,7 +440,33 @@ function Row({ label, value, bold, muted }: { label: string; value: string; bold
   );
 }
 
-const wrap = { maxWidth: 640, margin: '0 auto', padding: '2rem 1.5rem' } as const;
-const card = { border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '1rem', display: 'grid', gap: '0.6rem' } as const;
-const input = { padding: '0.6rem', border: '1px solid var(--border)', borderRadius: 'var(--radius)', fontSize: '1rem' } as const;
-const button = { padding: '0.8rem', background: 'var(--accent)', color: 'var(--primary-contrast)', border: 'none', borderRadius: 'var(--radius)', fontSize: '1rem', cursor: 'pointer' } as const;
+const wrap = { maxWidth: 680, margin: '2.5rem auto', padding: '0 1.25rem 3.5rem' } as const;
+const card = {
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  boxShadow: 'var(--shadow)',
+  padding: '1.25rem 1.5rem',
+  display: 'grid',
+  gap: '0.65rem',
+} as const;
+const ch3 = { margin: '0 0 0.35rem', fontSize: '1.02rem', fontWeight: 700, color: 'var(--text)' } as const;
+const input = {
+  padding: '0.7rem 0.85rem',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  fontSize: '0.95rem',
+  width: '100%',
+  background: '#fff',
+} as const;
+const button = {
+  padding: '0.85rem 1rem',
+  background: 'var(--primary)',
+  color: 'var(--primary-contrast)',
+  border: 'none',
+  borderRadius: 'var(--radius)',
+  fontSize: '1rem',
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'background 0.18s var(--ease)',
+} as const;

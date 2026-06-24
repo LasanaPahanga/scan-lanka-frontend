@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { DashboardView, fetchDashboard } from '@/lib/admin';
 import { formatLkr } from '@/lib/money';
 import { mutedText, adminMain } from '@/components/formStyles';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardView | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchDashboard().then(setData).catch(() => setData(null));
@@ -15,7 +17,18 @@ export default function AdminDashboardPage() {
 
   return (
     <main style={adminMain}>
-      <h1 className="page-title">Dashboard</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
+        <h1 className="page-title" style={{ margin: 0 }}>
+          Dashboard
+        </h1>
+        {user?.totpEnabled ? (
+          <span style={badgeOk}>🔒 2FA enrolled ✓</span>
+        ) : (
+          <Link href="/admin/2fa" style={badgeWarn}>
+            ⚠ Enable 2FA
+          </Link>
+        )}
+      </div>
       {!data ? (
         <p style={mutedText}>Loading…</p>
       ) : (
@@ -45,6 +58,26 @@ export default function AdminDashboardPage() {
     </main>
   );
 }
+
+const badgeOk = {
+  background: '#e7f6ec',
+  color: 'var(--success)',
+  border: '1px solid #b8e6c6',
+  borderRadius: 999,
+  padding: '0.25rem 0.7rem',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+} as const;
+const badgeWarn = {
+  background: '#fff4e5',
+  color: 'var(--warning, #b45309)',
+  border: '1px solid #f3d39b',
+  borderRadius: 999,
+  padding: '0.25rem 0.7rem',
+  fontSize: '0.8rem',
+  fontWeight: 700,
+  textDecoration: 'none',
+} as const;
 
 function Stat({ label, value, href }: { label: string; value: number; href: string }) {
   return (

@@ -48,7 +48,18 @@ export default function PaymentReturnPage() {
   }, []);
 
   return (
-    <main style={{ maxWidth: 560, margin: '0 auto', padding: '3rem 1.5rem', textAlign: 'center' }}>
+    <main
+      style={{
+        maxWidth: 520,
+        margin: '3rem auto',
+        padding: '2.5rem',
+        textAlign: 'center',
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius)',
+        boxShadow: 'var(--shadow-md)',
+      }}
+    >
       {!orderNumber ? (
         <>
           <h1>No order to show</h1>
