@@ -6,8 +6,11 @@ export function Footer() {
       <div className="container" style={grid}>
         <div>
           <div style={brandRow}>
-            <span style={brandMark}>SL</span>
-            <strong style={{ fontSize: '1.1rem' }}>Scan Lanka Trading Co. (Pvt) Ltd</strong>
+            <span style={logoChip}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="Scan Lanka" style={{ height: 34, width: 'auto', display: 'block' }} />
+            </span>
+            <strong style={{ fontSize: '1.05rem' }}>Scan Lanka Trading Co. (Pvt) Ltd</strong>
           </div>
           <p style={blurb}>
             Sri Lanka&apos;s leading manufacturer and supplier of boards and teaching equipment since
@@ -27,6 +30,7 @@ export function Footer() {
             <li><Link href="/products" className="footer-link">Our Products</Link></li>
             <li><Link href="/quote" className="footer-link">Request a Quote</Link></li>
             <li><Link href="/about" className="footer-link">About Us</Link></li>
+            <li><Link href="/clientele" className="footer-link">Clientele</Link></li>
             <li><Link href="/contact" className="footer-link">Contact Us</Link></li>
           </ul>
         </div>
@@ -77,16 +81,13 @@ const grid = {
   padding: '3rem 1.25rem 2rem',
 } as const;
 const brandRow = { display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#fff', marginBottom: '0.75rem' } as const;
-const brandMark = {
+const logoChip = {
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  width: 36,
-  height: 36,
-  borderRadius: 9,
-  background: 'var(--primary)',
-  color: '#fff',
-  fontWeight: 800,
+  background: '#fff',
+  borderRadius: 8,
+  padding: '6px 10px',
 } as const;
 const blurb = { fontSize: '0.9rem', lineHeight: 1.7, color: '#9fb1bd', maxWidth: 340 } as const;
 const socialRow = { display: 'flex', gap: '0.6rem', marginTop: '1rem' } as const;

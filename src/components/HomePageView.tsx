@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { HomeView } from '@/lib/home';
 import { ProductChip, mediaUrl } from '@/lib/catalog';
 import { ProductCard } from '@/components/ProductCard';
+import { ClientLogos } from '@/components/ClientLogos';
 import { Reveal } from '@/components/Reveal';
 
 const CATEGORIES = [
@@ -175,6 +176,13 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
           </section>
         )}
       </div>
+
+      {/* Trusted by / clientele */}
+      <section style={{ background: 'var(--bg-muted)', borderTop: '1px solid var(--border)' }}>
+        <div className="container" style={{ padding: '3rem 1.25rem' }}>
+          <ClientLogos heading="Trusted by leading institutions" max={12} />
+        </div>
+      </section>
 
       {/* Quote CTA band */}
       <section style={ctaBand}>

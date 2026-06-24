@@ -110,8 +110,14 @@ export function Header() {
           <Link href="/" className="nav-link">
             Home
           </Link>
+          <Link href="/about" className="nav-link">
+            About Us
+          </Link>
           <Link href="/products" className="nav-link">
             Our Products
+          </Link>
+          <Link href="/clientele" className="nav-link">
+            Clientele
           </Link>
           <Link href="/quote" className="nav-link">
             Request a Quote
