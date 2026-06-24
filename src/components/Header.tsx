@@ -17,6 +17,7 @@ export function Header() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [q, setQ] = useState('');
+  const [logoError, setLogoError] = useState(false);
 
   function search(e: React.FormEvent) {
     e.preventDefault();
@@ -46,12 +47,19 @@ export function Header() {
       {/* main bar */}
       <div style={mainBar}>
         <div className="container" style={mainInner}>
-          <Link href="/" style={brand}>
-            <span style={brandMark}>SL</span>
-            <span>
-              <span style={brandName}>Scan Lanka</span>
-              <span style={brandSub}>Trading Co. — Teaching Equipment</span>
-            </span>
+          <Link href="/" style={brand} aria-label="Scan Lanka — home">
+            {logoError ? (
+              <>
+                <span style={brandMark}>SL</span>
+                <span>
+                  <span style={brandName}>Scan Lanka</span>
+                  <span style={brandSub}>Trading Co. — Teaching Equipment</span>
+                </span>
+              </>
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src="/logo.png" alt="Scan Lanka" style={logoImg} onError={() => setLogoError(true)} />
+            )}
           </Link>
 
           <form onSubmit={search} style={searchWrap} role="search">
@@ -159,6 +167,7 @@ const brand = {
   textDecoration: 'none',
   color: 'var(--text)',
 } as const;
+const logoImg = { height: 52, width: 'auto', display: 'block' } as const;
 const brandMark = {
   display: 'inline-flex',
   alignItems: 'center',

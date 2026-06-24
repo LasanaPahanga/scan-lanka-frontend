@@ -69,7 +69,7 @@ export function Footer() {
   );
 }
 
-const footer = { background: '#0c1c27', color: '#c8d4dd', marginTop: '3rem' } as const;
+const footer = { background: '#0c1c27', color: '#c8d4dd', flexShrink: 0 } as const;
 const grid = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

@@ -20,9 +20,9 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
       router.replace('/');
       return;
     }
-    // Admin endpoints require enrolled TOTP (server enforces it). Send un-enrolled admins straight to
-    // 2FA setup instead of letting every admin API fail with a 403.
-    if (user.totpEnabled === false && pathname !== '/admin/2fa') {
+    // When the server enforces admin TOTP, send un-enrolled admins straight to 2FA setup instead of
+    // letting every admin API fail with a 403. (Enforcement is off during development.)
+    if (user.adminTotpRequired && user.totpEnabled === false && pathname !== '/admin/2fa') {
       router.replace('/admin/2fa');
     }
   }, [loading, user, router, pathname]);
@@ -30,7 +30,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   if (loading || !user || user.role !== 'ADMIN') {
     return <main style={{ padding: '2rem', color: 'var(--muted)' }}>Loading admin…</main>;
   }
-  if (user.totpEnabled === false && pathname !== '/admin/2fa') {
+  if (user.adminTotpRequired && user.totpEnabled === false && pathname !== '/admin/2fa') {
     return (
       <main style={{ padding: '2rem', color: 'var(--muted)' }}>
         Two-factor authentication is required for admin access — redirecting to setup…

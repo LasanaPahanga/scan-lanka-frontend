@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { HomeView } from '@/lib/home';
+import { ProductChip, mediaUrl } from '@/lib/catalog';
 import { ProductCard } from '@/components/ProductCard';
 import { Reveal } from '@/components/Reveal';
-import { mediaUrl } from '@/lib/catalog';
 
 const CATEGORIES = [
   'Whiteboards',
@@ -25,7 +25,12 @@ const TRUST = [
   { t: 'Bulk & institutional', d: 'Custom quotes for orders' },
 ];
 
-export function HomePageView({ home }: { home: HomeView }) {
+export interface CategoryRow {
+  category: string;
+  products: ProductChip[];
+}
+
+export function HomePageView({ home, categoryRows = [] }: { home: HomeView; categoryRows?: CategoryRow[] }) {
   const images = home.banners.map((b) => mediaUrl(b.imageUrl)).filter(Boolean) as string[];
   const [slide, setSlide] = useState(0);
 
@@ -35,22 +40,20 @@ export function HomePageView({ home }: { home: HomeView }) {
     return () => clearInterval(id);
   }, [images.length]);
 
+  const hasRows = categoryRows.length > 0;
+
   return (
     <main>
       {/* Hero — light & airy */}
       <section style={hero}>
         <div className="container" style={heroInner}>
-          <div className="animate-up" style={{ flex: '1 1 380px' }}>
+          <div className="animate-up" style={{ flex: '1 1 360px', textAlign: 'center' }}>
             <p style={heroEyebrow}>Scan Lanka</p>
             <h1 style={heroTitle}>
-              Leading Teaching Equipment <span style={{ color: 'var(--primary)' }}>Supplier</span> in
-              Sri Lanka
+              White Boards, Notice Boards <br />&amp; Teaching Equipment
             </h1>
-            <p style={heroText}>
-              The biggest quality supplier of whiteboards, notice boards, carrom boards and teaching
-              equipment — manufactured locally and delivered island-wide since 1998.
-            </p>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
+            <p style={heroText}>The biggest quality supplier of boards in Sri Lanka — since 1998.</p>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1.75rem' }}>
               <Link href="/products" className="btn btn-primary">
                 Shop all products
               </Link>
@@ -60,7 +63,7 @@ export function HomePageView({ home }: { home: HomeView }) {
             </div>
           </div>
 
-          <div className="animate-up" style={{ flex: '1 1 380px', animationDelay: '0.12s' }}>
+          <div className="animate-up" style={{ flex: '1 1 360px', animationDelay: '0.12s' }}>
             <div style={heroVisual}>
               {images.length > 0 ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -98,35 +101,33 @@ export function HomePageView({ home }: { home: HomeView }) {
       </section>
 
       <div className="container" style={{ padding: '3rem 1.25rem' }}>
-        {/* Categories */}
-        <section style={{ marginBottom: '3.5rem' }}>
-          <Reveal>
-            <div style={sectionHead}>
-              <h2 className="section-title">Shop by Category</h2>
-              <Link href="/products" className="icon-link" style={{ color: 'var(--primary)' }}>
-                View all →
-              </Link>
-            </div>
-          </Reveal>
-          <div style={catGrid}>
-            {CATEGORIES.map((c, i) => (
-              <Reveal key={c} delay={i * 50}>
-                <Link
-                  href={`/products?category=${encodeURIComponent(c)}`}
-                  className="card-hover"
-                  style={catCard}
-                >
-                  <span style={catIcon}>▦</span>
-                  <span style={{ fontWeight: 600 }}>{c}</span>
-                </Link>
+        {hasRows ? (
+          // Per-category product rows (matches scanlanka.com)
+          categoryRows.map((row) => (
+            <section key={row.category} style={{ marginBottom: '3rem' }}>
+              <Reveal>
+                <div style={sectionHead}>
+                  <h2 className="section-title">{row.category}</h2>
+                  <Link
+                    href={`/products?category=${encodeURIComponent(row.category)}`}
+                    className="icon-link"
+                    style={{ color: 'var(--primary)' }}
+                  >
+                    View all →
+                  </Link>
+                </div>
               </Reveal>
-            ))}
-          </div>
-        </section>
-
-        {/* Featured */}
-        {home.featured.length > 0 && (
-          <section>
+              <div style={productGrid}>
+                {row.products.map((p, i) => (
+                  <Reveal key={p.id} delay={i * 50}>
+                    <ProductCard product={p} />
+                  </Reveal>
+                ))}
+              </div>
+            </section>
+          ))
+        ) : home.featured.length > 0 ? (
+          <section style={{ marginBottom: '1rem' }}>
             <Reveal>
               <div style={sectionHead}>
                 <h2 className="section-title">Featured Products</h2>
@@ -139,6 +140,28 @@ export function HomePageView({ home }: { home: HomeView }) {
               {home.featured.map((p, i) => (
                 <Reveal key={p.id} delay={i * 50}>
                   <ProductCard product={p} />
+                </Reveal>
+              ))}
+            </div>
+          </section>
+        ) : (
+          // Fallback when the catalog has no products yet: category navigation tiles
+          <section>
+            <Reveal>
+              <div style={sectionHead}>
+                <h2 className="section-title">Shop by Category</h2>
+                <Link href="/products" className="icon-link" style={{ color: 'var(--primary)' }}>
+                  View all →
+                </Link>
+              </div>
+            </Reveal>
+            <div style={catGrid}>
+              {CATEGORIES.map((c, i) => (
+                <Reveal key={c} delay={i * 50}>
+                  <Link href={`/products?category=${encodeURIComponent(c)}`} className="card-hover" style={catCard}>
+                    <span style={catIcon}>▦</span>
+                    <span style={{ fontWeight: 600 }}>{c}</span>
+                  </Link>
                 </Reveal>
               ))}
             </div>
@@ -198,13 +221,12 @@ const heroEyebrow = {
   fontWeight: 700,
 };
 const heroTitle = {
-  fontSize: 'clamp(2rem, 4.5vw, 3.1rem)',
+  fontSize: 'clamp(2rem, 4.5vw, 3rem)',
   margin: '0.5rem 0 1rem',
   color: 'var(--text)',
-  maxWidth: 620,
   fontWeight: 800,
 } as const;
-const heroText = { fontSize: '1.05rem', color: 'var(--muted)', maxWidth: 540, margin: 0, lineHeight: 1.7 } as const;
+const heroText = { fontSize: '1.05rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 } as const;
 
 const heroVisual = {
   background: 'var(--surface)',
@@ -267,7 +289,7 @@ const sectionHead = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'flex-end',
-  marginBottom: '1.75rem',
+  marginBottom: '1.5rem',
   flexWrap: 'wrap' as const,
   gap: '0.5rem',
 } as const;

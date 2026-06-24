@@ -23,10 +23,12 @@ export default function AdminDashboardPage() {
         </h1>
         {user?.totpEnabled ? (
           <span style={badgeOk}>🔒 2FA enrolled ✓</span>
-        ) : (
+        ) : user?.adminTotpRequired ? (
           <Link href="/admin/2fa" style={badgeWarn}>
             ⚠ Enable 2FA
           </Link>
+        ) : (
+          <span style={badgeMuted}>2FA disabled (dev)</span>
         )}
       </div>
       {!data ? (
@@ -67,6 +69,15 @@ const badgeOk = {
   padding: '0.25rem 0.7rem',
   fontSize: '0.8rem',
   fontWeight: 700,
+} as const;
+const badgeMuted = {
+  background: 'var(--bg-muted)',
+  color: 'var(--muted)',
+  border: '1px solid var(--border)',
+  borderRadius: 999,
+  padding: '0.25rem 0.7rem',
+  fontSize: '0.8rem',
+  fontWeight: 600,
 } as const;
 const badgeWarn = {
   background: '#fff4e5',

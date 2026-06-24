@@ -1,4 +1,5 @@
 import { fetchHome } from '@/lib/home';
+import { getFacets, listProducts } from '@/lib/catalog';
 import { HomePageView } from '@/components/HomePageView';
 
 export const revalidate = 120;
@@ -9,6 +10,17 @@ export const metadata = {
 };
 
 export default async function Home() {
-  const home = await fetchHome();
-  return <HomePageView home={home} />;
+  const [home, facets] = await Promise.all([fetchHome(), getFacets()]);
+
+  // Per-category product rows (like scanlanka.com): first few categories, up to 4 products each.
+  const rows = (
+    await Promise.all(
+      facets.categories.slice(0, 6).map(async (category) => ({
+        category,
+        products: (await listProducts({ category, size: 4 })).content,
+      })),
+    )
+  ).filter((r) => r.products.length > 0);
+
+  return <HomePageView home={home} categoryRows={rows} />;
 }

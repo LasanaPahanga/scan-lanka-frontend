@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <CartProvider>
               <WishlistProvider>
                 <Header />
-                {children}
+                <div className="app-main">{children}</div>
                 <Footer />
                 <WhatsAppButton />
                 <CookieConsent />

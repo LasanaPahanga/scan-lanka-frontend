@@ -38,6 +38,15 @@ body {
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
 }
+/* Sticky footer: fill the viewport so the footer never leaves a white gap below it. */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.app-main {
+  flex: 1 0 auto;
+}
 a {
   color: var(--primary);
 }
