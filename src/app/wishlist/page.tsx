@@ -8,8 +8,8 @@ export default function WishlistPage() {
   const { items, loading } = useWishlist();
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ color: 'var(--text)' }}>Wishlist</h1>
+    <main className="page">
+      <h1 className="page-title">My Wishlist</h1>
       {loading && items.length === 0 ? (
         <p style={{ color: 'var(--muted)' }}>Loading…</p>
       ) : items.length === 0 ? (

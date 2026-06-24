@@ -12,8 +12,8 @@ export default async function DeliveryLocationsPage() {
   const zones = await fetchDeliveryLocations();
 
   return (
-    <main style={{ maxWidth: 800, margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ color: 'var(--text)' }}>Delivery locations</h1>
+    <main className="page page-narrow">
+      <h1 className="page-title">Delivery locations</h1>
       <p style={{ color: 'var(--muted)' }}>
         We deliver to the postal codes below. If yours isn&apos;t listed, choose shop pickup at checkout or{' '}
         <Link href="/orders/lookup" style={{ color: 'var(--primary)' }}>

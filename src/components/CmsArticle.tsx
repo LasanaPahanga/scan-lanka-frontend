@@ -6,12 +6,9 @@ export async function CmsArticle({ slug, children }: { slug: string; children?: 
   const page = await fetchContent(slug);
   if (!page) notFound();
   return (
-    <main style={{ maxWidth: 720, margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ color: 'var(--primary)' }}>{page.title}</h1>
-      <article
-        style={{ lineHeight: 1.7, color: 'var(--text)' }}
-        dangerouslySetInnerHTML={{ __html: page.bodyHtml }}
-      />
+    <main className="page page-narrow">
+      <h1 className="page-title">{page.title}</h1>
+      <article className="prose" dangerouslySetInnerHTML={{ __html: page.bodyHtml }} />
       {children}
     </main>
   );

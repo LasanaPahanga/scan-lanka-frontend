@@ -10,7 +10,7 @@ export default function CartPage() {
   if (loading && lines.length === 0) {
     return (
       <main style={wrap}>
-        <h1>Your cart</h1>
+        <h1 className="page-title">Your cart</h1>
         <p style={{ color: 'var(--muted)' }}>Loading cart…</p>
       </main>
     );
@@ -19,7 +19,7 @@ export default function CartPage() {
   if (lines.length === 0) {
     return (
       <main style={wrap}>
-        <h1>Your cart</h1>
+        <h1 className="page-title">Your cart</h1>
         <p style={{ color: 'var(--muted)' }}>Your cart is empty.</p>
         <Link href="/products" style={{ color: 'var(--primary)' }}>
           Browse products
@@ -30,7 +30,7 @@ export default function CartPage() {
 
   return (
     <main style={wrap}>
-      <h1>Your cart</h1>
+      <h1 className="page-title">Your cart</h1>
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
         <tbody>
           {lines.map((line) => (
@@ -85,7 +85,7 @@ export default function CartPage() {
   );
 }
 
-const wrap = { maxWidth: 800, margin: '0 auto', padding: '2rem 1.5rem' } as const;
+const wrap = { maxWidth: 820, margin: '0 auto', padding: '2.5rem 1.25rem 3.5rem' } as const;
 const td = { padding: '0.75rem 0.5rem', verticalAlign: 'middle' } as const;
 const checkout = {
   display: 'inline-block',

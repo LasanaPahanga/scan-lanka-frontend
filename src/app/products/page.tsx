@@ -40,8 +40,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   const hasFilters = Boolean(searchParams.q || searchParams.category || searchParams.parentId);
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <h1 style={{ color: 'var(--text)' }}>Products</h1>
+    <main className="page">
+      <h1 className="page-title">Our Products</h1>
+      <p className="page-intro">
+        Browse our full range of boards and teaching equipment — manufactured locally, delivered
+        island-wide.
+      </p>
       <Suspense fallback={null}>
         <ProductBrowseToolbar
           facets={facets}
