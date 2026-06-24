@@ -6,6 +6,7 @@ export interface Me {
   name: string | null;
   role: 'CUSTOMER' | 'ADMIN';
   emailVerified: boolean;
+  totpEnabled?: boolean;
 }
 
 export interface TwoFactorSetup {
