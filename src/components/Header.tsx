@@ -128,7 +128,12 @@ export function Header() {
   );
 }
 
-const utilBar = { background: 'var(--primary-dark)', color: '#eaf2f7', fontSize: '0.82rem' } as const;
+const utilBar = {
+  background: '#eef2f6',
+  color: 'var(--muted)',
+  fontSize: '0.82rem',
+  borderBottom: '1px solid var(--border)',
+} as const;
 const utilInner = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -137,7 +142,7 @@ const utilInner = {
   gap: '0.5rem',
   padding: '0.4rem 1.25rem',
 };
-const utilItem = { color: '#eaf2f7', textDecoration: 'none' } as const;
+const utilItem = { color: 'var(--muted)', textDecoration: 'none' } as const;
 
 const mainBar = { background: 'var(--surface)', borderBottom: '1px solid var(--border)' } as const;
 const mainInner = {

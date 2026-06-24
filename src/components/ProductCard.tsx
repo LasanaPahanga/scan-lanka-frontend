@@ -14,17 +14,21 @@ export function ProductCard({ product }: { product: ProductChip }) {
     <Link href={`/products/${product.slug}`} className="card-hover" style={card}>
       <div style={{ ...imgWrap, position: 'relative' }}>
         <WishlistToggle product={product} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        {img ? <img src={img} alt={product.name} style={imgStyle} /> : <div style={imgPlaceholder}>No image</div>}
+        {img ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={img} alt={product.name} className="zoom" style={imgStyle} />
+        ) : (
+          <div style={imgPlaceholder}>No image</div>
+        )}
       </div>
-      <div style={{ padding: '0.75rem' }}>
-        <div style={{ fontWeight: 600 }}>{product.name}</div>
-        <div style={{ color: 'var(--primary)', marginTop: '0.25rem' }}>{price || '—'}</div>
+      <div style={{ padding: '0.9rem 0.75rem', textAlign: 'center' }}>
+        <div style={nameStyle}>{product.name}</div>
+        <div style={{ color: 'var(--primary)', marginTop: '0.4rem', fontWeight: 700 }}>{price || '—'}</div>
         {product.availability === 'OUT_OF_STOCK' && (
-          <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Out of stock</div>
+          <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Out of stock</div>
         )}
         {product.availability === 'LOW_STOCK' && (
-          <div style={{ color: 'var(--accent)', fontSize: '0.8rem' }}>Low stock</div>
+          <div style={{ color: 'var(--accent)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Low stock</div>
         )}
       </div>
     </Link>
@@ -41,7 +45,18 @@ const card = {
   boxShadow: 'var(--shadow)',
   background: 'var(--bg)',
 } as const;
-const imgWrap = { aspectRatio: '4 / 3', background: 'var(--bg-muted)' } as const;
+const nameStyle = {
+  fontWeight: 600,
+  fontSize: '0.92rem',
+  textTransform: 'uppercase' as const,
+  letterSpacing: '0.3px',
+  color: 'var(--text)',
+  minHeight: '2.4em',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+};
+const imgWrap = { aspectRatio: '4 / 3', background: 'var(--bg-muted)', overflow: 'hidden' } as const;
 const imgStyle = { width: '100%', height: '100%', objectFit: 'cover' } as const;
 const imgPlaceholder = {
   width: '100%',
