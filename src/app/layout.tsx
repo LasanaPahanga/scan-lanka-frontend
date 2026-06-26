@@ -5,6 +5,7 @@ import { CartProvider } from '@/components/CartProvider';
 import { WishlistProvider } from '@/components/WishlistProvider';
 import { GeoProvider } from '@/components/GeoProvider';
 import { WhatsAppButton } from '@/components/WhatsAppButton';
+import { CustomerCareWidget } from '@/components/CustomerCareWidget';
 import { Footer } from '@/components/Footer';
 import { CookieConsent } from '@/components/CookieConsent';
 import { Header } from '@/components/Header';
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <div className="app-main">{children}</div>
                 <Footer />
                 <WhatsAppButton />
+                <CustomerCareWidget />
                 <CookieConsent />
               </WishlistProvider>
             </CartProvider>

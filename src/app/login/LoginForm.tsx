@@ -35,7 +35,7 @@ export default function LoginForm() {
       const me = await authApi.login(email, password, totp || undefined);
       setUser(me);
       if (me.role === 'ADMIN') {
-        router.push('/admin/2fa');
+        router.push(me.adminTotpRequired && !me.totpEnabled ? '/admin/2fa' : '/admin');
       } else {
         router.push(next);
       }

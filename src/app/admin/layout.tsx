@@ -11,6 +11,7 @@ const nav = [
   { href: '/admin/orders', label: 'Orders' },
   { href: '/admin/quotes', label: 'Quotes' },
   { href: '/admin/inquiries', label: 'Inquiries' },
+  { href: '/admin/support', label: 'Customer care' },
   { href: '/admin/delivery', label: 'Delivery & Tax' },
   { href: '/admin/merch', label: 'Merchandising' },
   { href: '/admin/content', label: 'Content' },

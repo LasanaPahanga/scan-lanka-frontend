@@ -62,8 +62,9 @@ export async function api<T>(path: string, init: RequestInit = {}, retried = fal
     }
     throw new ApiError(res.status, code, message);
   }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 /** Multipart upload (bank slip, etc.) — no JSON Content-Type. */
@@ -89,6 +90,7 @@ export async function apiForm<T>(path: string, form: FormData, retried = false):
     }
     throw new ApiError(res.status, 'ERROR', message);
   }
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
