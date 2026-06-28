@@ -54,7 +54,7 @@ export default function AdminOrderMessageDetailPage() {
       </p>
       <h1>{thread.orderNumber}</h1>
       <p style={mutedText}>
-        {thread.order.contactName} — {thread.order.contactEmail} · {thread.order.status} · {thread.status}
+        {thread.order.contactName} - {thread.order.contactEmail} · {thread.order.status} · {thread.status}
       </p>
 
       <section style={sideBySide}>
@@ -124,7 +124,7 @@ export default function AdminOrderMessageDetailPage() {
           <ul style={{ paddingLeft: '1.1rem', margin: '0.5rem 0' }}>
             {thread.order.lines.map((l) => (
               <li key={l.sku}>
-                {l.name} × {l.quantity} — {formatLkr(l.lineTotalCents)}
+                {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
               </li>
             ))}
           </ul>

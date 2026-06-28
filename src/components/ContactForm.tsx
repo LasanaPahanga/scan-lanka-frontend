@@ -31,7 +31,7 @@ export function ContactForm() {
   if (sent) {
     return (
       <p style={{ marginTop: '1.5rem' }}>
-        Thank you — we received your message and will get back to you soon.
+        Thank you - we received your message and will get back to you soon.
       </p>
     );
   }

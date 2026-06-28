@@ -347,7 +347,7 @@ export function ProductForm({ existing, categories }: Props) {
         <div style={builderBox}>
           <strong>Variants &amp; shipping</strong>
           <p style={mutedText}>
-            Set weight and lorry charges per size. Names and prices are listed for reference — change
+            Set weight and lorry charges per size. Names and prices are listed for reference - change
             visibility and descriptions above.
           </p>
           {variantDeliveryMsg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{variantDeliveryMsg}</p>}
@@ -355,7 +355,7 @@ export function ProductForm({ existing, categories }: Props) {
             {existing!.variants.map((v) => (
               <li key={v.id} style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
                 <strong style={{ fontSize: '0.9rem' }}>
-                  {v.sku} — Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
+                  {v.sku} - Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
                 </strong>
                 <div style={{ marginTop: '0.5rem' }}>
                   <VariantDeliveryEditor

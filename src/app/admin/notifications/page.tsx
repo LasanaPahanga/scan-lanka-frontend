@@ -37,7 +37,7 @@ export default function AdminNotificationsPage() {
   return (
     <main style={adminMain}>
       <h1>Email notifications</h1>
-      <p style={mutedText}>Outbox status — sent, retrying, or failed messages.</p>
+      <p style={mutedText}>Outbox status - sent, retrying, or failed messages.</p>
       <label style={{ display: 'block', margin: '1rem 0' }}>
         Filter:{' '}
         <select value={status} onChange={(e) => setStatus(e.target.value)}>

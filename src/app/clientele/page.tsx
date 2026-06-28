@@ -4,7 +4,7 @@ import { EditableHtml } from '@/components/EditableHtml';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'Clientele — Scan Lanka',
+  title: 'Clientele - Scan Lanka',
   description: 'Schools, universities and leading businesses across Sri Lanka trust Scan Lanka.',
 };
 

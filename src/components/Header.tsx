@@ -47,13 +47,13 @@ export function Header() {
       {/* main bar */}
       <div style={mainBar}>
         <div className="container" style={mainInner}>
-          <Link href="/" style={brand} aria-label="Scan Lanka — home">
+          <Link href="/" style={brand} aria-label="Scan Lanka - home">
             {logoError ? (
               <>
                 <span style={brandMark}>SL</span>
                 <span>
                   <span style={brandName}>Scan Lanka</span>
-                  <span style={brandSub}>Trading Co. — Teaching Equipment</span>
+                  <span style={brandSub}>Trading Co. - Teaching Equipment</span>
                 </span>
               </>
             ) : (
@@ -105,34 +105,36 @@ export function Header() {
       </div>
 
       {/* primary nav */}
-      <nav style={navBar}>
+      <nav style={navBar} aria-label="Main">
         <div className="container" style={navInner}>
-          <Link href="/" className="nav-link">
-            Home
-          </Link>
-          <Link href="/about" className="nav-link">
-            About Us
-          </Link>
-          <Link href="/products" className="nav-link">
-            Our Products
-          </Link>
-          <Link href="/clientele" className="nav-link">
-            Clientele
-          </Link>
-          <Link href="/quote" className="nav-link">
-            Request a Quote
-          </Link>
-          <Link href="/delivery" className="nav-link">
-            Delivery
-          </Link>
-          <Link href="/returns" className="nav-link">
-            Returns
-          </Link>
-          <Link href="/contact" className="nav-link">
-            Contact Us
-          </Link>
+          <div style={navList}>
+            <Link href="/" className="nav-link">
+              Home
+            </Link>
+            <Link href="/about" className="nav-link">
+              About Us
+            </Link>
+            <Link href="/products" className="nav-link">
+              Our Products
+            </Link>
+            <Link href="/clientele" className="nav-link">
+              Clientele
+            </Link>
+            <Link href="/quote" className="nav-link">
+              Request a Quote
+            </Link>
+            <Link href="/delivery" className="nav-link">
+              Delivery
+            </Link>
+            <Link href="/returns" className="nav-link">
+              Returns
+            </Link>
+            <Link href="/contact" className="nav-link">
+              Contact Us
+            </Link>
+          </div>
           {user?.role === 'ADMIN' && (
-            <Link href="/admin" className="nav-link" style={{ marginLeft: 'auto', color: 'var(--primary)' }}>
+            <Link href="/admin" className="nav-link nav-link-admin">
               Admin
             </Link>
           )}
@@ -154,7 +156,7 @@ const utilInner = {
   alignItems: 'center',
   flexWrap: 'wrap' as const,
   gap: '0.5rem',
-  padding: '0.4rem 1.25rem',
+  padding: '0.4rem 0',
 };
 const utilItem = { color: 'var(--muted)', textDecoration: 'none' } as const;
 
@@ -163,7 +165,7 @@ const mainInner = {
   display: 'flex',
   alignItems: 'center',
   gap: '1.5rem',
-  padding: '0.9rem 1.25rem',
+  padding: '0.9rem 0',
   flexWrap: 'wrap' as const,
 };
 const brand = {
@@ -218,13 +220,26 @@ const navBar = {
   borderBottom: '1px solid var(--border)',
   boxShadow: 'var(--shadow)',
 } as const;
+
 const navInner = {
   display: 'flex',
   alignItems: 'center',
-  gap: '1.5rem',
-  padding: '0.6rem 1.25rem',
-  flexWrap: 'wrap' as const,
+  justifyContent: 'center',
+  gap: '1rem',
+  padding: '0',
+  minHeight: 46,
+  position: 'relative' as const,
 };
+
+const navList = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexWrap: 'wrap' as const,
+  gap: '0.25rem 1.75rem',
+  width: '100%',
+  padding: '0.35rem 0',
+} as const;
 
 const countPill = {
   background: 'var(--accent)',

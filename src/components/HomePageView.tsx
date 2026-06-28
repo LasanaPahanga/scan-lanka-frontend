@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { HomeView } from '@/lib/home';
-import { ProductChip, mediaUrl } from '@/lib/catalog';
+import { ProductChip } from '@/lib/catalog';
 import { ProductCard } from '@/components/ProductCard';
 import { ClientLogos } from '@/components/ClientLogos';
+import { HeroVideoCrossfade } from '@/components/HeroVideoCrossfade';
 import { Reveal } from '@/components/Reveal';
 
 const CATEGORIES = [
@@ -32,32 +32,20 @@ export interface CategoryRow {
 }
 
 export function HomePageView({ home, categoryRows = [] }: { home: HomeView; categoryRows?: CategoryRow[] }) {
-  const images = home.banners.map((b) => mediaUrl(b.imageUrl)).filter(Boolean) as string[];
-  const [slide, setSlide] = useState(0);
-  const [heroFallbackError, setHeroFallbackError] = useState(false);
-
-  // When no admin banner is configured, use the dropped-in hero image, then the CSS whiteboard.
-  const heroFallback = '/herosectionimg.png';
-
-  useEffect(() => {
-    if (images.length < 2) return;
-    const id = setInterval(() => setSlide((s) => (s + 1) % images.length), 5000);
-    return () => clearInterval(id);
-  }, [images.length]);
-
   const hasRows = categoryRows.length > 0;
 
   return (
     <main>
-      {/* Hero — light & airy */}
+      {/* Hero - full-width video background with crossfade */}
       <section style={hero}>
+        <HeroVideoCrossfade />
         <div className="container" style={heroInner}>
-          <div className="animate-up" style={{ flex: '1 1 360px', textAlign: 'center' }}>
+          <div className="animate-up" style={heroContent}>
             <p style={heroEyebrow}>Scan Lanka</p>
             <h1 style={heroTitle}>
               White Boards, Notice Boards <br />&amp; Teaching Equipment
             </h1>
-            <p style={heroText}>The biggest quality supplier of boards in Sri Lanka — since 1998.</p>
+            <p style={heroText}>The biggest quality supplier of boards in Sri Lanka - since 1998.</p>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', justifyContent: 'center', marginTop: '1.75rem' }}>
               <Link href="/products" className="btn btn-primary">
                 Shop all products
@@ -66,32 +54,6 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
                 Request a quote
               </Link>
             </div>
-          </div>
-
-          <div className="animate-up" style={{ flex: '1 1 360px', animationDelay: '0.12s' }}>
-            <div style={heroVisual}>
-              {images.length > 0 ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={images[slide]} alt="" style={heroImg} />
-              ) : heroFallbackError ? (
-                <Whiteboard />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={heroFallback} alt="Scan Lanka boards" style={heroImg} onError={() => setHeroFallbackError(true)} />
-              )}
-            </div>
-            {images.length > 1 && (
-              <div style={dots}>
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    aria-label={`Slide ${i + 1}`}
-                    onClick={() => setSlide(i)}
-                    style={{ ...dot, ...(i === slide ? dotActive : null) }}
-                  />
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </section>
@@ -190,7 +152,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
           <div>
             <h2 style={{ margin: 0, color: '#fff' }}>Need a bulk or custom order?</h2>
             <p style={{ margin: '0.35rem 0 0', color: '#d6e7f5' }}>
-              Schools, offices and resellers — get an institutional quote tailored to you.
+              Schools, offices and resellers - get an institutional quote tailored to you.
             </p>
           </div>
           <Link href="/quote" className="btn btn-accent" style={{ whiteSpace: 'nowrap' }}>
@@ -202,30 +164,32 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
   );
 }
 
-/* Minimal CSS whiteboard illustration shown when no banner image is configured. */
-function Whiteboard() {
-  return (
-    <div style={wbFrame}>
-      <div style={wbSurface}>
-        <div style={{ width: '55%', height: 10, background: '#dbe6f0', borderRadius: 6 }} />
-        <div style={{ width: '40%', height: 10, background: '#e7eef6', borderRadius: 6, marginTop: 10 }} />
-        <div style={{ width: '70%', height: 10, background: '#eef3f9', borderRadius: 6, marginTop: 10 }} />
-      </div>
-      <div style={wbTray}>
-        <span style={{ width: 26, height: 6, background: 'var(--primary)', borderRadius: 4 }} />
-        <span style={{ width: 26, height: 6, background: 'var(--accent)', borderRadius: 4 }} />
-      </div>
-    </div>
-  );
-}
+const heroContent = {
+  flex: '1 1 100%',
+  maxWidth: 720,
+  margin: '0 auto',
+  textAlign: 'center' as const,
+  position: 'relative' as const,
+  zIndex: 1,
+} as const;
 
-const hero = { background: 'var(--bg-muted)', borderBottom: '1px solid var(--border)' } as const;
+const hero = {
+  position: 'relative',
+  overflow: 'hidden',
+  background: 'var(--bg-muted)',
+  borderBottom: '1px solid var(--border)',
+  minHeight: 'min(520px, 85vh)',
+} as const;
+
 const heroInner = {
   display: 'flex',
   alignItems: 'center',
   gap: '2.5rem',
   padding: '3.5rem 1.25rem',
   flexWrap: 'wrap' as const,
+  position: 'relative' as const,
+  zIndex: 1,
+  minHeight: 'min(520px, 85vh)',
 };
 const heroEyebrow = {
   textTransform: 'uppercase' as const,
@@ -242,55 +206,6 @@ const heroTitle = {
   fontWeight: 800,
 } as const;
 const heroText = { fontSize: '1.05rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 } as const;
-
-const heroVisual = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  boxShadow: 'var(--shadow-md)',
-  padding: '1.25rem',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minHeight: 280,
-} as const;
-const heroImg = { width: '100%', height: 300, objectFit: 'contain' } as const;
-
-const wbFrame = { width: '100%', maxWidth: 420 } as const;
-const wbSurface = {
-  aspectRatio: '4 / 3',
-  background: '#fff',
-  border: '6px solid #c9d4de',
-  borderRadius: 6,
-  boxShadow: 'inset 0 0 0 1px #eef3f8',
-  padding: '1.5rem',
-  display: 'flex',
-  flexDirection: 'column' as const,
-  justifyContent: 'center',
-};
-const wbTray = {
-  width: '60%',
-  height: 12,
-  margin: '0 auto',
-  background: '#c9d4de',
-  borderRadius: '0 0 8px 8px',
-  display: 'flex',
-  gap: 8,
-  alignItems: 'center',
-  justifyContent: 'center',
-};
-
-const dots = { display: 'flex', gap: 8, justifyContent: 'center', marginTop: '1rem' } as const;
-const dot = {
-  width: 9,
-  height: 9,
-  borderRadius: 999,
-  border: 'none',
-  background: '#c4d0db',
-  cursor: 'pointer',
-  padding: 0,
-} as const;
-const dotActive = { background: 'var(--primary)', width: 22 } as const;
 
 const trustGrid = {
   display: 'grid',

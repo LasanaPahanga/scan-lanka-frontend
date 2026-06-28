@@ -11,7 +11,7 @@ import { WishlistToggle } from '@/components/WishlistToggle';
 
 function stockLabel(availability: string): string | null {
   if (availability === 'OUT_OF_STOCK') return 'Out of stock';
-  if (availability === 'LOW_STOCK') return 'Low stock — order soon';
+  if (availability === 'LOW_STOCK') return 'Low stock - order soon';
   return null;
 }
 
@@ -133,7 +133,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
         <div>
           <h1 className="page-title" style={{ marginTop: 0 }}>{product.name}</h1>
           <div style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 800, marginBottom: '0.5rem' }}>
-            {priceLabel || '—'}
+            {priceLabel || ''}
           </div>
           {geo.indicativePricing && (
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('geo.indicative')}</p>
@@ -195,13 +195,13 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                 <Link href="/quote" style={{ color: 'var(--primary)' }}>
                   quote
                 </Link>{' '}
-                — not available for standard online checkout.
+                not available for standard online checkout.
               </p>
             ) : (
               <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
-                <li>Company lorry — prepaid online (orders over Rs 6,000)</li>
+                <li>Company lorry - prepaid online (orders over Rs 6,000)</li>
                 {product.couriable ? (
-                  <li>Courier (Citrek) — pay on delivery{product.weightKg ? ` (~${product.weightKg} kg)` : ''}</li>
+                  <li>Courier (Citrek) - pay on delivery{product.weightKg ? ` (~${product.weightKg} kg)` : ''}</li>
                 ) : (
                   <li>Courier not available for this item (weight not set)</li>
                 )}

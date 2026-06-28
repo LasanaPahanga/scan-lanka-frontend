@@ -109,7 +109,7 @@ export function OrderThread(props: Props) {
             style={{ display: 'grid', gap: '0.5rem', margin: '0.75rem 0' }}
           >
             {thread.messages.length === 0 ? (
-              <p style={mutedText}>No messages yet — send the first one below.</p>
+              <p style={mutedText}>No messages yet - send the first one below.</p>
             ) : (
               thread.messages.map((m) => (
                 <div

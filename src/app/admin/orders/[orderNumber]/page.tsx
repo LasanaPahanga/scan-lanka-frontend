@@ -84,7 +84,7 @@ export default function AdminOrderDetailPage() {
         {order.status} · {order.fulfilmentType} · {order.deliveryPayment}
       </p>
       <p>
-        {order.contactName} — {order.contactEmail} — {order.contactPhone}
+        {order.contactName} - {order.contactEmail} - {order.contactPhone}
       </p>
       {order.customerId != null && (
         <p style={mutedText}>
@@ -119,7 +119,7 @@ export default function AdminOrderDetailPage() {
         <ul>
           {order.lines.map((l) => (
             <li key={l.id} style={{ marginBottom: '0.5rem' }}>
-              {l.name} ({l.sku}) × {l.quantity} — {formatLkr(l.lineTotalCents)}
+              {l.name} ({l.sku}) × {l.quantity} - {formatLkr(l.lineTotalCents)}
               <select
                 value={l.status}
                 onChange={async (e) => {
@@ -269,7 +269,7 @@ export default function AdminOrderDetailPage() {
                   await cancelOrder(orderNumber, { reason: cancelReason, password: stepUpPassword });
                   await reload();
                 } catch {
-                  setError('Cancel failed — check step-up or order status.');
+                  setError('Cancel failed - check step-up or order status.');
                 }
               }}
             >
@@ -337,7 +337,7 @@ export default function AdminOrderDetailPage() {
                 setRefundAmount('');
                 await reload();
               } catch {
-                setError('Refund failed — check cap and step-up.');
+                setError('Refund failed - check cap and step-up.');
               }
             }}
           >
@@ -349,7 +349,7 @@ export default function AdminOrderDetailPage() {
           <ul style={{ marginTop: '1rem', color: 'var(--muted)', paddingLeft: '1.2rem' }}>
             {refunds.map((r) => (
               <li key={r.id}>
-                {formatLkr(r.amountCents)} via {r.method} — {new Date(r.createdAt).toLocaleString()}
+                {formatLkr(r.amountCents)} via {r.method} - {new Date(r.createdAt).toLocaleString()}
                 {r.gatewayRef ? ` (${r.gatewayRef})` : ''}
               </li>
             ))}
@@ -363,7 +363,7 @@ export default function AdminOrderDetailPage() {
           <ul style={{ color: 'var(--muted)', paddingLeft: '1.2rem' }}>
             {order.timeline.map((e) => (
               <li key={e.at + e.toStatus}>
-                {new Date(e.at).toLocaleString()} — {e.toStatus}
+                {new Date(e.at).toLocaleString()} - {e.toStatus}
                 {e.note ? ` (${e.note})` : ''}
               </li>
             ))}

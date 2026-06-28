@@ -8,11 +8,11 @@ export const revalidate = 60;
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const p = await getProduct(params.slug);
-  if (!p) return { title: 'Not found — Scan Lanka' };
+  if (!p) return { title: 'Not found - Scan Lanka' };
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   const url = `${base}/products/${params.slug}`;
   return {
-    title: `${p.name} — Scan Lanka`,
+    title: `${p.name} - Scan Lanka`,
     description: p.description ?? undefined,
     alternates: { canonical: url, languages: { 'en-LK': url, 'x-default': url } },
     openGraph: { title: p.name, description: p.description ?? undefined, url, type: 'website' },

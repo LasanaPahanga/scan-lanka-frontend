@@ -68,7 +68,7 @@ export default function AdminProductsPage() {
     setBusyId(r.id);
     try {
       const { outcome } = await adminDeleteProduct(r.id);
-      if (outcome === 'ARCHIVED') alert('Product had orders — archived (hidden from the shop) instead of deleted.');
+      if (outcome === 'ARCHIVED') alert('Product had orders - archived (hidden from the shop) instead of deleted.');
       await reload();
     } catch (e) {
       alert(e instanceof Error ? e.message : 'Failed');
@@ -80,7 +80,7 @@ export default function AdminProductsPage() {
   function price(r: AdminProductRow) {
     if (r.priceMode === 'SINGLE') return formatLkr(r.singlePriceCents);
     if (r.priceMinCents != null && r.priceMaxCents != null) return formatRange(r.priceMinCents, r.priceMaxCents);
-    return '—';
+    return '-';
   }
 
   return (
@@ -151,9 +151,9 @@ export default function AdminProductsPage() {
                       </Link>
                       <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{r.sku}</div>
                     </td>
-                    <td style={td}>{r.category ?? '—'}</td>
+                    <td style={td}>{r.category ?? '-'}</td>
                     <td style={td}>{price(r)}</td>
-                    <td style={td}>{r.priceMode === 'VARIANT' ? '—' : r.stockQty ?? '∞'}</td>
+                    <td style={td}>{r.priceMode === 'VARIANT' ? '-' : r.stockQty ?? '∞'}</td>
                     <td style={td}>
                       {r.archived ? (
                         <span style={{ ...pill, background: '#fde8e8', color: '#9b1c1c' }}>Archived</span>

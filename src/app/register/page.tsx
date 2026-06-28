@@ -42,7 +42,7 @@ export default function RegisterPage() {
         <h1 style={{ color: 'var(--primary)' }}>Check your email</h1>
         <p style={mutedText}>
           We&apos;ve sent a verification code to <strong>{email}</strong>. Verify it to unlock account
-          features — you can still shop as a guest meanwhile.
+          features - you can still shop as a guest meanwhile.
         </p>
         <a href={verifyHref} style={textLink}>
           Enter verification code
@@ -59,7 +59,7 @@ export default function RegisterPage() {
   return (
     <main style={pageWrap}>
       <h1 style={{ color: 'var(--primary)' }}>Create account</h1>
-      <p style={mutedText}>Optional — you can check out as a guest without an account.</p>
+      <p style={mutedText}>Optional - you can check out as a guest without an account.</p>
       <form onSubmit={onSubmit} style={formStack}>
         <input
           style={fieldInput}

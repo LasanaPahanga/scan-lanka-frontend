@@ -19,7 +19,7 @@ export function ContactReturnsCta({ compact }: { compact?: boolean }) {
         Need to return, cancel, or get a refund?
       </h2>
       <p style={{ color: 'var(--muted)', margin: '0 0 0.75rem', lineHeight: 1.5 }}>
-        Returns and refunds are handled offline. Please contact us — we&apos;ll guide you through the process.
+        Returns and refunds are handled offline. Please contact us - we&apos;ll guide you through the process.
         See our{' '}
         <Link href="/returns" style={{ color: 'var(--primary)' }}>
           returns policy

@@ -88,7 +88,7 @@ function OrderDetailView() {
         <ul>
           {order.lines.map((l) => (
             <li key={l.sku}>
-              {l.name} × {l.quantity} — {formatLkr(l.lineTotalCents)}
+              {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
             </li>
           ))}
         </ul>
@@ -110,7 +110,7 @@ function OrderDetailView() {
           <ul style={{ color: 'var(--muted)', paddingLeft: '1.2rem' }}>
             {order.timeline.map((e) => (
               <li key={e.at + e.toStatus}>
-                {new Date(e.at).toLocaleString()} — {e.toStatus}
+                {new Date(e.at).toLocaleString()} - {e.toStatus}
               </li>
             ))}
           </ul>

@@ -23,7 +23,7 @@ export function ProductCard({ product }: { product: ProductChip }) {
       </div>
       <div style={{ padding: '0.9rem 0.75rem', textAlign: 'center' }}>
         <div style={nameStyle}>{product.name}</div>
-        <div style={{ color: 'var(--primary)', marginTop: '0.4rem', fontWeight: 700 }}>{price || '—'}</div>
+        <div style={{ color: 'var(--primary)', marginTop: '0.4rem', fontWeight: 700 }}>{price || ''}</div>
         {product.availability === 'OUT_OF_STOCK' && (
           <div style={{ color: 'var(--danger)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Out of stock</div>
         )}

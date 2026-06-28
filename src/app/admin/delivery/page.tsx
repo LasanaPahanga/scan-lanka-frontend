@@ -74,7 +74,7 @@ export default function AdminDeliveryPage() {
       });
     } catch {
       setPostalZone(null);
-      setMsg('Postal code not mapped yet — fill the form below to add it.');
+      setMsg('Postal code not mapped yet - fill the form below to add it.');
     }
   }
 

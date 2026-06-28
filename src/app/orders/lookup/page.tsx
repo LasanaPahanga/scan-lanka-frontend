@@ -70,13 +70,13 @@ export default function OrderLookupPage() {
           </p>
           {detail.trackingRef && (
             <p>
-              Tracking: {detail.carrier ?? 'Carrier'} — <strong>{detail.trackingRef}</strong>
+              Tracking: {detail.carrier ?? 'Carrier'} - <strong>{detail.trackingRef}</strong>
             </p>
           )}
           <ul style={{ paddingLeft: '1.2rem' }}>
             {detail.lines.map((l) => (
               <li key={`${l.sku}-${l.quantity}`}>
-                {l.name} × {l.quantity} — {formatLkr(l.lineTotalCents)}
+                {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
               </li>
             ))}
           </ul>
@@ -86,7 +86,7 @@ export default function OrderLookupPage() {
               <ul style={{ paddingLeft: '1.2rem', color: 'var(--muted)' }}>
                 {detail.timeline.map((e) => (
                   <li key={e.at + e.toStatus}>
-                    {new Date(e.at).toLocaleString()} — {e.toStatus}
+                    {new Date(e.at).toLocaleString()} - {e.toStatus}
                   </li>
                 ))}
               </ul>

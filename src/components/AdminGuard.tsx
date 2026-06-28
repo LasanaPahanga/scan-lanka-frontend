@@ -4,7 +4,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
-/** UX guard for admin routes — server still enforces ADMIN + TOTP. */
+/** UX guard for admin routes - server still enforces ADMIN + TOTP. */
 export function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -33,7 +33,7 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   if (user.adminTotpRequired && user.totpEnabled === false && pathname !== '/admin/2fa') {
     return (
       <main style={{ padding: '2rem', color: 'var(--muted)' }}>
-        Two-factor authentication is required for admin access — redirecting to setup…
+        Two-factor authentication is required for admin access - redirecting to setup…
       </main>
     );
   }

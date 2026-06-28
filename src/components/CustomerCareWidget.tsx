@@ -132,7 +132,7 @@ export function CustomerCareWidget() {
           <div style={messagesArea}>
             {!chat ? (
               <form onSubmit={onStart} style={{ display: 'grid', gap: '0.5rem' }}>
-                <p style={{ ...mutedText, margin: 0 }}>Ask us anything — we typically reply within business hours.</p>
+                <p style={{ ...mutedText, margin: 0 }}>Ask us anything - we typically reply within business hours.</p>
                 {user ? (
                   <p style={{ ...mutedText, margin: 0 }}>
                     Chatting as <strong>{user.name?.trim() || user.email}</strong>

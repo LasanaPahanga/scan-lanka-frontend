@@ -363,7 +363,7 @@ export default function CheckoutPage() {
               </option>
               {savedAddresses.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.label ?? a.street} — {a.postalCode}
+                  {a.label ?? a.street} - {a.postalCode}
                 </option>
               ))}
             </select>
@@ -395,7 +395,7 @@ export default function CheckoutPage() {
           <section style={{ ...card, borderColor: 'var(--primary)' }}>
             <h3 style={ch3}>Contact us to order</h3>
             <p style={{ color: 'var(--muted)', margin: 0 }}>
-              Items in your cart must be arranged via WhatsApp or a quote — online checkout is not
+              Items in your cart must be arranged via WhatsApp or a quote - online checkout is not
               available for them.
             </p>
             <p style={{ marginTop: '0.75rem' }}>
@@ -492,7 +492,7 @@ export default function CheckoutPage() {
                 <>
                   <Row label="Lorry delivery (pay now)" value={formatLkr(quote.deliveryCents)} />
                   {quote.someArranged && (
-                    <p style={mutedNote}>Some items may need a separate delivery cost — we&apos;ll contact you.</p>
+                    <p style={mutedNote}>Some items may need a separate delivery cost - we&apos;ll contact you.</p>
                   )}
                 </>
               )}
@@ -565,12 +565,12 @@ function RailCard({
       />
       <strong>{railLabel(opt.method)}</strong>
       {opt.method === 'COMPANY_LORRY' && opt.available && (
-        <span style={{ color: 'var(--muted)' }}> — pay product + delivery online (card or bank)</span>
+        <span style={{ color: 'var(--muted)' }}> · Pay product + delivery online (card or bank)</span>
       )}
       {opt.method === 'COURIER' && opt.available && (
         <span style={{ color: 'var(--muted)' }}>
           {' '}
-          — nothing online; courier collects ~{formatLkr(opt.courierEstimateCents)} + product on delivery
+          · No online payment; courier collects ~{formatLkr(opt.courierEstimateCents)} + product on delivery
         </span>
       )}
       {disabled && opt.reason && (

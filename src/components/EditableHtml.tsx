@@ -6,7 +6,7 @@ import { fetchContent } from '@/lib/content';
  * otherwise falls back to the page's built-in markup. This lets the bespoke page layouts stay
  * intact while the prose inside specific regions becomes editable from the admin Content editor.
  *
- * Server component (async) — safe to drop into any server-rendered page.
+ * Server component (async) - safe to drop into any server-rendered page.
  */
 export async function EditableHtml({
   slug,

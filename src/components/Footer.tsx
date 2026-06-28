@@ -3,7 +3,8 @@ import Link from 'next/link';
 export function Footer() {
   return (
     <footer style={footer}>
-      <div className="container" style={grid}>
+      <div style={footerOverlay}>
+        <div className="container" style={grid}>
         <div>
           <div style={brandRow}>
             <span style={logoChip}>
@@ -14,7 +15,7 @@ export function Footer() {
           </div>
           <p style={blurb}>
             Sri Lanka&apos;s leading manufacturer and supplier of boards and teaching equipment since
-            1998 — whiteboards, notice boards, carrom boards, easels and more, delivered island-wide.
+            1998 - whiteboards, notice boards, carrom boards, easels and more, delivered island-wide.
           </p>
           <div style={socialRow}>
             <a href="https://facebook.com" target="_blank" rel="noreferrer" style={social} aria-label="Facebook">f</a>
@@ -61,6 +62,7 @@ export function Footer() {
             <a href="mailto:scanlk@sltnet.lk" className="footer-link">scanlk@sltnet.lk</a>
           </address>
         </div>
+        </div>
       </div>
 
       <div style={bottomBar}>
@@ -73,12 +75,26 @@ export function Footer() {
   );
 }
 
-const footer = { background: '#0c1c27', color: '#c8d4dd', flexShrink: 0 } as const;
+const footer = {
+  backgroundColor: '#0c1c27',
+  backgroundImage: 'url(/footer.png)',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center bottom',
+  backgroundRepeat: 'no-repeat',
+  color: '#c8d4dd',
+  flexShrink: 0,
+} as const;
+
+const footerOverlay = {
+  background:
+    'linear-gradient(180deg, rgba(12, 28, 39, 0.72) 0%, rgba(12, 28, 39, 0.58) 50%, rgba(12, 28, 39, 0.48) 100%)',
+} as const;
+
 const grid = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
   gap: '2rem',
-  padding: '3rem 1.25rem 2rem',
+  padding: '3rem 0 2rem',
 } as const;
 const brandRow = { display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#fff', marginBottom: '0.75rem' } as const;
 const logoChip = {
@@ -106,14 +122,17 @@ const social = {
 const colTitle = { color: '#fff', fontSize: '0.95rem', margin: '0 0 1rem', letterSpacing: '0.3px' } as const;
 const list = { listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.6rem' } as const;
 const contact = { fontStyle: 'normal', fontSize: '0.9rem', lineHeight: 1.6, color: '#9fb1bd' } as const;
-const bottomBar = { borderTop: '1px solid rgba(255,255,255,0.1)' } as const;
+const bottomBar = {
+  borderTop: '1px solid rgba(255,255,255,0.12)',
+  background: 'rgba(12, 28, 39, 0.72)',
+} as const;
 const bottomInner = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
   flexWrap: 'wrap' as const,
   gap: '0.5rem',
-  padding: '1.1rem 1.25rem',
+  padding: '1.1rem 0',
   fontSize: '0.82rem',
   color: '#8aa0ad',
 };

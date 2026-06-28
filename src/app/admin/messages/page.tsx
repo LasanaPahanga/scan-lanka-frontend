@@ -25,7 +25,7 @@ export default function AdminOrderMessagesPage() {
   return (
     <main style={adminMain}>
       <h1>Order messages</h1>
-      <p style={mutedText}>Threads linked to orders — delivery timing, updates, and customer questions.</p>
+      <p style={mutedText}>Threads linked to orders - delivery timing, updates, and customer questions.</p>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '1rem 0' }}>
         {(['', 'OPEN', 'CLOSED'] as const).map((s) => (
@@ -66,7 +66,7 @@ export default function AdminOrderMessagesPage() {
                 <p style={{ ...mutedText, margin: '0.25rem 0' }}>
                   {new Date(t.lastMessageAt).toLocaleString()}
                 </p>
-                <p style={{ margin: 0 }}>{t.preview || '—'}</p>
+                <p style={{ margin: 0 }}>{t.preview || '-'}</p>
               </Link>
             </li>
           ))}

@@ -24,9 +24,9 @@ export default function AdminQuotesPage() {
           {quotes.map((q) => (
             <li key={q.id} style={{ padding: '0.5rem 0', borderBottom: '1px solid var(--border)' }}>
               <Link href={`/admin/quotes/${q.id}`} style={{ fontWeight: 600 }}>
-                #{q.id} — {q.requesterName}
+                #{q.id} - {q.requesterName}
               </Link>
-              <span style={mutedText}> · {q.status} · {q.country ?? '—'}</span>
+              <span style={mutedText}> · {q.status} · {q.country ?? '-'}</span>
             </li>
           ))}
         </ul>

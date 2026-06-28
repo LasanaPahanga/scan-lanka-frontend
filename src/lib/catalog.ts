@@ -1,6 +1,5 @@
 import { api } from './api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { API_BASE, safeServerFetch } from './server-fetch';
 
 export interface ProductChip {
   id: number;
@@ -117,44 +116,40 @@ const emptyPage = (): ProductPage => ({
 
 // Server-side reads (SSG/ISR — revalidated; global/03 §3b, 13 SEO).
 export async function listProducts(params: ProductListParams = {}): Promise<ProductPage> {
+  const res = await safeServerFetch(`/api/products${buildQuery({ size: 24, ...params })}`, 60);
+  if (!res?.ok) return emptyPage();
   try {
-    const res = await fetch(`${API_BASE}/api/products${buildQuery({ size: 24, ...params })}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return emptyPage();
-    return res.json();
+    return await res.json();
   } catch {
     return emptyPage();
   }
 }
 
 export async function getFacets(): Promise<CatalogFacets> {
+  const res = await safeServerFetch('/api/catalog/facets', 60);
+  if (!res?.ok) return { parents: [], categories: [] };
   try {
-    const res = await fetch(`${API_BASE}/api/catalog/facets`, { next: { revalidate: 60 } });
-    if (!res.ok) return { parents: [], categories: [] };
-    return res.json();
+    return await res.json();
   } catch {
     return { parents: [], categories: [] };
   }
 }
 
 export async function getCategoryCounts(): Promise<CategoryCount[]> {
+  const res = await safeServerFetch('/api/catalog/categories', 60);
+  if (!res?.ok) return [];
   try {
-    const res = await fetch(`${API_BASE}/api/catalog/categories`, { next: { revalidate: 60 } });
-    if (!res.ok) return [];
-    return res.json();
+    return await res.json();
   } catch {
     return [];
   }
 }
 
 export async function getProduct(slug: string): Promise<ProductDetail | null> {
+  const res = await safeServerFetch(`/api/products/${encodeURIComponent(slug)}`, 60);
+  if (!res?.ok) return null;
   try {
-    const res = await fetch(`${API_BASE}/api/products/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return null;
-    return res.json();
+    return await res.json();
   } catch {
     return null;
   }

@@ -51,7 +51,7 @@ export default function AdminSupportDetailPage() {
       <h1>Chat #{chat.id}</h1>
       <p style={mutedText}>
         {chat.visitorName ?? 'Visitor'}
-        {chat.visitorEmail ? ` — ${chat.visitorEmail}` : ''}
+        {chat.visitorEmail ? ` - ${chat.visitorEmail}` : ''}
         {chat.pageContext ? ` · from ${chat.pageContext}` : ''} · {chat.status}
       </p>
       <section style={{ marginTop: '1rem' }}>

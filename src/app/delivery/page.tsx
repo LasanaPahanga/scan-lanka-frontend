@@ -5,7 +5,7 @@ import { EditableHtml } from '@/components/EditableHtml';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'Delivery locations — Scan Lanka',
+  title: 'Delivery locations - Scan Lanka',
   description: 'Postal codes and zones we deliver to across Sri Lanka.',
 };
 

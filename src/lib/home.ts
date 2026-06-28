@@ -1,7 +1,6 @@
 import { api } from './api';
 import type { ProductChip } from './catalog';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { API_BASE, safeServerFetch } from './server-fetch';
 
 export interface HomeBanner {
   id: number;
@@ -19,10 +18,10 @@ export interface HomeView {
 }
 
 export async function fetchHome(): Promise<HomeView> {
+  const res = await safeServerFetch('/api/home', 120);
+  if (!res?.ok) return { featured: [], banners: [] };
   try {
-    const res = await fetch(`${API_BASE}/api/home`, { next: { revalidate: 120 } });
-    if (!res.ok) return { featured: [], banners: [] };
-    return res.json();
+    return await res.json();
   } catch {
     return { featured: [], banners: [] };
   }

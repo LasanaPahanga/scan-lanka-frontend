@@ -11,14 +11,14 @@ import { CookieConsent } from '@/components/CookieConsent';
 import { Header } from '@/components/Header';
 
 export const metadata: Metadata = {
-  title: 'Scan Lanka — Boards & Teaching Equipment',
+  title: 'Scan Lanka - Boards & Teaching Equipment',
   description:
-    'Scan Lanka Trading Co. — manufacturer & supplier of boards and teaching equipment since 1998.',
+    'Scan Lanka Trading Co. - manufacturer & supplier of boards and teaching equipment since 1998.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   alternates: { canonical: '/', languages: { 'en-LK': '/', 'x-default': '/' } },
   openGraph: {
     title: 'Scan Lanka',
-    description: 'Boards & teaching equipment — Sri Lanka manufacturer since 1998.',
+    description: 'Boards & teaching equipment - Sri Lanka manufacturer since 1998.',
     locale: 'en_LK',
     type: 'website',
   },

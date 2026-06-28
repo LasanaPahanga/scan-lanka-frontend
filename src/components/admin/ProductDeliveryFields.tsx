@@ -35,7 +35,7 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
         type="number"
         step="0.001"
         min="0"
-        placeholder="Weight (kg) — required for courier"
+        placeholder="Weight (kg) - required for courier"
         value={value.weightKg ?? ''}
         onChange={(e) =>
           onChange({

@@ -59,7 +59,7 @@ export default function QuoteRequestPage() {
     <main style={pageWrap}>
       <h1 style={{ color: 'var(--primary)' }}>Request a quote</h1>
       <p style={mutedText}>
-        {t('geo.noCheckout')} Use this form for bulk, wholesale, or international orders — especially if you
+        {t('geo.noCheckout')} Use this form for bulk, wholesale, or international orders - especially if you
         are visiting from outside Sri Lanka ({geo.country}).
       </p>
       <form onSubmit={onSubmit} style={formStack}>

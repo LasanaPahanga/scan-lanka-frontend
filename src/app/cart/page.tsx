@@ -57,7 +57,7 @@ export default function CartPage() {
                 />
               </td>
               <td style={{ ...td, textAlign: 'right' }}>
-                {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '—'}
+                {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '-'}
               </td>
               <td style={{ ...td, textAlign: 'right' }}>
                 <button

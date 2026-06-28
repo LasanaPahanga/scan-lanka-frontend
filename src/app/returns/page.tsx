@@ -4,7 +4,7 @@ import { ContactReturnsCta } from '@/components/ContactReturnsCta';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'Returns & refunds — Scan Lanka',
+  title: 'Returns & refunds - Scan Lanka',
 };
 
 export default function ReturnsPage() {

@@ -39,11 +39,16 @@ async function silentRefresh(): Promise<boolean> {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...init,
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...init,
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+    });
+  } catch {
+    throw new ApiError(0, 'NETWORK', 'Could not reach the server. Is the backend running?');
+  }
 
   if (res.status === 401 && shouldAttemptRefresh(path, retried)) {
     const refreshed = await silentRefresh();

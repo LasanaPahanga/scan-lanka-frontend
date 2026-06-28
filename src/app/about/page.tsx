@@ -4,9 +4,9 @@ import { EditableHtml } from '@/components/EditableHtml';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'About Us — Scan Lanka',
+  title: 'About Us - Scan Lanka',
   description:
-    'Scan Lanka Trading Co. — Sri Lanka’s leading manufacturer & supplier of boards and teaching equipment since 1998. ISO 9001:2015 certified.',
+    'Scan Lanka Trading Co. - Sri Lanka’s leading manufacturer & supplier of boards and teaching equipment since 1998. ISO 9001:2015 certified.',
 };
 
 const SPECIALTIES = [

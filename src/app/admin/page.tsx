@@ -49,7 +49,7 @@ export default function AdminDashboardPage() {
               <ul>
                 {data.lowStock.map((p) => (
                   <li key={p.id}>
-                    {p.name} ({p.sku}) — {p.stockQty} left
+                    {p.name} ({p.sku}) - {p.stockQty} left
                   </li>
                 ))}
               </ul>

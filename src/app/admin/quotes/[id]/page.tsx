@@ -44,7 +44,7 @@ export default function AdminQuoteDetailPage() {
       </p>
       <h1>Quote #{quote.id}</h1>
       <p style={mutedText}>
-        {quote.requesterName} — {quote.email} — {quote.phone} · {quote.status}
+        {quote.requesterName} - {quote.email} - {quote.phone} · {quote.status}
       </p>
       {quote.quotedTotalCents != null && <p>Quoted: {formatLkr(quote.quotedTotalCents)}</p>}
       <ul>

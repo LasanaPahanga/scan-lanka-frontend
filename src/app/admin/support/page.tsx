@@ -47,7 +47,7 @@ export default function AdminSupportPage() {
             <li key={c.id} style={{ borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
               <Link href={`/admin/support/${c.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <strong>{c.visitorName ?? 'Visitor'}</strong>
-                {c.visitorEmail ? ` — ${c.visitorEmail}` : ''}
+                {c.visitorEmail ? ` - ${c.visitorEmail}` : ''}
                 <p style={{ ...mutedText, margin: '0.25rem 0' }}>{new Date(c.updatedAt).toLocaleString()}</p>
                 <p style={{ margin: 0 }}>{c.preview}</p>
               </Link>

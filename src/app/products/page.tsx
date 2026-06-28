@@ -8,7 +8,7 @@ import { CategoryTiles } from '@/components/CategoryTiles';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Products — Scan Lanka',
+  title: 'Products - Scan Lanka',
   description: 'Browse boards & teaching equipment from Scan Lanka.',
 };
 
@@ -45,7 +45,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     <main className="page">
       <h1 className="page-title">Our Products</h1>
       <p className="page-intro">
-        Browse our full range of boards and teaching equipment — manufactured locally, delivered
+        Browse our full range of boards and teaching equipment - manufactured locally, delivered
         island-wide.
       </p>
       <CategoryTiles categories={categoryCounts} active={searchParams.category} />

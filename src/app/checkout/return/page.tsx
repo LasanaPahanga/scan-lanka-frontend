@@ -81,7 +81,7 @@ export default function PaymentReturnPage() {
         <>
           <h1>Awaiting bank confirmation</h1>
           <p style={{ color: 'var(--muted)' }}>
-            Order <strong>{orderNumber}</strong> — we received your slip and will confirm your payment soon.
+            Order <strong>{orderNumber}</strong> - we received your slip and will confirm your payment soon.
             We&apos;ll email your receipt once approved.
           </p>
           <Link href={`/orders/lookup`} style={{ color: 'var(--primary)' }}>
@@ -94,7 +94,7 @@ export default function PaymentReturnPage() {
           <p>
             Order <strong>{orderNumber}</strong> wasn&apos;t paid.
             {status === 'BANK_SLIP_REJECTED'
-              ? ' Your bank slip was rejected — please upload a new slip from order lookup.'
+              ? ' Your bank slip was rejected - please upload a new slip from order lookup.'
               : ' You can try again from your cart.'}
           </p>
           <Link href={status === 'BANK_SLIP_REJECTED' ? '/orders/lookup' : '/cart'} style={{ color: 'var(--primary)' }}>
@@ -105,7 +105,7 @@ export default function PaymentReturnPage() {
         <>
           <h1>Confirming your payment…</h1>
           <p style={{ color: 'var(--muted)' }}>
-            Order <strong>{orderNumber}</strong> — we&apos;re confirming with the payment provider
+            Order <strong>{orderNumber}</strong> - we&apos;re confirming with the payment provider
             {checking ? '…' : '.'}
           </p>
           {!checking && status && PAYMENT_PENDING.has(status) && (

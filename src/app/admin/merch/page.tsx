@@ -70,7 +70,7 @@ export default function AdminMerchPage() {
     });
     setDraft(emptyBanner);
     await reload();
-    setMsg('Banner created — upload an image below.');
+    setMsg('Banner created - upload an image below.');
   }
 
   async function saveBanner(b: HomeBanner) {
@@ -116,7 +116,7 @@ export default function AdminMerchPage() {
         <ul>
           {entries.map((e) => (
             <li key={e.productId} style={{ marginBottom: '0.35rem' }}>
-              Product {e.productId} — order {e.displayOrder}{' '}
+              Product {e.productId} - order {e.displayOrder}{' '}
               <button type="button" onClick={() => removeFeatured(e.productId)}>
                 Remove
               </button>
