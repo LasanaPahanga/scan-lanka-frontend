@@ -5,13 +5,24 @@ import { useRouter } from 'next/navigation';
 import {
   AdminProductDetail,
   CreateProductBody,
+  DeliveryAttrs,
   GroupInput,
   VariantInput,
   adminCreateProduct,
   adminUpdateProduct,
+  adminUpdateVariantDelivery,
 } from '@/lib/admin-catalog';
 import { fieldInput, primaryButton, secondaryButton, mutedText } from '@/components/formStyles';
 import { ProductImageManager } from './ProductImageManager';
+import { ProductDeliveryFields } from './ProductDeliveryFields';
+
+const emptyDelivery = (): DeliveryAttrs => ({
+  weightKg: null,
+  lorryColomboCents: null,
+  lorrySuburbCents: null,
+  lorryOuterCents: null,
+  whatsappOnly: false,
+});
 
 const HANDLING = ['STANDARD', 'FRAGILE_GLASS', 'OVERSIZE'];
 
@@ -58,6 +69,8 @@ export function ProductForm({ existing, categories }: Props) {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [delivery, setDelivery] = useState<DeliveryAttrs>(existing?.delivery ?? emptyDelivery());
+  const [variantDeliveryMsg, setVariantDeliveryMsg] = useState<string | null>(null);
 
   // Build the option matrix for the variant builder (create mode only).
   const optionLists = useMemo(
@@ -91,7 +104,7 @@ export function ProductForm({ existing, categories }: Props) {
           category: category.trim() || null,
           handlingClass,
           active,
-          // variant matrix is not editable here; only SINGLE price/stock can change
+          delivery: isVariant ? undefined : delivery,
           stockQty: isVariant ? undefined : stock.trim() === '' ? null : Number(stock),
           singlePriceCents: isVariant ? undefined : rupeesToCents(priceRupees),
         });
@@ -329,21 +342,39 @@ export function ProductForm({ existing, categories }: Props) {
         </div>
       )}
 
-      {/* Variant edit notice */}
+      {/* Variant edit + per-size delivery */}
       {isEdit && isVariant && (
         <div style={builderBox}>
-          <strong>Variants</strong>
+          <strong>Variants &amp; shipping</strong>
           <p style={mutedText}>
-            This product has {existing!.variants.length} variant(s). Names, category, description and visibility
-            are editable above. To change the option matrix or per-variant prices, recreate the product.
+            Set weight and lorry charges per size. Names and prices are listed for reference — change
+            visibility and descriptions above.
           </p>
-          <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+          {variantDeliveryMsg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{variantDeliveryMsg}</p>}
+          <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '1rem' }}>
             {existing!.variants.map((v) => (
-              <li key={v.id} style={{ fontSize: '0.88rem' }}>
-                {v.sku} — Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')} ({v.availability})
+              <li key={v.id} style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                <strong style={{ fontSize: '0.9rem' }}>
+                  {v.sku} — Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
+                </strong>
+                <div style={{ marginTop: '0.5rem' }}>
+                  <VariantDeliveryEditor
+                    productId={existing!.id}
+                    variantId={v.id}
+                    initial={v.delivery}
+                    onSaved={() => setVariantDeliveryMsg(`Saved shipping for ${v.sku}`)}
+                  />
+                </div>
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {isEdit && !isVariant && (
+        <div style={builderBox}>
+          <strong>Shipping</strong>
+          <ProductDeliveryFields value={delivery} onChange={setDelivery} />
         </div>
       )}
 
@@ -398,3 +429,40 @@ const builderBox = {
 } as const;
 const cellHead = { textAlign: 'left' as const, padding: '0.35rem 0.5rem', color: 'var(--muted)', fontSize: '0.78rem' };
 const cell = { padding: '0.25rem 0.5rem', borderTop: '1px solid var(--border)' } as const;
+
+function VariantDeliveryEditor({
+  productId,
+  variantId,
+  initial,
+  onSaved,
+}: {
+  productId: number;
+  variantId: number;
+  initial: DeliveryAttrs;
+  onSaved: () => void;
+}) {
+  const [draft, setDraft] = useState(initial);
+  const [busy, setBusy] = useState(false);
+
+  return (
+    <div>
+      <ProductDeliveryFields value={draft} onChange={setDraft} compact />
+      <button
+        type="button"
+        style={{ ...secondaryButton, width: 'auto', marginTop: '0.5rem' }}
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await adminUpdateVariantDelivery(productId, variantId, draft);
+            onSaved();
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? 'Saving…' : 'Save shipping for this size'}
+      </button>
+    </div>
+  );
+}

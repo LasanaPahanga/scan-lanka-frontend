@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
 import { ContactReturnsCta } from '@/components/ContactReturnsCta';
+import { OrderThread } from '@/components/OrderThread';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { getMyOrder, OrderDetail } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
@@ -115,6 +116,8 @@ function OrderDetailView() {
           </ul>
         </section>
       )}
+
+      <OrderThread mode="customer" orderNumber={order.orderNumber} />
 
       <ContactReturnsCta compact />
     </main>

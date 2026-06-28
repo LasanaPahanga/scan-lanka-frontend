@@ -7,15 +7,20 @@ import { useAuth } from '@/components/AuthProvider';
 import { GuestCartItem } from '@/lib/cart';
 import { listAddresses, SavedAddress } from '@/lib/addresses';
 import { fetchPostalCodes, PostalCode } from '@/lib/delivery';
+import { fetchWhatsApp } from '@/lib/geo';
 import { formatLkr } from '@/lib/money';
 import {
-  DeliveryPayment,
-  FulfilmentType,
+  DeliveryMethod,
+  DeliveryOption,
+  DeliveryOptionsResult,
   PlacedResult,
   QuoteResult,
+  fetchDeliveryOptions,
   initiatePayment,
   placeOrder,
   quoteCheckout,
+  railLabel,
+  railReason,
   submitToPayHere,
   uploadBankSlip,
 } from '@/lib/checkout';
@@ -40,12 +45,13 @@ export default function CheckoutPage() {
       })),
     [lines],
   );
-  const [fulfilment, setFulfilment] = useState<FulfilmentType>('DELIVERY');
-  const [payment, setPayment] = useState<DeliveryPayment>('PREPAID');
+
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('CARD');
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipUploaded, setSlipUploaded] = useState(false);
   const [slipError, setSlipError] = useState<string | null>(null);
+  const [whatsappHref, setWhatsappHref] = useState<string | null>(null);
   const [form, setForm] = useState({
     contactName: '',
     contactPhone: '',
@@ -55,6 +61,7 @@ export default function CheckoutPage() {
     province: '',
     postalCode: '',
   });
+  const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOptionsResult | null>(null);
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [placed, setPlaced] = useState<PlacedResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -72,8 +79,9 @@ export default function CheckoutPage() {
   });
   const [methods, setMethods] = useState<PaymentMethods | null>(null);
 
-  const isDelivery = fulfilment === 'DELIVERY';
   const canUseSaved = user?.role === 'CUSTOMER' && user.emailVerified;
+  const needsOnlinePayment = deliveryMethod === 'COMPANY_LORRY' && (quote?.onlineTotalCents ?? 0) > 0;
+  const isCourier = deliveryMethod === 'COURIER';
 
   useEffect(() => {
     fetchPaymentMethods()
@@ -86,13 +94,14 @@ export default function CheckoutPage() {
   }, []);
 
   useEffect(() => {
-    if (methods && !methods.deliveryCod && payment === 'COD') setPayment('PREPAID');
-  }, [methods, payment]);
-
-  useEffect(() => {
-    if (!isDelivery) return;
     fetchPostalCodes().then(setPostalCodes).catch(() => setPostalCodes([]));
-  }, [isDelivery]);
+    fetchWhatsApp(geo.country)
+      .then((w) => {
+        const num = w.number.replace(/\D/g, '');
+        setWhatsappHref(`https://wa.me/94${num.replace(/^0/, '')}?text=${encodeURIComponent(w.prefill)}`);
+      })
+      .catch(() => setWhatsappHref(null));
+  }, [geo.country]);
 
   useEffect(() => {
     if (!canUseSaved) return;
@@ -104,6 +113,47 @@ export default function CheckoutPage() {
       })
       .catch(() => setSavedAddresses([]));
   }, [canUseSaved]);
+
+  useEffect(() => {
+    if (items.length === 0 || placed || !form.postalCode.trim()) {
+      setDeliveryOptions(null);
+      setDeliveryMethod(null);
+      return;
+    }
+    let cancelled = false;
+    fetchDeliveryOptions(items, form.postalCode.trim())
+      .then((opts) => {
+        if (cancelled) return;
+        setDeliveryOptions(opts);
+        if (opts.whatsappOnly) {
+          setDeliveryMethod(null);
+          return;
+        }
+        const firstAvailable = opts.options.find((o) => o.available);
+        setDeliveryMethod((prev) => {
+          if (prev && opts.options.some((o) => o.method === prev && o.available)) return prev;
+          return firstAvailable?.method ?? null;
+        });
+      })
+      .catch(() => !cancelled && setDeliveryOptions(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [items, form.postalCode, placed]);
+
+  useEffect(() => {
+    if (items.length === 0 || placed || !deliveryMethod || !form.postalCode.trim()) {
+      setQuote(null);
+      return;
+    }
+    let cancelled = false;
+    quoteCheckout(items, deliveryMethod, form.postalCode.trim())
+      .then((q) => !cancelled && setQuote(q))
+      .catch(() => !cancelled && setQuote(null));
+    return () => {
+      cancelled = true;
+    };
+  }, [items, deliveryMethod, form.postalCode, placed]);
 
   function applyAddress(a: SavedAddress) {
     setForm((f) => ({
@@ -117,33 +167,25 @@ export default function CheckoutPage() {
     }));
   }
 
-  useEffect(() => {
-    if (items.length === 0 || placed) return;
-    let cancelled = false;
-    quoteCheckout(items, fulfilment, isDelivery ? form.postalCode || null : null, payment)
-      .then((q) => !cancelled && setQuote(q))
-      .catch(() => !cancelled && setQuote(null));
-    return () => {
-      cancelled = true;
-    };
-  }, [items, fulfilment, payment, form.postalCode, isDelivery, placed]);
-
-  function set<K extends keyof typeof form>(key: K, value: string) {
+  function setField<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!deliveryMethod) return;
     setBusy(true);
     setError(null);
     try {
       const result = await placeOrder({
         items,
-        fulfilmentType: fulfilment,
-        deliveryPayment: payment,
-        ship: isDelivery
-          ? { street: form.street, city: form.city, province: form.province, postalCode: form.postalCode }
-          : null,
+        deliveryMethod,
+        ship: {
+          street: form.street,
+          city: form.city,
+          province: form.province,
+          postalCode: form.postalCode,
+        },
         billing: showBilling
           ? {
               name: billing.name || undefined,
@@ -161,8 +203,7 @@ export default function CheckoutPage() {
       savePendingOrder(result.orderNumber, form.contactEmail);
       await clear();
 
-      if (method === 'CARD') {
-        // Hand off to PayHere when configured; otherwise show confirmation (dev / no creds).
+      if (needsOnlinePayment && method === 'CARD') {
         const init = await initiatePayment(result.orderNumber).catch(() => null);
         if (init && init.params.merchant_id) {
           submitToPayHere(init, {
@@ -172,10 +213,10 @@ export default function CheckoutPage() {
             address: form.street,
             city: form.city,
           });
-          return; // redirecting away to PayHere
+          return;
         }
       }
-      setPlaced(result); // BANK (or card dev-fallback) → show confirmation / slip upload
+      setPlaced(result);
     } catch {
       setError('We could not place your order. Please check your details and try again.');
     } finally {
@@ -197,20 +238,40 @@ export default function CheckoutPage() {
   if (placed) {
     return (
       <main style={wrap}>
-        <h1 style={{ color: 'var(--primary)' }}>Order placed 🎉</h1>
+        <h1 style={{ color: 'var(--primary)' }}>Order placed</h1>
         <p>
           Your order number is <strong>{placed.orderNumber}</strong>.
         </p>
-
-        {method === 'BANK' && !slipUploaded && (
+        {isCourier && (
+          <p style={{ color: 'var(--muted)' }}>
+            Pay the courier on delivery (approximate total was shown at checkout). We&apos;ll coordinate
+            delivery details with you.
+          </p>
+        )}
+        {!isCourier && (
+          <p style={{ color: 'var(--muted)' }}>
+            Company-lorry delivery has no fixed date at checkout. Message us about timing from{' '}
+            <Link href="/orders/lookup" style={{ color: 'var(--primary)' }}>
+              order lookup
+            </Link>
+            {user ? (
+              <>
+                {' '}
+                or{' '}
+                <Link href={`/account/orders/${encodeURIComponent(placed.orderNumber)}`} style={{ color: 'var(--primary)' }}>
+                  your order page
+                </Link>
+              </>
+            ) : null}
+            .
+          </p>
+        )}
+        {needsOnlinePayment && method === 'BANK' && !slipUploaded && (
           <section style={card}>
             <h3 style={ch3}>Pay by bank transfer</h3>
             <p style={{ color: 'var(--muted)' }}>
-              Transfer <strong>{formatLkr(placed.totalCents)}</strong> to our account, then upload your
-              slip below. We&apos;ll confirm it and email your receipt.
-            </p>
-            <p style={{ fontSize: '0.9rem' }}>
-              Bank: Scan Lanka Trading Co. · A/C: (admin-configured) · Ref: {placed.orderNumber}
+              Transfer <strong>{formatLkr(placed.onlineTotalCents)}</strong> to our account, then upload
+              your slip below.
             </p>
             <input type="file" accept="image/*" onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)} />
             {slipError && <p style={{ color: 'var(--danger)' }}>{slipError}</p>}
@@ -219,20 +280,13 @@ export default function CheckoutPage() {
             </button>
           </section>
         )}
-
-        {method === 'BANK' && slipUploaded && (
-          <p style={{ color: 'var(--muted)' }}>
-            Thanks! Your slip is uploaded — we&apos;ll confirm your payment and email your receipt.
-          </p>
+        {needsOnlinePayment && method === 'BANK' && slipUploaded && (
+          <p style={{ color: 'var(--muted)' }}>Thanks! We&apos;ll confirm your payment and email your receipt.</p>
         )}
-
-        {method !== 'BANK' && (
-          <p style={{ color: 'var(--muted)' }}>
-            We&apos;ll email your receipt once payment is confirmed.
-          </p>
+        {needsOnlinePayment && method === 'CARD' && placed.onlineTotalCents > 0 && (
+          <p style={{ color: 'var(--muted)' }}>We&apos;ll email your receipt once payment is confirmed.</p>
         )}
-
-        <Link href={`/orders/lookup`} style={{ color: 'var(--primary)', marginRight: '1rem' }}>
+        <Link href="/orders/lookup" style={{ color: 'var(--primary)', marginRight: '1rem' }}>
           Track this order
         </Link>
         <Link href="/products" style={{ color: 'var(--primary)' }}>
@@ -272,7 +326,11 @@ export default function CheckoutPage() {
     );
   }
 
-  const notServiceable = isDelivery && quote != null && !quote.serviceable;
+  const canPlace =
+    deliveryMethod &&
+    quote?.available &&
+    form.postalCode.trim() &&
+    (!needsOnlinePayment || (methods && (methods.payhere || methods.bankTransfer)));
 
   return (
     <main style={wrap}>
@@ -281,72 +339,111 @@ export default function CheckoutPage() {
         <section style={card}>
           <h3 style={ch3}>Contact</h3>
           <input style={input} placeholder="Full name" value={form.contactName}
-            onChange={(e) => set('contactName', e.target.value)} required />
+            onChange={(e) => setField('contactName', e.target.value)} required />
           <input style={input} placeholder="Phone" value={form.contactPhone}
-            onChange={(e) => set('contactPhone', e.target.value)} required />
+            onChange={(e) => setField('contactPhone', e.target.value)} required />
           <input style={input} type="email" placeholder="Email" value={form.contactEmail}
-            onChange={(e) => set('contactEmail', e.target.value)} required />
+            onChange={(e) => setField('contactEmail', e.target.value)} required />
         </section>
 
         <section style={card}>
-          <h3 style={ch3}>Fulfilment</h3>
-          <select style={input} value={fulfilment} onChange={(e) => setFulfilment(e.target.value as FulfilmentType)}>
-            <option value="DELIVERY">Delivery</option>
-            <option value="PICKUP_SHOP">Pick up from shop</option>
-            <option value="PICKUP_FACTORY">Pick up from factory</option>
-          </select>
-          {isDelivery && (
-            <>
-              {canUseSaved && savedAddresses.length > 0 && (
-                <select
-                  style={input}
-                  defaultValue=""
-                  onChange={(e) => {
-                    const id = Number(e.target.value);
-                    const a = savedAddresses.find((x) => x.id === id);
-                    if (a) applyAddress(a);
-                  }}
-                >
-                  <option value="" disabled>
-                    Use a saved address…
-                  </option>
-                  {savedAddresses.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.label ?? a.street} — {a.postalCode}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <input style={input} placeholder="Street address" value={form.street}
-                onChange={(e) => set('street', e.target.value)} required />
-              <input style={input} placeholder="City" value={form.city}
-                onChange={(e) => set('city', e.target.value)} required />
-              <input style={input} placeholder="Province" value={form.province}
-                onChange={(e) => set('province', e.target.value)} required />
-              <input
-                style={input}
-                placeholder="Postal code"
-                list="postal-codes"
-                value={form.postalCode}
-                onChange={(e) => set('postalCode', e.target.value)}
-                required
-              />
-              <datalist id="postal-codes">
-                {postalCodes.map((p) => (
-                  <option key={p.postalCode} value={p.postalCode}>
-                    {p.zoneName}
-                  </option>
-                ))}
-              </datalist>
-              {notServiceable && (
-                <p style={{ color: 'var(--danger)' }}>
-                  Sorry, we don&apos;t deliver to that postal code.{' '}
-                  <Link href="/delivery">See delivery areas</Link> or choose pickup.
-                </p>
-              )}
-            </>
+          <h3 style={ch3}>Delivery address</h3>
+          {canUseSaved && savedAddresses.length > 0 && (
+            <select
+              style={input}
+              defaultValue=""
+              onChange={(e) => {
+                const id = Number(e.target.value);
+                const a = savedAddresses.find((x) => x.id === id);
+                if (a) applyAddress(a);
+              }}
+            >
+              <option value="" disabled>
+                Use a saved address…
+              </option>
+              {savedAddresses.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.label ?? a.street} — {a.postalCode}
+                </option>
+              ))}
+            </select>
           )}
+          <input style={input} placeholder="Street address" value={form.street}
+            onChange={(e) => setField('street', e.target.value)} required />
+          <input style={input} placeholder="City" value={form.city}
+            onChange={(e) => setField('city', e.target.value)} required />
+          <input style={input} placeholder="Province" value={form.province}
+            onChange={(e) => setField('province', e.target.value)} required />
+          <input
+            style={input}
+            placeholder="Postal code"
+            list="postal-codes"
+            value={form.postalCode}
+            onChange={(e) => setField('postalCode', e.target.value)}
+            required
+          />
+          <datalist id="postal-codes">
+            {postalCodes.map((p) => (
+              <option key={p.postalCode} value={p.postalCode}>
+                {p.zoneName}
+              </option>
+            ))}
+          </datalist>
         </section>
+
+        {deliveryOptions?.whatsappOnly && (
+          <section style={{ ...card, borderColor: 'var(--primary)' }}>
+            <h3 style={ch3}>Contact us to order</h3>
+            <p style={{ color: 'var(--muted)', margin: 0 }}>
+              Items in your cart must be arranged via WhatsApp or a quote — online checkout is not
+              available for them.
+            </p>
+            <p style={{ marginTop: '0.75rem' }}>
+              {whatsappHref && (
+                <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
+                  Chat on WhatsApp
+                </a>
+              )}
+              {' · '}
+              <Link href="/quote" style={{ color: 'var(--primary)' }}>
+                Request a quote
+              </Link>
+            </p>
+          </section>
+        )}
+
+        {deliveryOptions && !deliveryOptions.whatsappOnly && (
+          <section style={card}>
+            <h3 style={ch3}>Delivery method</h3>
+            {!deliveryOptions.postalServiceable && (
+              <p style={{ color: 'var(--danger)' }}>
+                Sorry, we don&apos;t deliver to that postal code.{' '}
+                <Link href="/delivery">See delivery areas</Link> or{' '}
+                <Link href="/contact">contact us</Link>.
+              </p>
+            )}
+            {deliveryOptions.options.map((opt) => (
+              <RailCard
+                key={opt.method}
+                opt={opt}
+                selected={deliveryMethod === opt.method}
+                onSelect={() => setDeliveryMethod(opt.method)}
+              />
+            ))}
+            <p style={{ ...mutedNote, marginTop: '0.5rem' }}>
+              Questions before ordering?{' '}
+              {whatsappHref ? (
+                <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
+                  Ask us on WhatsApp
+                </a>
+              ) : (
+                <Link href="/contact" style={{ color: 'var(--primary)' }}>
+                  Contact us
+                </Link>
+              )}
+            </p>
+          </section>
+        )}
 
         <section style={card}>
           <h3 style={ch3}>Billing (optional)</h3>
@@ -368,66 +465,120 @@ export default function CheckoutPage() {
           )}
         </section>
 
-        <section style={card}>
-          <h3 style={ch3}>Delivery payment</h3>
-          <label style={{ display: 'block' }}>
-            <input type="radio" checked={payment === 'PREPAID'} onChange={() => setPayment('PREPAID')} /> Pay
-            delivery now
-          </label>
-          {(methods?.deliveryCod ?? true) && (
-            <label style={{ display: 'block' }}>
-              <input type="radio" checked={payment === 'COD'} onChange={() => setPayment('COD')} /> Pay delivery on
-              delivery (cash)
-            </label>
-          )}
-        </section>
-
-        <section style={card}>
-          <h3 style={ch3}>Payment method</h3>
-          {(methods?.payhere ?? true) && (
-            <label style={{ display: 'block' }}>
-              <input type="radio" checked={method === 'CARD'} onChange={() => setMethod('CARD')} /> Card (PayHere)
-            </label>
-          )}
-          {(methods?.bankTransfer ?? true) && (
-            <label style={{ display: 'block' }}>
-              <input type="radio" checked={method === 'BANK'} onChange={() => setMethod('BANK')} /> Bank transfer
-              (upload slip)
-            </label>
-          )}
-          {methods && !methods.payhere && !methods.bankTransfer && (
-            <p style={{ color: 'var(--danger)' }}>No online payment methods are available right now.</p>
-          )}
-        </section>
+        {needsOnlinePayment && (
+          <section style={card}>
+            <h3 style={ch3}>Payment method</h3>
+            {(methods?.payhere ?? true) && (
+              <label style={{ display: 'block' }}>
+                <input type="radio" checked={method === 'CARD'} onChange={() => setMethod('CARD')} /> Card
+                (PayHere)
+              </label>
+            )}
+            {(methods?.bankTransfer ?? true) && (
+              <label style={{ display: 'block' }}>
+                <input type="radio" checked={method === 'BANK'} onChange={() => setMethod('BANK')} /> Bank
+                transfer (upload slip)
+              </label>
+            )}
+          </section>
+        )}
 
         <section style={card}>
           <h3 style={ch3}>Summary</h3>
-          {quote ? (
+          {quote && quote.available ? (
             <>
               <Row label="Subtotal" value={formatLkr(quote.subtotalCents)} />
-              {payment === 'COD' ? (
-                <Row label="Delivery (paid on delivery)" value={formatLkr(quote.deliveryCodCents)} muted />
-              ) : (
-                <Row label="Delivery" value={formatLkr(quote.deliveryCents)} />
+              {deliveryMethod === 'COMPANY_LORRY' && (
+                <>
+                  <Row label="Lorry delivery (pay now)" value={formatLkr(quote.deliveryCents)} />
+                  {quote.someArranged && (
+                    <p style={mutedNote}>Some items may need a separate delivery cost — we&apos;ll contact you.</p>
+                  )}
+                </>
+              )}
+              {deliveryMethod === 'COURIER' && (
+                <Row
+                  label="Courier fee (approx., pay on delivery)"
+                  value={formatLkr(quote.courierEstimateCents)}
+                  muted
+                />
               )}
               <Row label="Tax" value={formatLkr(quote.taxCents)} />
-              <Row label="Pay now" value={formatLkr(quote.totalCents)} bold />
+              {isCourier ? (
+                <>
+                  <Row label="Pay online now" value={formatLkr(0)} />
+                  <Row label="Approx. total on delivery" value={formatLkr(quote.approxTotalCents)} bold />
+                </>
+              ) : (
+                <Row label="Pay now" value={formatLkr(quote.onlineTotalCents)} bold />
+              )}
             </>
+          ) : quote && !quote.available ? (
+            <p style={{ color: 'var(--danger)' }}>{railReason(quote.reason)}</p>
           ) : (
-            <p style={{ color: 'var(--muted)' }}>Enter details to see your total…</p>
+            <p style={{ color: 'var(--muted)' }}>Enter your postal code and choose a delivery method…</p>
           )}
         </section>
 
         {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
-        <button
-          type="submit"
-          disabled={busy || notServiceable || (methods != null && !methods.payhere && !methods.bankTransfer)}
-          style={{ ...button, opacity: busy || notServiceable ? 0.5 : 1 }}
-        >
-          {busy ? 'Placing order…' : 'Place order'}
+        <button type="submit" disabled={busy || !canPlace} style={{ ...button, opacity: busy || !canPlace ? 0.5 : 1 }}>
+          {busy
+            ? 'Placing order…'
+            : isCourier
+              ? 'Place order (pay on delivery)'
+              : 'Place order'}
         </button>
       </form>
     </main>
+  );
+}
+
+function RailCard({
+  opt,
+  selected,
+  onSelect,
+}: {
+  opt: DeliveryOption;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const disabled = !opt.available;
+  return (
+    <label
+      style={{
+        display: 'block',
+        padding: '0.75rem',
+        border: `2px solid ${selected ? 'var(--primary)' : 'var(--border)'}`,
+        borderRadius: 'var(--radius-sm)',
+        marginBottom: '0.5rem',
+        opacity: disabled ? 0.55 : 1,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+      }}
+    >
+      <input
+        type="radio"
+        name="deliveryMethod"
+        checked={selected}
+        disabled={disabled}
+        onChange={onSelect}
+        style={{ marginRight: '0.5rem' }}
+      />
+      <strong>{railLabel(opt.method)}</strong>
+      {opt.method === 'COMPANY_LORRY' && opt.available && (
+        <span style={{ color: 'var(--muted)' }}> — pay product + delivery online (card or bank)</span>
+      )}
+      {opt.method === 'COURIER' && opt.available && (
+        <span style={{ color: 'var(--muted)' }}>
+          {' '}
+          — nothing online; courier collects ~{formatLkr(opt.courierEstimateCents)} + product on delivery
+        </span>
+      )}
+      {disabled && opt.reason && (
+        <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+          {railReason(opt.reason)}
+        </div>
+      )}
+    </label>
   );
 }
 
@@ -468,5 +619,5 @@ const button = {
   fontSize: '1rem',
   fontWeight: 600,
   cursor: 'pointer',
-  transition: 'background 0.18s var(--ease)',
 } as const;
+const mutedNote = { color: 'var(--muted)', fontSize: '0.85rem', margin: 0 } as const;

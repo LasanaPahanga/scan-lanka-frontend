@@ -38,7 +38,17 @@ export interface AdminVariant {
   priceCents: number;
   optionsSignature: string;
   availability: string;
+  delivery: DeliveryAttrs;
 }
+
+export interface DeliveryAttrs {
+  weightKg: number | null;
+  lorryColomboCents: number | null;
+  lorrySuburbCents: number | null;
+  lorryOuterCents: number | null;
+  whatsappOnly: boolean;
+}
+
 export interface AdminProductDetail {
   id: number;
   name: string;
@@ -54,6 +64,7 @@ export interface AdminProductDetail {
   priceMode: PriceMode;
   singlePriceCents: number | null;
   stockQty: number | null;
+  delivery: DeliveryAttrs;
   imageUrls: string[];
   specGroups: AdminSpecGroup[];
   variants: AdminVariant[];
@@ -91,6 +102,7 @@ export interface UpdateProductBody {
   active?: boolean;
   stockQty?: number | null;
   singlePriceCents?: number | null;
+  delivery?: DeliveryAttrs;
 }
 
 export const adminListProducts = () => api<AdminProductRow[]>('/api/admin/products');
@@ -121,6 +133,12 @@ export const adminCreateProduct = (body: CreateProductBody) =>
 
 export const adminUpdateProduct = (id: number, body: UpdateProductBody) =>
   api<void>(`/api/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+
+export const adminUpdateVariantDelivery = (productId: number, variantId: number, delivery: DeliveryAttrs) =>
+  api<void>(`/api/admin/products/${productId}/variants/${variantId}/delivery`, {
+    method: 'PATCH',
+    body: JSON.stringify({ delivery }),
+  });
 
 export const adminSetProductActive = (id: number, active: boolean) =>
   api<void>(`/api/admin/products/${id}/active`, { method: 'PATCH', body: JSON.stringify({ active }) });

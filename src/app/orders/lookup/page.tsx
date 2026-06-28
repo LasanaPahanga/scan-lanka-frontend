@@ -6,6 +6,7 @@ import { lookupOrderDetail } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
 import { ApiError } from '@/lib/api';
 import { ContactReturnsCta } from '@/components/ContactReturnsCta';
+import { OrderThread } from '@/components/OrderThread';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
 import { dangerText, fieldInput, formStack, mutedText, pageWrap, primaryButton } from '@/components/formStyles';
 
@@ -91,6 +92,7 @@ export default function OrderLookupPage() {
               </ul>
             </>
           )}
+          <OrderThread mode="guest" orderNumber={detail.orderNumber} email={email.trim()} />
           <ContactReturnsCta compact />
         </section>
       )}

@@ -2,235 +2,275 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import {
-  createZone,
-  deleteZone,
-  DeliveryConfigView,
-  getDeliveryConfig,
-  getTaxConfig,
-  listZones,
-  putDeliveryConfig,
-  putTaxConfig,
-  TaxConfigView,
-  updateZone,
-  ZoneView,
-} from '@/lib/admin';
-import { adminMain, fieldInput, mutedText, primaryButton, secondaryButton } from '@/components/formStyles';
+  CourierRateView,
+  CourierZone,
+  DeliveryMethodView,
+  DeliverySettingsView,
+  LorryZone,
+  PostalZoneView,
+  deletePostalZone,
+  getDeliverySettings,
+  getPostalZone,
+  listCourierRates,
+  listDeliveryMethods,
+  putDeliverySettings,
+  setDeliveryMethod,
+  upsertCourierRate,
+  upsertPostalZone,
+} from '@/lib/admin-delivery';
+import { getTaxConfig, putTaxConfig, TaxConfigView } from '@/lib/admin';
+import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
 
-const emptyZone = (): ZoneView => ({
-  id: 0,
-  name: '',
-  baseChargeCents: 0,
-  perKgChargeCents: 0,
-  fuelPct: 0,
-  active: true,
-  postalCodes: [],
-});
+const LORRY_ZONES: LorryZone[] = ['COLOMBO', 'SUBURB', 'OUTER'];
+const COURIER_ZONES: CourierZone[] = ['COLOMBO_1_15', 'OTHER', 'JAFFNA_NORTH'];
 
 export default function AdminDeliveryPage() {
-  const [zones, setZones] = useState<ZoneView[]>([]);
-  const [delivery, setDelivery] = useState<DeliveryConfigView | null>(null);
+  const [rates, setRates] = useState<CourierRateView[]>([]);
+  const [settings, setSettings] = useState<DeliverySettingsView | null>(null);
+  const [methods, setMethods] = useState<DeliveryMethodView[]>([]);
   const [tax, setTax] = useState<TaxConfigView | null>(null);
-  const [draft, setDraft] = useState<ZoneView>(emptyZone());
+  const [postalLookup, setPostalLookup] = useState('');
+  const [postalZone, setPostalZone] = useState<PostalZoneView | null>(null);
+  const [postalDraft, setPostalDraft] = useState({
+    lorryZone: 'COLOMBO' as LorryZone,
+    courierZone: 'OTHER' as CourierZone,
+    district: '',
+    province: '',
+  });
   const [msg, setMsg] = useState<string | null>(null);
 
   async function reload() {
-    setZones(await listZones());
-    setDelivery(await getDeliveryConfig());
+    setRates(await listCourierRates());
+    setSettings(await getDeliverySettings());
+    setMethods(await listDeliveryMethods());
     setTax(await getTaxConfig());
   }
 
   useEffect(() => {
-    reload().catch(() => {});
+    void reload().catch(() => {});
   }, []);
 
-  async function saveZone(z: ZoneView, e: FormEvent) {
+  async function saveRate(zone: CourierZone, baseRupees: string, perKgRupees: string) {
+    setMsg(null);
+    await upsertCourierRate(zone, {
+      baseCents: Math.round(Number(baseRupees) * 100),
+      perKgCents: Math.round(Number(perKgRupees) * 100),
+    });
+    setMsg(`Courier rate for ${zone} saved.`);
+    await reload();
+  }
+
+  async function lookupPostal(e: FormEvent) {
     e.preventDefault();
     setMsg(null);
     try {
-      const body = {
-        name: z.name,
-        baseChargeCents: z.baseChargeCents,
-        perKgChargeCents: z.perKgChargeCents,
-        fuelPct: z.fuelPct,
-        active: z.active,
-        postalCodes: z.postalCodes,
-      };
-      await updateZone(z.id, body);
-      setMsg('Zone saved.');
-      await reload();
+      const z = await getPostalZone(postalLookup.trim());
+      setPostalZone(z);
+      setPostalDraft({
+        lorryZone: z.lorryZone,
+        courierZone: z.courierZone,
+        district: z.district ?? '',
+        province: z.province ?? '',
+      });
     } catch {
-      setMsg('Save failed (check postal overlap).');
+      setPostalZone(null);
+      setMsg('Postal code not mapped yet — fill the form below to add it.');
     }
   }
 
-  async function addZone(e: FormEvent) {
+  async function savePostal(e: FormEvent) {
     e.preventDefault();
+    if (!postalLookup.trim()) return;
     setMsg(null);
-    try {
-      await createZone({
-        name: draft.name,
-        baseChargeCents: draft.baseChargeCents,
-        perKgChargeCents: draft.perKgChargeCents,
-        fuelPct: draft.fuelPct,
-        active: draft.active,
-        postalCodes: draft.postalCodes,
-      });
-      setDraft(emptyZone());
-      setMsg('Zone created.');
-      await reload();
-    } catch {
-      setMsg('Create failed.');
-    }
+    await upsertPostalZone(postalLookup.trim(), {
+      lorryZone: postalDraft.lorryZone,
+      courierZone: postalDraft.courierZone,
+      district: postalDraft.district || null,
+      province: postalDraft.province || null,
+    });
+    setMsg(`Postal zone ${postalLookup.trim()} saved.`);
+    const z = await getPostalZone(postalLookup.trim());
+    setPostalZone(z);
   }
 
   return (
     <main style={adminMain}>
-      <h1 className="page-title">Delivery & tax</h1>
-      {msg && <p>{msg}</p>}
+      <h1>Delivery &amp; tax</h1>
+      <p style={mutedText}>Two-rail delivery: company lorry (prepaid online) and courier Citrek (full COD).</p>
+      {msg && <p style={{ color: 'var(--primary)' }}>{msg}</p>}
 
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>Add zone</h2>
-        <form onSubmit={addZone} style={{ border: '1px solid var(--border)', padding: '1rem', borderRadius: 'var(--radius)', marginBottom: '1.5rem' }}>
-          <input style={{ ...fieldInput, width: '100%', marginBottom: '0.5rem' }} placeholder="Zone name" value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} required />
-          <label>
-            Base (cents){' '}
-            <input type="number" value={draft.baseChargeCents} onChange={(e) => setDraft({ ...draft, baseChargeCents: Number(e.target.value) })} />
-          </label>
-          <label style={{ marginLeft: '1rem' }}>
-            Per kg (cents){' '}
-            <input type="number" value={draft.perKgChargeCents} onChange={(e) => setDraft({ ...draft, perKgChargeCents: Number(e.target.value) })} />
-          </label>
-          <textarea
-            value={draft.postalCodes.join('\n')}
-            onChange={(e) => setDraft({ ...draft, postalCodes: e.target.value.split(/\s+/).filter(Boolean) })}
-            placeholder="Postal codes (one per line)"
-            style={{ ...fieldInput, width: '100%', marginTop: '0.5rem', minHeight: 60 }}
+      <section style={section}>
+        <h2 style={h2}>Global lorry settings</h2>
+        {settings && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const rupees = (e.currentTarget.elements.namedItem('minBill') as HTMLInputElement).value;
+              await putDeliverySettings({ lorryMinBillCents: Math.round(Number(rupees) * 100) });
+              setMsg('Lorry minimum bill updated.');
+              await reload();
+            }}
+          >
+            <label style={label}>
+              Minimum product subtotal for lorry (Rs, must exceed this amount)
+              <input
+                style={fieldInput}
+                name="minBill"
+                type="number"
+                step="0.01"
+                defaultValue={settings.lorryMinBillCents / 100}
+              />
+            </label>
+            <button type="submit" style={{ ...primaryButton, width: 'auto', marginTop: '0.5rem' }}>
+              Save
+            </button>
+          </form>
+        )}
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>Delivery rails</h2>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {methods.map((m) => (
+            <li key={m.method} style={{ marginBottom: '0.5rem' }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={m.enabled}
+                  onChange={async (e) => {
+                    await setDeliveryMethod(m.method, e.target.checked);
+                    await reload();
+                  }}
+                />{' '}
+                {m.method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Citrek)'}
+              </label>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>Courier rate card (Citrek estimate)</h2>
+        {COURIER_ZONES.map((zone) => {
+          const row = rates.find((r) => r.zone === zone) ?? { zone, baseCents: 0, perKgCents: 0 };
+          return (
+            <form
+              key={zone}
+              style={{ display: 'grid', gap: '0.5rem', marginBottom: '1rem', maxWidth: 420 }}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                void saveRate(zone, String(fd.get('base')), String(fd.get('perKg')));
+              }}
+            >
+              <strong>{zone}</strong>
+              <input style={fieldInput} name="base" type="number" step="0.01" placeholder="Base (Rs)"
+                defaultValue={row.baseCents / 100} />
+              <input style={fieldInput} name="perKg" type="number" step="0.01" placeholder="Per kg (Rs)"
+                defaultValue={row.perKgCents / 100} />
+              <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+                Save {zone}
+              </button>
+            </form>
+          );
+        })}
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>Postal code → zones</h2>
+        <form onSubmit={lookupPostal} style={{ display: 'flex', gap: '0.5rem', maxWidth: 420 }}>
+          <input
+            style={{ ...fieldInput, flex: 1 }}
+            placeholder="Postal code"
+            value={postalLookup}
+            onChange={(e) => setPostalLookup(e.target.value)}
           />
-          <button type="submit" style={{ ...primaryButton, width: 'auto', marginTop: '0.5rem' }}>
-            Create zone
+          <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+            Look up
           </button>
         </form>
-
-        <h2 style={{ fontSize: '1.05rem' }}>Zones</h2>
-        {zones.map((z) => (
-          <form
-            key={z.id}
-            onSubmit={(e) => saveZone(z, e)}
-            style={{ border: '1px solid var(--border)', padding: '1rem', marginBottom: '1rem', borderRadius: 'var(--radius)' }}
+        <form onSubmit={savePostal} style={{ marginTop: '1rem', display: 'grid', gap: '0.5rem', maxWidth: 420 }}>
+          <select
+            style={fieldInput}
+            value={postalDraft.lorryZone}
+            onChange={(e) => setPostalDraft((d) => ({ ...d, lorryZone: e.target.value as LorryZone }))}
           >
-            <input
-              value={z.name}
-              onChange={(e) => setZones((prev) => prev.map((x) => (x.id === z.id ? { ...x, name: e.target.value } : x)))}
-              style={{ ...fieldInput, width: '100%', marginBottom: '0.5rem' }}
-            />
-            <label>
-              Base (cents){' '}
-              <input
-                type="number"
-                value={z.baseChargeCents}
-                onChange={(e) =>
-                  setZones((prev) =>
-                    prev.map((x) => (x.id === z.id ? { ...x, baseChargeCents: Number(e.target.value) } : x)),
-                  )
-                }
-              />
-            </label>
-            <label style={{ marginLeft: '1rem' }}>
-              Per kg (cents){' '}
-              <input
-                type="number"
-                value={z.perKgChargeCents}
-                onChange={(e) =>
-                  setZones((prev) =>
-                    prev.map((x) => (x.id === z.id ? { ...x, perKgChargeCents: Number(e.target.value) } : x)),
-                  )
-                }
-              />
-            </label>
-            <textarea
-              value={z.postalCodes.join('\n')}
-              onChange={(e) =>
-                setZones((prev) =>
-                  prev.map((x) =>
-                    x.id === z.id ? { ...x, postalCodes: e.target.value.split(/\s+/).filter(Boolean) } : x,
-                  ),
-                )
-              }
-              placeholder="Postal codes (one per line)"
-              style={{ ...fieldInput, width: '100%', marginTop: '0.5rem', minHeight: 60 }}
-            />
-            <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.5rem' }}>
-              <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
-                Save zone
-              </button>
+            {LORRY_ZONES.map((z) => (
+              <option key={z} value={z}>
+                Lorry: {z}
+              </option>
+            ))}
+          </select>
+          <select
+            style={fieldInput}
+            value={postalDraft.courierZone}
+            onChange={(e) => setPostalDraft((d) => ({ ...d, courierZone: e.target.value as CourierZone }))}
+          >
+            {COURIER_ZONES.map((z) => (
+              <option key={z} value={z}>
+                Courier: {z}
+              </option>
+            ))}
+          </select>
+          <input style={fieldInput} placeholder="District" value={postalDraft.district}
+            onChange={(e) => setPostalDraft((d) => ({ ...d, district: e.target.value }))} />
+          <input style={fieldInput} placeholder="Province" value={postalDraft.province}
+            onChange={(e) => setPostalDraft((d) => ({ ...d, province: e.target.value }))} />
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+              Save mapping
+            </button>
+            {postalZone && (
               <button
                 type="button"
-                style={{ ...secondaryButton, width: 'auto', color: 'var(--danger)' }}
+                style={{ color: 'var(--danger)' }}
                 onClick={async () => {
-                  if (!confirm(`Delete zone "${z.name}"?`)) return;
-                  await deleteZone(z.id);
-                  await reload();
+                  await deletePostalZone(postalLookup.trim());
+                  setPostalZone(null);
+                  setMsg('Postal mapping removed.');
                 }}
               >
                 Delete
               </button>
-            </div>
-          </form>
-        ))}
+            )}
+          </div>
+          {postalZone && (
+            <p style={mutedText}>
+              Current: lorry {postalZone.lorryZone}, courier {postalZone.courierZone}
+              {postalZone.district ? ` · ${postalZone.district}` : ''}
+            </p>
+          )}
+        </form>
       </section>
 
-      {delivery && (
-        <section>
-          <h2 style={{ fontSize: '1.05rem' }}>Pickup surcharges</h2>
-          <div style={{ display: 'grid', gap: '0.5rem', maxWidth: 420 }}>
-            {(['pickFirstCents', 'pickNextCents', 'fragileSurchargeCents', 'oversizeSurchargeCents', 'dimDivisor'] as const).map((key) => (
-              <label key={key} style={mutedText}>
-                {key}{' '}
-                <input
-                  style={fieldInput}
-                  type="number"
-                  value={delivery[key]}
-                  onChange={(e) => setDelivery({ ...delivery, [key]: Number(e.target.value) })}
-                />
-              </label>
-            ))}
-          </div>
-          <button
-            type="button"
-            style={{ ...primaryButton, width: 'auto', marginTop: '0.5rem' }}
-            onClick={async () => {
-              await putDeliveryConfig(delivery);
-              setMsg('Delivery config saved.');
-            }}
-          >
-            Save delivery config
-          </button>
-        </section>
-      )}
-
-      {tax && (
-        <section style={{ marginTop: '1rem' }}>
-          <h2 style={{ fontSize: '1.05rem' }}>Tax</h2>
-          <label>
-            Rate (bps){' '}
-            <input style={fieldInput} type="number" value={tax.rateBps} onChange={(e) => setTax({ ...tax, rateBps: Number(e.target.value) })} />
-          </label>
-          <label style={{ display: 'block', marginTop: '0.5rem' }}>
-            Label{' '}
-            <input style={fieldInput} value={tax.label} onChange={(e) => setTax({ ...tax, label: e.target.value })} />
-          </label>
-          <button
-            type="button"
-            style={{ ...primaryButton, width: 'auto', marginTop: '0.5rem' }}
-            onClick={async () => {
-              await putTaxConfig(tax);
+      <section style={section}>
+        <h2 style={h2}>Tax</h2>
+        {tax && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              await putTaxConfig({
+                rateBps: Number(fd.get('rateBps')),
+                label: String(fd.get('label')),
+              });
               setMsg('Tax config saved.');
+              await reload();
             }}
+            style={{ display: 'grid', gap: '0.5rem', maxWidth: 420 }}
           >
-            Save tax
-          </button>
-        </section>
-      )}
+            <input style={fieldInput} name="label" defaultValue={tax.label} placeholder="Tax label" />
+            <input style={fieldInput} name="rateBps" type="number" defaultValue={tax.rateBps} placeholder="Rate (bps)" />
+            <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+              Save tax
+            </button>
+          </form>
+        )}
+      </section>
     </main>
   );
 }
+
+const section = { marginTop: '2rem' } as const;
+const h2 = { fontSize: '1.1rem', marginBottom: '0.75rem' } as const;
+const label = { display: 'grid', gap: '0.35rem', fontSize: '0.9rem' } as const;

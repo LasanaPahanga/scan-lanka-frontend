@@ -17,9 +17,14 @@ export default async function DeliveryLocationsPage() {
       <h1 className="page-title">Delivery locations</h1>
       <EditableHtml slug="delivery" className="prose">
         <p style={{ color: 'var(--muted)' }}>
-          We deliver to the postal codes below. If yours isn&apos;t listed, choose shop pickup at checkout or{' '}
-          <Link href="/orders/lookup" style={{ color: 'var(--primary)' }}>
+          We deliver to the postal codes below via company lorry (prepaid online) or courier (pay on delivery).
+          If yours isn&apos;t listed,{' '}
+          <Link href="/contact" style={{ color: 'var(--primary)' }}>
             contact us
+          </Link>{' '}
+          or{' '}
+          <Link href="/quote" style={{ color: 'var(--primary)' }}>
+            request a quote
           </Link>
           .
         </p>

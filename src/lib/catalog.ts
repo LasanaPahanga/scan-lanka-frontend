@@ -42,6 +42,9 @@ export interface ProductDetail {
   priceMinCents: number | null;
   priceMaxCents: number | null;
   availability: string;
+  whatsappOnly: boolean;
+  weightKg: number | null;
+  couriable: boolean;
   imageUrls: string[];
   specGroups: SpecGroup[];
   variants: Variant[];

@@ -93,6 +93,15 @@ export function CustomerCareWidget() {
     }
   }
 
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
   const closed = chat?.status === 'CLOSED';
 
   if (!authLoading && user?.role === 'ADMIN') return null;
@@ -112,7 +121,7 @@ export function CustomerCareWidget() {
       </button>
 
       {open && (
-        <div style={panel} role="dialog" aria-label="Customer care chat">
+        <div style={panel} role="dialog" aria-modal="true" aria-label="Customer care chat">
           <header style={panelHeader}>
             <strong>Customer care</strong>
             <button type="button" onClick={() => setOpen(false)} style={closeBtn} aria-label="Close">

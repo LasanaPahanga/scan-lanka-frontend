@@ -59,8 +59,11 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     product.priceMode === 'SINGLE' ? product.availability : resolved?.availability ?? '';
   const inStock = currentAvailability !== 'OUT_OF_STOCK';
   const stockMsg = stockLabel(currentAvailability);
+  const whatsappOnly = product.whatsappOnly;
   const canAddToCart =
-    geo.canCheckout && (product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock));
+    geo.canCheckout &&
+    !whatsappOnly &&
+    (product.priceMode === 'SINGLE' || (allSelected && resolved != null && inStock));
 
   const chip = {
     id: product.id,
@@ -180,6 +183,32 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
           {resolveError && <p style={{ color: 'var(--danger)' }}>That combination isn&apos;t available.</p>}
 
+          <div style={deliveryBox}>
+            <div style={{ fontWeight: 600, marginBottom: '0.35rem' }}>Delivery</div>
+            {whatsappOnly ? (
+              <p style={{ color: 'var(--muted)', margin: 0, fontSize: '0.9rem' }}>
+                This item is arranged via{' '}
+                <Link href="/contact" style={{ color: 'var(--primary)' }}>
+                  contact
+                </Link>{' '}
+                or{' '}
+                <Link href="/quote" style={{ color: 'var(--primary)' }}>
+                  quote
+                </Link>{' '}
+                — not available for standard online checkout.
+              </p>
+            ) : (
+              <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
+                <li>Company lorry — prepaid online (orders over Rs 6,000)</li>
+                {product.couriable ? (
+                  <li>Courier (Citrek) — pay on delivery{product.weightKg ? ` (~${product.weightKg} kg)` : ''}</li>
+                ) : (
+                  <li>Courier not available for this item (weight not set)</li>
+                )}
+              </ul>
+            )}
+          </div>
+
           <button
             type="button"
             disabled={!canAddToCart}
@@ -195,7 +224,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             }}
             style={{ ...addBtn, opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
           >
-            {added ? 'Added ✓' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
+            {added ? 'Added ✓' : whatsappOnly ? 'Contact us to order' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
           </button>
 
           {product.description && <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>{product.description}</p>}
@@ -239,6 +268,14 @@ const optBtn = {
   transition: 'border-color 0.15s var(--ease), background 0.15s var(--ease)',
 } as const;
 const optBtnActive = { borderColor: 'var(--primary)', background: 'var(--primary)', color: 'var(--primary-contrast)' } as const;
+const deliveryBox = {
+  marginTop: '1rem',
+  marginBottom: '0.5rem',
+  padding: '0.75rem 1rem',
+  background: 'var(--bg-muted)',
+  borderRadius: 'var(--radius-sm)',
+  border: '1px solid var(--border)',
+} as const;
 const addBtn = {
   padding: '0.85rem 1.75rem',
   background: 'var(--primary)',
