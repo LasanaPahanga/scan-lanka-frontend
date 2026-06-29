@@ -85,7 +85,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       <Link href="/products" className="icon-link" style={{ display: 'inline-flex', marginBottom: '1.25rem' }}>
         ← Back to products
       </Link>
-      <div style={layout}>
+      <div className="product-detail-layout" style={layout}>
         <div>
           <div
             style={{ ...mainImg, position: 'relative' }}

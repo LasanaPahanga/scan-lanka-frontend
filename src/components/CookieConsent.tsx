@@ -14,7 +14,7 @@ export function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div style={bar}>
+    <div className="cookie-consent-bar" style={bar}>
       <p style={{ margin: 0, flex: 1, fontSize: '0.9rem' }}>
         We use essential cookies for sign-in and checkout. See our{' '}
         <a href="/privacy" style={{ color: 'var(--primary)' }}>

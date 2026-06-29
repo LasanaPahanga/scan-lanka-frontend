@@ -26,8 +26,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <AdminGuard>
-      <div style={shell}>
-        <aside style={sidebar}>
+      <div className="admin-shell" style={shell}>
+        <aside className="admin-sidebar" style={sidebar}>
           <div style={brand}>
             <span style={brandMark}>SL</span>
             <div>
@@ -35,7 +35,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <div style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>Scan Lanka</div>
             </div>
           </div>
-          <nav style={{ display: 'grid', gap: '0.2rem' }}>
+          <nav className="admin-nav" style={{ display: 'grid', gap: '0.2rem' }}>
             {nav.map((n) => {
               const active = n.href === '/admin' ? pathname === '/admin' : pathname.startsWith(n.href);
               return (
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             ← Back to store
           </Link>
         </aside>
-        <div style={{ flex: 1, minWidth: 0, background: 'var(--bg-muted)' }}>{children}</div>
+        <div className="admin-content" style={{ flex: 1, minWidth: 0, background: 'var(--bg-muted)' }}>{children}</div>
       </div>
     </AdminGuard>
   );

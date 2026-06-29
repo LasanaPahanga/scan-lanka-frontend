@@ -57,7 +57,7 @@ export default function AdminOrderMessageDetailPage() {
         {thread.order.contactName} - {thread.order.contactEmail} · {thread.order.status} · {thread.status}
       </p>
 
-      <section style={sideBySide}>
+      <section className="responsive-stack" style={sideBySide}>
         <div>
           <h2 style={{ fontSize: '1rem' }}>Messages</h2>
           <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.5rem' }}>

@@ -37,9 +37,9 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
   return (
     <main>
       {/* Hero - full-width video background with crossfade */}
-      <section style={hero}>
+      <section className="home-hero" style={hero}>
         <HeroVideoCrossfade />
-        <div className="container" style={heroInner}>
+        <div className="container hero-inner" style={heroInner}>
           <div className="animate-up" style={heroContent}>
             <p style={heroEyebrow}>Scan Lanka</p>
             <h1 style={heroTitle}>

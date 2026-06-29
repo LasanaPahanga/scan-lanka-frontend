@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/components/CartProvider';
 import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
@@ -11,75 +11,106 @@ import { CountrySelector } from '@/components/CountrySelector';
 const HOTLINE = '070 5 307 685';
 const EMAIL = 'scanlk@sltnet.lk';
 
+const NAV = [
+  { href: '/', label: 'Home' },
+  { href: '/about', label: 'About Us' },
+  { href: '/products', label: 'Our Products' },
+  { href: '/clientele', label: 'Clientele' },
+  { href: '/quote', label: 'Request a Quote' },
+  { href: '/delivery', label: 'Delivery' },
+  { href: '/returns', label: 'Returns' },
+  { href: '/contact', label: 'Contact Us' },
+] as const;
+
 export function Header() {
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const [q, setQ] = useState('');
   const [logoError, setLogoError] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [menuOpen]);
 
   function search(e: React.FormEvent) {
     e.preventDefault();
+    setMenuOpen(false);
     router.push(q.trim() ? `/products?q=${encodeURIComponent(q.trim())}` : '/products');
   }
 
   return (
-    <header style={{ position: 'sticky', top: 0, zIndex: 20 }}>
-      {/* utility bar */}
-      <div style={utilBar}>
-        <div className="container" style={utilInner}>
-          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+    <header className="site-header" style={{ position: 'sticky', top: 0, zIndex: 20 }}>
+      <div className="header-util-bar" style={utilBar}>
+        <div className="container header-util-inner">
+          <div className="header-util-contact">
             <a href={`tel:${HOTLINE.replace(/\s/g, '')}`} style={utilItem}>
-              ☎ Hotline {HOTLINE}
+              ☎ <span className="util-hotline-text">Hotline {HOTLINE}</span>
             </a>
-            <a href={`mailto:${EMAIL}`} style={utilItem}>
+            <a href={`mailto:${EMAIL}`} className="util-email" style={utilItem}>
               ✉ {EMAIL}
             </a>
           </div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <span style={{ opacity: 0.85 }}>Manufacturer &amp; supplier since 1998</span>
+          <div className="header-util-meta">
+            <span className="util-tagline">Manufacturer &amp; supplier since 1998</span>
             <CountrySelector />
           </div>
         </div>
       </div>
 
-      {/* main bar */}
-      <div style={mainBar}>
-        <div className="container" style={mainInner}>
-          <Link href="/" style={brand} aria-label="Scan Lanka - home">
-            {logoError ? (
-              <>
-                <span style={brandMark}>SL</span>
-                <span>
-                  <span style={brandName}>Scan Lanka</span>
-                  <span style={brandSub}>Trading Co. - Teaching Equipment</span>
-                </span>
-              </>
-            ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src="/logo.png" alt="Scan Lanka" style={logoImg} onError={() => setLogoError(true)} />
-            )}
-          </Link>
+      <div className="header-main-bar" style={mainBar}>
+        <div className="container header-main-inner">
+          <div className="header-brand-row">
+            <Link href="/" style={brand} aria-label="Scan Lanka - home">
+              {logoError ? (
+                <>
+                  <span style={brandMark}>SL</span>
+                  <span>
+                    <span style={brandName}>Scan Lanka</span>
+                    <span style={brandSub}>Trading Co. - Teaching Equipment</span>
+                  </span>
+                </>
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src="/logo.png" alt="Scan Lanka" className="header-logo" style={logoImg} onError={() => setLogoError(true)} />
+              )}
+            </Link>
 
-          <form onSubmit={search} style={searchWrap} role="search">
+            <button
+              type="button"
+              className="header-menu-btn"
+              aria-expanded={menuOpen}
+              aria-controls="site-nav"
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              {menuOpen ? 'Close' : 'Menu'}
+            </button>
+          </div>
+
+          <form onSubmit={search} className="header-search" style={searchWrap} role="search">
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search whiteboards, notice boards, carrom boards…"
+              placeholder="Search products…"
               aria-label="Search products"
               style={searchInput}
             />
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ borderRadius: '0 var(--radius) var(--radius) 0' }}
-            >
+            <button type="submit" className="btn btn-primary header-search-btn" style={{ borderRadius: '0 var(--radius) var(--radius) 0' }}>
               Search
             </button>
           </form>
 
-          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+          <div className="header-actions">
             <Link href="/wishlist" className="icon-link" aria-label="Wishlist">
               ♡ <span style={countPill}>{wishlistCount}</span>
             </Link>
@@ -88,50 +119,39 @@ export function Header() {
             </Link>
             {user ? (
               <>
-                <Link href="/account" className="icon-link">
-                  My account
+                <Link href="/account" className="icon-link header-account-link">
+                  Account
                 </Link>
-                <button type="button" onClick={() => void logout()} style={ghostBtn}>
+                <button type="button" onClick={() => void logout()} className="header-signout-btn" style={ghostBtn}>
                   Sign out
                 </button>
               </>
             ) : (
-              <Link href="/login" className="icon-link">
-                Login / Register
+              <Link href="/login" className="icon-link header-login-link">
+                Login
               </Link>
             )}
           </div>
         </div>
       </div>
 
-      {/* primary nav */}
-      <nav style={navBar} aria-label="Main">
-        <div className="container" style={navInner}>
-          <div style={navList}>
-            <Link href="/" className="nav-link">
-              Home
-            </Link>
-            <Link href="/about" className="nav-link">
-              About Us
-            </Link>
-            <Link href="/products" className="nav-link">
-              Our Products
-            </Link>
-            <Link href="/clientele" className="nav-link">
-              Clientele
-            </Link>
-            <Link href="/quote" className="nav-link">
-              Request a Quote
-            </Link>
-            <Link href="/delivery" className="nav-link">
-              Delivery
-            </Link>
-            <Link href="/returns" className="nav-link">
-              Returns
-            </Link>
-            <Link href="/contact" className="nav-link">
-              Contact Us
-            </Link>
+      {menuOpen && (
+        <button type="button" className="nav-backdrop" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
+      )}
+
+      <nav id="site-nav" className={`site-nav${menuOpen ? ' is-open' : ''}`} style={navBar} aria-label="Main">
+        <div className="container site-nav-inner">
+          <div className="site-nav-list">
+            {NAV.map((item) => (
+              <Link key={item.href} href={item.href} className="nav-link" onClick={() => setMenuOpen(false)}>
+                {item.label}
+              </Link>
+            ))}
+            {user?.role === 'ADMIN' && (
+              <Link href="/admin" className="nav-link nav-link-admin-mobile" onClick={() => setMenuOpen(false)}>
+                Admin
+              </Link>
+            )}
           </div>
           {user?.role === 'ADMIN' && (
             <Link href="/admin" className="nav-link nav-link-admin">
@@ -150,24 +170,9 @@ const utilBar = {
   fontSize: '0.82rem',
   borderBottom: '1px solid var(--border)',
 } as const;
-const utilInner = {
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  flexWrap: 'wrap' as const,
-  gap: '0.5rem',
-  padding: '0.4rem 0',
-};
 const utilItem = { color: 'var(--muted)', textDecoration: 'none' } as const;
 
 const mainBar = { background: 'var(--surface)', borderBottom: '1px solid var(--border)' } as const;
-const mainInner = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1.5rem',
-  padding: '0.9rem 0',
-  flexWrap: 'wrap' as const,
-};
 const brand = {
   display: 'flex',
   alignItems: 'center',
@@ -204,9 +209,10 @@ const brandSub = {
   letterSpacing: '0.5px',
 };
 
-const searchWrap = { display: 'flex', flex: '1 1 320px', minWidth: 220, maxWidth: 560 } as const;
+const searchWrap = { display: 'flex', flex: '1 1 320px', minWidth: 0, maxWidth: 560 } as const;
 const searchInput = {
   flex: 1,
+  minWidth: 0,
   padding: '0.6rem 0.85rem',
   border: '1px solid var(--border)',
   borderRight: 'none',
@@ -219,26 +225,6 @@ const navBar = {
   background: 'var(--surface)',
   borderBottom: '1px solid var(--border)',
   boxShadow: 'var(--shadow)',
-} as const;
-
-const navInner = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '1rem',
-  padding: '0',
-  minHeight: 46,
-  position: 'relative' as const,
-};
-
-const navList = {
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flexWrap: 'wrap' as const,
-  gap: '0.25rem 1.75rem',
-  width: '100%',
-  padding: '0.35rem 0',
 } as const;
 
 const countPill = {

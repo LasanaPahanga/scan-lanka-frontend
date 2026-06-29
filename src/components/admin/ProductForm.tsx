@@ -232,7 +232,7 @@ export function ProductForm({ existing, categories }: Props) {
       )}
 
       {(isEdit ? !isVariant : mode === 'SINGLE') && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div className="admin-grid-2cols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <Field label="Price (Rs) *">
             <input
               style={fieldInput}
@@ -265,7 +265,7 @@ export function ProductForm({ existing, categories }: Props) {
             combination becomes a priced variant below.
           </p>
           {groups.map((g, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <div key={i} className="admin-grid-3cols" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', gap: '0.5rem', marginBottom: '0.5rem' }}>
               <input
                 style={fieldInput}
                 placeholder="Group name (Size)"

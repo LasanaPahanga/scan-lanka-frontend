@@ -110,6 +110,7 @@ export function CustomerCareWidget() {
     <>
       <button
         type="button"
+        className="fab-widget"
         onClick={() => setOpen((v) => !v)}
         style={fab}
         aria-label="Customer care chat"

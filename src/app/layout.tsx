@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import '../styles/tokens.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CartProvider } from '@/components/CartProvider';
@@ -22,6 +22,11 @@ export const metadata: Metadata = {
     locale: 'en_LK',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
