@@ -9,6 +9,7 @@ import { CustomerCareWidget } from '@/components/CustomerCareWidget';
 import { Footer } from '@/components/Footer';
 import { CookieConsent } from '@/components/CookieConsent';
 import { Header } from '@/components/Header';
+import { IntroSplash } from '@/components/IntroSplash';
 
 export const metadata: Metadata = {
   title: 'Scan Lanka - Boards & Teaching Equipment',
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <GeoProvider>
             <CartProvider>
               <WishlistProvider>
+                <IntroSplash />
                 <Header />
                 <div className="app-main">{children}</div>
                 <Footer />
