@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { listSupportChats, SupportSummary } from '@/lib/support';
-import { adminMain, mutedText } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default function AdminSupportPage() {
   const [items, setItems] = useState<SupportSummary[]>([]);
@@ -19,37 +20,34 @@ export default function AdminSupportPage() {
 
   return (
     <main style={adminMain}>
-      <h1>Customer care</h1>
-      <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+      <AdminPageHeader title="Customer care" description="Live chat conversations from the storefront widget." />
+
+      <div className="admin-filter-bar">
         {(['OPEN', 'CLOSED'] as const).map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setStatus(s)}
-            style={{
-              padding: '0.35rem 0.75rem',
-              borderRadius: 'var(--radius-sm)',
-              border: '1px solid var(--border)',
-              background: status === s ? 'var(--primary-light)' : 'var(--surface)',
-              fontWeight: status === s ? 700 : 500,
-              cursor: 'pointer',
-            }}
+            className={`admin-filter-chip${status === s ? ' admin-filter-chip--active' : ''}`}
           >
             {s === 'OPEN' ? 'Open' : 'Closed'}
           </button>
         ))}
       </div>
+
       {items.length === 0 ? (
-        <p style={mutedText}>No {status.toLowerCase()} conversations.</p>
+        <p className="admin-empty">No {status.toLowerCase()} conversations.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="admin-inbox">
           {items.map((c) => (
-            <li key={c.id} style={{ borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
-              <Link href={`/admin/support/${c.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <strong>{c.visitorName ?? 'Visitor'}</strong>
-                {c.visitorEmail ? ` - ${c.visitorEmail}` : ''}
-                <p style={{ ...mutedText, margin: '0.25rem 0' }}>{new Date(c.updatedAt).toLocaleString()}</p>
-                <p style={{ margin: 0 }}>{c.preview}</p>
+            <li key={c.id} className="admin-inbox-item">
+              <Link href={`/admin/support/${c.id}`}>
+                <div className="admin-inbox-meta">
+                  <strong>{c.visitorName ?? 'Visitor'}</strong>
+                  {c.visitorEmail && <span className="admin-inbox-time">{c.visitorEmail}</span>}
+                  <span className="admin-inbox-time">{new Date(c.updatedAt).toLocaleString()}</span>
+                </div>
+                <p className="admin-inbox-preview">{c.preview}</p>
               </Link>
             </li>
           ))}

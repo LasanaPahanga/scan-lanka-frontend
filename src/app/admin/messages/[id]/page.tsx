@@ -11,7 +11,9 @@ import {
   getAdminOrderThread,
   reopenOrderThread,
 } from '@/lib/order-messages';
-import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 export default function AdminOrderMessageDetailPage() {
   const params = useParams();
@@ -30,7 +32,7 @@ export default function AdminOrderMessageDetailPage() {
   if (!thread) {
     return (
       <main style={adminMain}>
-        <p style={mutedText}>Loading…</p>
+        <p className="admin-empty">Loading…</p>
       </main>
     );
   }
@@ -47,32 +49,26 @@ export default function AdminOrderMessageDetailPage() {
 
   return (
     <main style={adminMain}>
-      <p>
-        <Link href="/admin/messages">← Order messages</Link>
-        {' · '}
-        <Link href={`/admin/orders/${encodeURIComponent(thread.order.orderNumber)}`}>View order</Link>
-      </p>
-      <h1>{thread.orderNumber}</h1>
-      <p style={mutedText}>
-        {thread.order.contactName} - {thread.order.contactEmail} · {thread.order.status} · {thread.status}
-      </p>
+      <AdminPageHeader
+        back={{ href: '/admin/messages', label: 'Order messages' }}
+        title={thread.orderNumber}
+        description={`${thread.order.contactName} · ${thread.order.contactEmail} · ${thread.order.status} · ${thread.status}`}
+        actions={
+          <Link href={`/admin/orders/${encodeURIComponent(thread.order.orderNumber)}`} className="admin-btn admin-btn--secondary admin-btn--sm">
+            View order
+          </Link>
+        }
+      />
 
-      <section className="responsive-stack" style={sideBySide}>
-        <div>
-          <h2 style={{ fontSize: '1rem' }}>Messages</h2>
-          <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.5rem' }}>
+      <div className="admin-chat-layout">
+        <AdminSection title="Messages">
+          <ul className="admin-chat">
             {thread.messages.map((m) => (
               <li
                 key={m.id}
-                style={{
-                  padding: '0.5rem 0.75rem',
-                  borderRadius: 'var(--radius-sm)',
-                  background: m.role === 'ADMIN' ? 'var(--primary-light)' : 'var(--bg-muted)',
-                  maxWidth: '85%',
-                  marginLeft: m.role === 'ADMIN' ? 'auto' : 0,
-                }}
+                className={`admin-chat-bubble ${m.role === 'ADMIN' ? 'admin-chat-bubble--staff' : 'admin-chat-bubble--visitor'}`}
               >
-                <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+                <div className="admin-chat-meta">
                   {m.label} · {new Date(m.at).toLocaleString()}
                 </div>
                 <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
@@ -81,23 +77,19 @@ export default function AdminOrderMessageDetailPage() {
           </ul>
           {!closed && (
             <form onSubmit={onReply} style={{ marginTop: '1rem' }}>
-              <textarea
-                style={{ ...fieldInput, width: '100%', minHeight: 80 }}
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                placeholder="Reply to customer…"
-                required
-              />
-              <button type="submit" style={{ ...primaryButton, marginTop: '0.5rem', width: 'auto' }}>
-                Send reply
-              </button>
+              <textarea className="admin-field" value={body} onChange={(e) => setBody(e.target.value)} placeholder="Reply to customer…" required style={{ width: '100%', minHeight: 88 }} />
+              <div className="admin-toolbar">
+                <button type="submit" className="admin-btn admin-btn--primary admin-btn--sm">
+                  Send reply
+                </button>
+              </div>
             </form>
           )}
-          <div style={{ marginTop: '0.75rem', display: 'flex', gap: '0.75rem' }}>
+          <div className="admin-toolbar">
             {!closed ? (
               <button
                 type="button"
-                style={{ color: 'var(--danger)' }}
+                className="admin-btn admin-btn--danger admin-btn--sm"
                 onClick={async () => {
                   await closeOrderThread(id);
                   await reload();
@@ -108,6 +100,7 @@ export default function AdminOrderMessageDetailPage() {
             ) : (
               <button
                 type="button"
+                className="admin-btn admin-btn--secondary admin-btn--sm"
                 onClick={async () => {
                   await reopenOrderThread(id);
                   await reload();
@@ -117,34 +110,19 @@ export default function AdminOrderMessageDetailPage() {
               </button>
             )}
           </div>
-        </div>
+        </AdminSection>
 
-        <aside style={orderPane}>
-          <h2 style={{ fontSize: '1rem', marginTop: 0 }}>Linked order</h2>
-          <ul style={{ paddingLeft: '1.1rem', margin: '0.5rem 0' }}>
+        <aside className="admin-aside-panel">
+          <h2 style={{ fontSize: '1rem', margin: '0 0 0.65rem' }}>Linked order</h2>
+          <ul style={{ paddingLeft: '1.1rem', margin: 0 }}>
             {thread.order.lines.map((l) => (
               <li key={l.sku}>
-                {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
+                {l.name} × {l.quantity} — {formatLkr(l.lineTotalCents)}
               </li>
             ))}
           </ul>
         </aside>
-      </section>
+      </div>
     </main>
   );
 }
-
-const sideBySide = {
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) minmax(220px, 280px)',
-  gap: '1.5rem',
-  marginTop: '1rem',
-} as const;
-
-const orderPane = {
-  padding: '0.75rem 1rem',
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  height: 'fit-content',
-} as const;

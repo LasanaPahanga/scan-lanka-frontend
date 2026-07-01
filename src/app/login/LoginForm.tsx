@@ -43,6 +43,10 @@ export default function LoginForm() {
       if (err instanceof ApiError && err.message === 'TOTP_REQUIRED') {
         setNeedsTotp(true);
         setError('Enter your authenticator code.');
+      } else if (err instanceof ApiError && err.status === 0) {
+        setError('Could not reach the server. Is the backend running?');
+      } else if (err instanceof ApiError && err.status === 400) {
+        setError('Request failed. Clear cookies for localhost (DevTools → Application → Cookies) and try again.');
       } else {
         setError('Invalid email or password.');
       }

@@ -6,7 +6,8 @@ import {
   listAdminNotifications,
   resendNotification,
 } from '@/lib/admin-notifications';
-import { mutedText, adminMain } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default function AdminNotificationsPage() {
   const [rows, setRows] = useState<AdminNotification[]>([]);
@@ -36,55 +37,71 @@ export default function AdminNotificationsPage() {
 
   return (
     <main style={adminMain}>
-      <h1>Email notifications</h1>
-      <p style={mutedText}>Outbox status - sent, retrying, or failed messages.</p>
-      <label style={{ display: 'block', margin: '1rem 0' }}>
-        Filter:{' '}
-        <select value={status} onChange={(e) => setStatus(e.target.value)}>
-          <option value="all">All</option>
-          <option value="PENDING">Pending</option>
-          <option value="RETRYING">Retrying</option>
-          <option value="SENT">Sent</option>
-          <option value="FAILED">Failed</option>
-        </select>
-      </label>
-      {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem' }}>
-        <thead>
-          <tr>
-            <th align="left">Type</th>
-            <th align="left">To</th>
-            <th align="left">Subject</th>
-            <th align="left">Status</th>
-            <th align="left">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((n) => (
-            <tr key={n.id} style={{ borderTop: '1px solid var(--border)' }}>
-              <td>{n.type}</td>
-              <td>{n.recipient}</td>
-              <td>{n.subject}</td>
-              <td>
-                {n.status}
-                {n.lastError && (
-                  <span style={{ display: 'block', color: 'var(--muted)', fontSize: '0.85rem' }}>
-                    {n.lastError}
-                  </span>
-                )}
-              </td>
-              <td>
-                {n.status === 'FAILED' && (
-                  <button type="button" disabled={busyId === n.id} onClick={() => onResend(n.id)}>
-                    {busyId === n.id ? '…' : 'Resend'}
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {rows.length === 0 && <p style={mutedText}>No notifications yet.</p>}
+      <AdminPageHeader title="Email notifications" description="Outbox status — sent, retrying, or failed messages." />
+
+      <div className="admin-filter-bar">
+        {[
+          { id: 'all', label: 'All' },
+          { id: 'PENDING', label: 'Pending' },
+          { id: 'RETRYING', label: 'Retrying' },
+          { id: 'SENT', label: 'Sent' },
+          { id: 'FAILED', label: 'Failed' },
+        ].map((f) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => setStatus(f.id)}
+            className={`admin-filter-chip${status === f.id ? ' admin-filter-chip--active' : ''}`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {error && <p className="admin-alert admin-alert--error">{error}</p>}
+
+      {rows.length === 0 ? (
+        <p className="admin-empty">No notifications yet.</p>
+      ) : (
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>To</th>
+                <th>Subject</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((n) => (
+                <tr key={n.id}>
+                  <td>{n.type}</td>
+                  <td>{n.recipient}</td>
+                  <td>{n.subject}</td>
+                  <td>
+                    <span className="admin-badge admin-badge--muted">{n.status}</span>
+                    {n.lastError && <span style={{ display: 'block', color: 'var(--muted)', fontSize: '0.82rem', marginTop: '0.25rem' }}>{n.lastError}</span>}
+                  </td>
+                  <td>
+                    {n.status === 'FAILED' && (
+                      <button
+                        type="button"
+                        className="admin-btn admin-btn--secondary admin-btn--sm"
+                        disabled={busyId === n.id}
+                        onClick={() => onResend(n.id)}
+                      >
+                        {busyId === n.id ? '…' : 'Resend'}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </main>
   );
 }

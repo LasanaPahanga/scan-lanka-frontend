@@ -1,7 +1,6 @@
 import { api } from './api';
+import { getApiBase } from './api-base';
 import { GuestCartItem } from './cart';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
 
 export type DeliveryMethod = 'COMPANY_LORRY' | 'COURIER';
 
@@ -74,7 +73,7 @@ export async function uploadBankSlip(orderNumber: string, file: File): Promise<v
   const fd = new FormData();
   fd.append('orderNumber', orderNumber);
   fd.append('file', file);
-  const res = await fetch(`${API_BASE}/api/payments/bank-transfer/slip`, {
+  const res = await fetch(`${getApiBase()}/api/payments/bank-transfer/slip`, {
     method: 'POST',
     credentials: 'include',
     body: fd,

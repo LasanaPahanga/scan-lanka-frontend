@@ -1,7 +1,7 @@
 // Central API client (global/09 §5: one client). Sends cookies (httpOnly auth — global/02 §2);
 // never stores tokens in JS. Secrets are server-only (NEXT_PUBLIC_* is public).
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { getApiBase } from './api-base';
 
 export class ApiError extends Error {
   constructor(
@@ -24,8 +24,9 @@ function shouldAttemptRefresh(path: string, retried: boolean): boolean {
 }
 
 async function silentRefresh(): Promise<boolean> {
+  const apiBase = getApiBase();
   if (!refreshInFlight) {
-    refreshInFlight = fetch(`${API_BASE}/api/auth/refresh`, {
+    refreshInFlight = fetch(`${apiBase}/api/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -39,12 +40,20 @@ async function silentRefresh(): Promise<boolean> {
 }
 
 export async function api<T>(path: string, init: RequestInit = {}, retried = false): Promise<T> {
+  const method = (init.method ?? 'GET').toUpperCase();
+  const hasBody = init.body != null && init.body !== '';
+  const headers = new Headers(init.headers);
+  if (hasBody || (method !== 'GET' && method !== 'HEAD')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    const apiBase = getApiBase();
+    res = await fetch(`${apiBase}${path}`, {
       ...init,
       credentials: 'include',
-      headers: { 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+      headers,
     });
   } catch {
     throw new ApiError(0, 'NETWORK', 'Could not reach the server. Is the backend running?');
@@ -74,7 +83,8 @@ export async function api<T>(path: string, init: RequestInit = {}, retried = fal
 
 /** Multipart upload (bank slip, etc.) — no JSON Content-Type. */
 export async function apiForm<T>(path: string, form: FormData, retried = false): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
+  const apiBase = getApiBase();
+  const res = await fetch(`${apiBase}${path}`, {
     method: 'POST',
     credentials: 'include',
     body: form,

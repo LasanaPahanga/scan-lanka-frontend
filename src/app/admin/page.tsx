@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { DashboardView, fetchDashboard } from '@/lib/admin';
-import { formatLkr } from '@/lib/money';
-import { mutedText, adminMain } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
 import { useAuth } from '@/components/AuthProvider';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<DashboardView | null>(null);
@@ -15,27 +16,25 @@ export default function AdminDashboardPage() {
     fetchDashboard().then(setData).catch(() => setData(null));
   }, []);
 
+  const badge = user?.totpEnabled ? (
+    <span className="admin-badge admin-badge--success">2FA enrolled</span>
+  ) : user?.adminTotpRequired ? (
+    <Link href="/admin/2fa" className="admin-badge admin-badge--warn">
+      Enable 2FA
+    </Link>
+  ) : (
+    <span className="admin-badge admin-badge--muted">2FA off (dev)</span>
+  );
+
   return (
     <main style={adminMain}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', flexWrap: 'wrap', marginBottom: '1.25rem' }}>
-        <h1 className="page-title" style={{ margin: 0 }}>
-          Dashboard
-        </h1>
-        {user?.totpEnabled ? (
-          <span style={badgeOk}>🔒 2FA enrolled ✓</span>
-        ) : user?.adminTotpRequired ? (
-          <Link href="/admin/2fa" style={badgeWarn}>
-            ⚠ Enable 2FA
-          </Link>
-        ) : (
-          <span style={badgeMuted}>2FA disabled (dev)</span>
-        )}
-      </div>
+      <AdminPageHeader title="Dashboard" description="Order pipeline overview and stock alerts." actions={badge} />
+
       {!data ? (
-        <p style={mutedText}>Loading…</p>
+        <p className="admin-empty">Loading…</p>
       ) : (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem' }}>
+          <div className="admin-stat-grid">
             <Stat label="Pending payment" value={data.pendingPayment} href="/admin/orders?view=pending_payment" />
             <Stat label="Awaiting bank" value={data.awaitingBank} href="/admin/orders?view=pending_payment" />
             <Stat label="Paid" value={data.paid} href="/admin/orders?view=paid" />
@@ -43,17 +42,20 @@ export default function AdminDashboardPage() {
             <Stat label="Delivered" value={data.delivered} href="/admin/orders?view=delivered" />
             <Stat label="Cancelled" value={data.cancelled} href="/admin/orders?view=cancelled" />
           </div>
+
           {data.lowStock.length > 0 && (
-            <section style={{ marginTop: '2rem' }}>
-              <h2 style={{ fontSize: '1.05rem' }}>Low stock</h2>
-              <ul>
+            <AdminSection title="Low stock">
+              <ul className="admin-line-list">
                 {data.lowStock.map((p) => (
                   <li key={p.id}>
-                    {p.name} ({p.sku}) - {p.stockQty} left
+                    <span>
+                      {p.name} ({p.sku})
+                    </span>
+                    <span className="admin-badge admin-badge--warn">{p.stockQty} left</span>
                   </li>
                 ))}
               </ul>
-            </section>
+            </AdminSection>
           )}
         </>
       )}
@@ -61,52 +63,11 @@ export default function AdminDashboardPage() {
   );
 }
 
-const badgeOk = {
-  background: '#e7f6ec',
-  color: 'var(--success)',
-  border: '1px solid #b8e6c6',
-  borderRadius: 999,
-  padding: '0.25rem 0.7rem',
-  fontSize: '0.8rem',
-  fontWeight: 700,
-} as const;
-const badgeMuted = {
-  background: 'var(--bg-muted)',
-  color: 'var(--muted)',
-  border: '1px solid var(--border)',
-  borderRadius: 999,
-  padding: '0.25rem 0.7rem',
-  fontSize: '0.8rem',
-  fontWeight: 600,
-} as const;
-const badgeWarn = {
-  background: '#fff4e5',
-  color: 'var(--warning, #b45309)',
-  border: '1px solid #f3d39b',
-  borderRadius: 999,
-  padding: '0.25rem 0.7rem',
-  fontSize: '0.8rem',
-  fontWeight: 700,
-  textDecoration: 'none',
-} as const;
-
 function Stat({ label, value, href }: { label: string; value: number; href: string }) {
   return (
-    <Link
-      href={href}
-      className="card-hover"
-      style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius)',
-        boxShadow: 'var(--shadow)',
-        padding: '1.1rem 1.25rem',
-        textDecoration: 'none',
-        color: 'inherit',
-      }}
-    >
-      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--primary)' }}>{value}</div>
-      <div style={{ color: 'var(--muted)', fontSize: '0.85rem', marginTop: '0.15rem' }}>{label}</div>
+    <Link href={href} className="admin-stat-card">
+      <div className="admin-stat-value">{value}</div>
+      <div className="admin-stat-label">{label}</div>
     </Link>
   );
 }

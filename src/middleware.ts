@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    `connect-src 'self' ${apiBase}`,
+    isLocalDev ? "connect-src 'self'" : `connect-src 'self' ${apiBase}`,
     "frame-ancestors 'none'",
     "base-uri 'none'",
     "object-src 'none'",

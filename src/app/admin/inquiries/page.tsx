@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { listInquiries, markInquiryHandled, InquiryView } from '@/lib/contact';
-import { mutedText, adminMain } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 export default function AdminInquiriesPage() {
   const [items, setItems] = useState<InquiryView[]>([]);
@@ -15,22 +17,23 @@ export default function AdminInquiriesPage() {
 
   return (
     <main style={adminMain}>
-      <h1>Contact inquiries</h1>
+      <AdminPageHeader title="Contact inquiries" description="Messages submitted through the contact form." />
+
       {items.length === 0 ? (
-        <p style={mutedText}>No new inquiries.</p>
+        <p className="admin-empty">No new inquiries.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {items.map((i) => (
-            <li key={i.id} style={{ borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
-              <strong>{i.name}</strong> - {i.email} {i.phone ? `· ${i.phone}` : ''}
-              <p style={mutedText}>{new Date(i.createdAt).toLocaleString()}</p>
-              <p>{i.message}</p>
-              <button type="button" onClick={() => markInquiryHandled(i.id).then(reload)}>
+        items.map((i) => (
+          <AdminSection key={i.id} title={`${i.name} · ${i.email}`}>
+            {i.phone && <p>{i.phone}</p>}
+            <p className="admin-inbox-time">{new Date(i.createdAt).toLocaleString()}</p>
+            <p>{i.message}</p>
+            <div className="admin-toolbar">
+              <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => markInquiryHandled(i.id).then(reload)}>
                 Mark handled
               </button>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </AdminSection>
+        ))
       )}
     </main>
   );

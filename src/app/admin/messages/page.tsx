@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { listAdminOrderThreads, OrderThreadSummary } from '@/lib/order-messages';
-import { adminMain, mutedText } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 export default function AdminOrderMessagesPage() {
   const [items, setItems] = useState<OrderThreadSummary[]>([]);
@@ -24,49 +25,51 @@ export default function AdminOrderMessagesPage() {
 
   return (
     <main style={adminMain}>
-      <h1>Order messages</h1>
-      <p style={mutedText}>Threads linked to orders - delivery timing, updates, and customer questions.</p>
+      <AdminPageHeader
+        title="Order messages"
+        description="Threads linked to orders — delivery timing, updates, and customer questions."
+      />
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', margin: '1rem 0' }}>
+      <div className="admin-filter-bar">
         {(['', 'OPEN', 'CLOSED'] as const).map((s) => (
           <button
             key={s || 'all'}
             type="button"
             onClick={() => setStatus(s)}
-            style={filterBtn(status === s)}
+            className={`admin-filter-chip${status === s ? ' admin-filter-chip--active' : ''}`}
           >
             {s === '' ? 'All' : s === 'OPEN' ? 'Open' : 'Closed'}
           </button>
         ))}
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.9rem' }}>
+        <label className="admin-check-row" style={{ marginBottom: 0 }}>
           <input type="checkbox" checked={unreadOnly} onChange={(e) => setUnreadOnly(e.target.checked)} />
           Unread only
         </label>
         <input
           type="search"
+          className="admin-search"
           placeholder="Search order #"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          style={{ marginLeft: 'auto', padding: '0.35rem 0.6rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}
         />
       </div>
 
       {items.length === 0 ? (
-        <p style={mutedText}>No threads match your filters.</p>
+        <p className="admin-empty">No threads match your filters.</p>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <ul className="admin-inbox">
           {items.map((t) => (
-            <li key={t.id} style={{ borderBottom: '1px solid var(--border)', padding: '0.75rem 0' }}>
-              <Link href={`/admin/messages/${t.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <strong>{t.orderNumber}</strong>
-                {t.adminUnread > 0 && (
-                  <span style={badge}>{t.adminUnread} new</span>
-                )}
-                <span style={{ color: 'var(--muted)', marginLeft: '0.5rem' }}>{t.status}</span>
-                <p style={{ ...mutedText, margin: '0.25rem 0' }}>
-                  {new Date(t.lastMessageAt).toLocaleString()}
-                </p>
-                <p style={{ margin: 0 }}>{t.preview || '-'}</p>
+            <li key={t.id} className="admin-inbox-item">
+              <Link href={`/admin/messages/${t.id}`}>
+                <div className="admin-inbox-meta">
+                  <strong>{t.orderNumber}</strong>
+                  {t.adminUnread > 0 && (
+                    <span className="admin-badge admin-badge--primary">{t.adminUnread} new</span>
+                  )}
+                  <span className="admin-badge admin-badge--muted">{t.status}</span>
+                  <span className="admin-inbox-time">{new Date(t.lastMessageAt).toLocaleString()}</span>
+                </div>
+                <p className="admin-inbox-preview">{t.preview || '—'}</p>
               </Link>
             </li>
           ))}
@@ -75,24 +78,3 @@ export default function AdminOrderMessagesPage() {
     </main>
   );
 }
-
-function filterBtn(active: boolean) {
-  return {
-    padding: '0.35rem 0.75rem',
-    borderRadius: 'var(--radius-sm)',
-    border: '1px solid var(--border)',
-    background: active ? 'var(--primary-light)' : 'var(--surface)',
-    fontWeight: active ? 700 : 500,
-    cursor: 'pointer',
-  } as const;
-}
-
-const badge = {
-  marginLeft: '0.5rem',
-  padding: '0.1rem 0.45rem',
-  borderRadius: 999,
-  background: 'var(--primary)',
-  color: '#fff',
-  fontSize: '0.72rem',
-  fontWeight: 700,
-} as const;

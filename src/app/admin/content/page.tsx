@@ -3,7 +3,9 @@
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ContentPage, listContentPages, saveContentPage } from '@/lib/content';
-import { mutedText, adminMain, primaryButton, fieldInput } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 const SLUGS = ['about', 'delivery', 'clientele', 'contact', 'returns', 'privacy', 'terms'];
 
@@ -43,33 +45,49 @@ export default function AdminContentPage() {
 
   return (
     <main style={adminMain}>
-      <h1>Content pages</h1>
-      <p style={mutedText}>
-        HTML is sanitized on save. Public pages:{' '}
+      <AdminPageHeader
+        title="Content pages"
+        description="HTML is sanitized on save. Preview public pages from the links below."
+      />
+
+      <div className="admin-filter-bar">
         {SLUGS.map((s) => (
-          <Link key={s} href={`/${s}`} style={{ marginRight: '0.5rem' }}>
-            /{s}
-          </Link>
-        ))}
-      </p>
-      <div style={{ marginBottom: '1rem' }}>
-        {SLUGS.map((s) => (
-          <button key={s} type="button" onClick={() => select(s)} style={{ marginRight: '0.5rem' }}>
+          <button
+            key={s}
+            type="button"
+            onClick={() => select(s)}
+            className={`admin-filter-chip${slug === s ? ' admin-filter-chip--active' : ''}`}
+          >
             {s}
           </button>
         ))}
       </div>
-      <form onSubmit={onSave}>
-        <input style={{ ...fieldInput, width: '100%', marginBottom: '0.5rem' }} value={title} onChange={(e) => setTitle(e.target.value)} />
-        <textarea
-          style={{ ...fieldInput, width: '100%', minHeight: 240 }}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-        />
-        <button type="submit" style={{ ...primaryButton, marginTop: '0.5rem' }}>
-          Save {slug}
-        </button>
-      </form>
+
+      <p style={{ marginBottom: '1rem', fontSize: '0.88rem' }}>
+        {SLUGS.map((s) => (
+          <Link key={s} href={`/${s}`} style={{ marginRight: '0.75rem' }}>
+            /{s}
+          </Link>
+        ))}
+      </p>
+
+      <AdminSection title={`Editing: ${slug}`}>
+        <form onSubmit={onSave}>
+          <div className="admin-field">
+            <label htmlFor="content-title">Page title</label>
+            <input id="content-title" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="content-body">HTML body</label>
+            <textarea id="content-body" value={body} onChange={(e) => setBody(e.target.value)} style={{ minHeight: 280 }} />
+          </div>
+          <div className="admin-toolbar">
+            <button type="submit" className="admin-btn admin-btn--primary">
+              Save {slug}
+            </button>
+          </div>
+        </form>
+      </AdminSection>
     </main>
   );
 }

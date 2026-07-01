@@ -24,6 +24,8 @@ import {
 import { saveBlob } from '@/lib/admin-notifications';
 import { formatLkr } from '@/lib/money';
 import { mutedText, adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 const ITEM_STATUSES = ['PENDING', 'PREPARING', 'PREPARED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 const ORDER_STATUSES = ['PACKED', 'SHIPPED', 'READY_FOR_PICKUP', 'COMPLETED', 'CANCELLED'];
@@ -69,64 +71,63 @@ export default function AdminOrderDetailPage() {
   if (!order) {
     return (
       <main style={adminMain}>
-        <p style={mutedText}>Loading…</p>
+        <p className="admin-empty">Loading…</p>
       </main>
     );
   }
 
   return (
     <main style={adminMain}>
-      <p>
-        <Link href="/admin/orders">← Orders</Link>
-      </p>
-      <h1>{order.orderNumber}</h1>
-      <p style={mutedText}>
-        {order.status} · {order.fulfilmentType} · {order.deliveryPayment}
-      </p>
-      <p>
-        {order.contactName} - {order.contactEmail} - {order.contactPhone}
-      </p>
-      {order.customerId != null && (
-        <p style={mutedText}>
-          Registered customer ·{' '}
-          <Link href={`/admin/customers/${order.customerId}`}>View all orders for this customer</Link>
+      <AdminPageHeader
+        back={{ href: '/admin/orders', label: 'Orders' }}
+        title={order.orderNumber}
+        description={`${order.status} · ${order.fulfilmentType} · ${order.deliveryPayment}`}
+      />
+
+      <AdminSection title="Customer">
+        <p>
+          {order.contactName} · {order.contactEmail} · {order.contactPhone}
         </p>
-      )}
-
-      <section style={{ marginTop: '1rem' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>Dispatch summary</h2>
-        <button
-          type="button"
-          onClick={async () => {
-            try {
-              setDispatch(await fetchDispatchSummary(orderNumber));
-            } catch {
-              setError('Could not load dispatch summary.');
-            }
-          }}
-        >
-          Load dispatch summary
-        </button>
-        {dispatch && (
-          <pre style={{ fontSize: '0.82rem', marginTop: '0.5rem', whiteSpace: 'pre-wrap' }}>
-            {JSON.stringify(dispatch, null, 2)}
-          </pre>
+        {order.customerId != null && (
+          <p style={mutedText}>
+            Registered customer ·{' '}
+            <Link href={`/admin/customers/${order.customerId}`}>View all orders</Link>
+          </p>
         )}
-      </section>
+      </AdminSection>
 
-      <section style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>Lines</h2>
-        <ul>
+      <AdminSection title="Dispatch summary">
+        <div className="admin-toolbar" style={{ marginTop: 0 }}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--secondary admin-btn--sm"
+            onClick={async () => {
+              try {
+                setDispatch(await fetchDispatchSummary(orderNumber));
+              } catch {
+                setError('Could not load dispatch summary.');
+              }
+            }}
+          >
+            Load dispatch summary
+          </button>
+        </div>
+        {dispatch && <pre className="admin-pre">{JSON.stringify(dispatch, null, 2)}</pre>}
+      </AdminSection>
+
+      <AdminSection title="Line items">
+        <ul className="admin-line-list">
           {order.lines.map((l) => (
-            <li key={l.id} style={{ marginBottom: '0.5rem' }}>
-              {l.name} ({l.sku}) × {l.quantity} - {formatLkr(l.lineTotalCents)}
+            <li key={l.id}>
+              <span>
+                {l.name} ({l.sku}) × {l.quantity} — {formatLkr(l.lineTotalCents)}
+              </span>
               <select
                 value={l.status}
                 onChange={async (e) => {
                   await updateItemStatus(orderNumber, l.id, e.target.value);
                   await reload();
                 }}
-                style={{ marginLeft: '0.5rem' }}
               >
                 {ITEM_STATUSES.map((s) => (
                   <option key={s} value={s}>
@@ -137,182 +138,186 @@ export default function AdminOrderDetailPage() {
             </li>
           ))}
         </ul>
-      </section>
+      </AdminSection>
 
-      <section style={{ marginTop: '1rem' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>Order status</h2>
-        <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
-        <button
-          type="button"
-          style={{ marginLeft: '0.5rem' }}
-          onClick={async () => {
-            setError(null);
-            try {
-              await updateOrderStatus(orderNumber, newStatus);
-              await reload();
-            } catch {
-              setError('Status update failed.');
-            }
-          }}
-        >
-          Update
-        </button>
-      </section>
+      <AdminSection title="Order status">
+        <div className="admin-toolbar" style={{ marginTop: 0 }}>
+          <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary admin-btn--sm"
+            onClick={async () => {
+              setError(null);
+              try {
+                await updateOrderStatus(orderNumber, newStatus);
+                await reload();
+              } catch {
+                setError('Status update failed.');
+              }
+            }}
+          >
+            Update status
+          </button>
+        </div>
+      </AdminSection>
 
       {order.payment?.method === 'BANK_TRANSFER' && order.payment.slipUrl && (
-        <section style={{ marginTop: '1rem' }}>
-          <h2 style={{ fontSize: '1.05rem' }}>Bank slip</h2>
+        <AdminSection title="Bank slip">
           <p>
             Status: {order.payment.status} / {order.payment.slipReviewStatus}
           </p>
-          <a href={order.payment.slipUrl} target="_blank" rel="noreferrer">
-            View slip
-          </a>
-          <div style={{ marginTop: '0.5rem' }}>
-            <button type="button" onClick={() => bankConfirm(orderNumber).then(reload)}>
+          <div className="admin-toolbar" style={{ marginTop: 0 }}>
+            <a href={order.payment.slipUrl} target="_blank" rel="noreferrer" className="admin-btn admin-btn--secondary admin-btn--sm">
+              View slip
+            </a>
+            <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => bankConfirm(orderNumber).then(reload)}>
               Confirm payment
             </button>
-            <button type="button" style={{ marginLeft: '0.5rem' }} onClick={() => bankReject(orderNumber).then(reload)}>
+            <button type="button" className="admin-btn admin-btn--danger admin-btn--sm" onClick={() => bankReject(orderNumber).then(reload)}>
               Reject slip
             </button>
           </div>
-        </section>
+        </AdminSection>
       )}
 
       {order.deliveryPayment === 'COD' && (
-        <section style={{ marginTop: '1rem' }}>
-          <h2 style={{ fontSize: '1.05rem' }}>COD</h2>
+        <AdminSection title="Cash on delivery">
           <p>Estimated delivery: {formatLkr(order.deliveryCodCents)}</p>
-          <button type="button" onClick={() => codReceived(orderNumber).then(reload)}>
-            Mark COD received
-          </button>
-        </section>
+          <div className="admin-toolbar" style={{ marginTop: 0 }}>
+            <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => codReceived(orderNumber).then(reload)}>
+              Mark COD received
+            </button>
+          </div>
+        </AdminSection>
       )}
 
-      <section style={{ marginTop: '1rem' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>Actual delivery cost</h2>
-        <input
-          placeholder="Actual cents"
-          value={actualCents}
-          onChange={(e) => setActualCents(e.target.value)}
-          style={{ marginRight: '0.5rem' }}
-        />
-        <input placeholder="Courier" value={courier} onChange={(e) => setCourier(e.target.value)} />
-        <button
-          type="button"
-          style={{ marginLeft: '0.5rem' }}
-          onClick={async () => {
-            await recordDeliveryActual(orderNumber, Number(actualCents), courier);
-            await reload();
-          }}
-        >
-          Save
-        </button>
+      <AdminSection title="Actual delivery cost">
+        <div className="admin-grid-2">
+          <div className="admin-field">
+            <label htmlFor="actual-cents">Actual cost (cents)</label>
+            <input id="actual-cents" placeholder="e.g. 45000" value={actualCents} onChange={(e) => setActualCents(e.target.value)} />
+          </div>
+          <div className="admin-field">
+            <label htmlFor="courier">Courier</label>
+            <input id="courier" placeholder="Courier name" value={courier} onChange={(e) => setCourier(e.target.value)} />
+          </div>
+        </div>
+        <div className="admin-toolbar">
+          <button
+            type="button"
+            className="admin-btn admin-btn--primary admin-btn--sm"
+            onClick={async () => {
+              await recordDeliveryActual(orderNumber, Number(actualCents), courier);
+              await reload();
+            }}
+          >
+            Save delivery cost
+          </button>
+        </div>
         {order.actualDeliveryCents != null && (
           <p style={mutedText}>
             Recorded: {formatLkr(order.actualDeliveryCents)}
             {order.deliveryCourier ? ` via ${order.deliveryCourier}` : ''}
           </p>
         )}
-      </section>
+      </AdminSection>
 
-      <section style={{ marginTop: '1rem' }}>
-        <button
-          type="button"
-          onClick={async () => {
-            const blob = await downloadAdminReceipt(orderNumber);
-            saveBlob(blob, `SL-${orderNumber}-receipt.pdf`);
-          }}
-        >
-          Download receipt PDF
-        </button>
-        <button type="button" style={{ marginLeft: '0.5rem' }} onClick={() => resendReceipt(orderNumber)}>
-          Resend receipt email
-        </button>
-      </section>
+      <AdminSection title="Receipt">
+        <div className="admin-toolbar" style={{ marginTop: 0 }}>
+          <button
+            type="button"
+            className="admin-btn admin-btn--secondary admin-btn--sm"
+            onClick={async () => {
+              const blob = await downloadAdminReceipt(orderNumber);
+              saveBlob(blob, `SL-${orderNumber}-receipt.pdf`);
+            }}
+          >
+            Download PDF
+          </button>
+          <button type="button" className="admin-btn admin-btn--secondary admin-btn--sm" onClick={() => resendReceipt(orderNumber)}>
+            Resend email
+          </button>
+        </div>
+      </AdminSection>
 
-      <section style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
-        <h2 style={{ fontSize: '1.05rem' }}>After-sales (step-up required)</h2>
+      <AdminSection title="After-sales (step-up required)">
         <p style={mutedText}>
           Refunded so far: {formatLkr(refundedTotal)} · Cap remaining: {formatLkr(refundCap)}
         </p>
-        <label style={{ display: 'block', marginTop: '0.5rem' }}>
-          Admin password
+        <div className="admin-field">
+          <label htmlFor="step-up">Admin password</label>
           <input
+            id="step-up"
             type="password"
             value={stepUpPassword}
             onChange={(e) => setStepUpPassword(e.target.value)}
-            style={{ display: 'block', marginTop: '0.25rem', width: '100%', maxWidth: 280 }}
+            style={{ maxWidth: 320 }}
           />
-        </label>
+        </div>
 
         {!TERMINAL.has(order.status) && order.status !== 'SHIPPED' && (
-          <div style={{ marginTop: '1rem' }}>
-            <h3 style={{ fontSize: '0.95rem' }}>Cancel order</h3>
-            <input
-              placeholder="Reason"
-              value={cancelReason}
-              onChange={(e) => setCancelReason(e.target.value)}
-              style={{ marginRight: '0.5rem' }}
-            />
-            <button
-              type="button"
-              onClick={async () => {
-                setError(null);
-                try {
-                  await cancelOrder(orderNumber, { reason: cancelReason, password: stepUpPassword });
-                  await reload();
-                } catch {
-                  setError('Cancel failed - check step-up or order status.');
-                }
-              }}
-            >
-              Cancel order
-            </button>
-          </div>
+          <>
+            <h3>Cancel order</h3>
+            <div className="admin-toolbar" style={{ marginTop: 0 }}>
+              <input placeholder="Reason" value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} style={{ maxWidth: 240 }} />
+              <button
+                type="button"
+                className="admin-btn admin-btn--danger admin-btn--sm"
+                onClick={async () => {
+                  setError(null);
+                  try {
+                    await cancelOrder(orderNumber, { reason: cancelReason, password: stepUpPassword });
+                    await reload();
+                  } catch {
+                    setError('Cancel failed - check step-up or order status.');
+                  }
+                }}
+              >
+                Cancel order
+              </button>
+            </div>
+          </>
         )}
 
-        <div style={{ marginTop: '1rem' }}>
-          <h3 style={{ fontSize: '0.95rem' }}>Record refund</h3>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.5rem' }}>
-            <input
-              placeholder="Amount (cents)"
-              value={refundAmount}
-              onChange={(e) => setRefundAmount(e.target.value)}
-            />
-            <select value={refundMethod} onChange={(e) => setRefundMethod(e.target.value)}>
-              {REFUND_METHODS.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <input placeholder="Reason" value={refundReason} onChange={(e) => setRefundReason(e.target.value)} />
-            <input placeholder="Gateway / bank ref" value={refundRef} onChange={(e) => setRefundRef(e.target.value)} />
-          </div>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {order.lines.map((l) => (
-              <li key={l.id} style={{ marginBottom: '0.35rem' }}>
-                {l.name} × {l.quantity}
-                <select
-                  value={lineDisposition[l.id] ?? 'RESTOCK'}
-                  onChange={(e) => setLineDisposition((d) => ({ ...d, [l.id]: e.target.value }))}
-                  style={{ marginLeft: '0.5rem' }}
-                >
-                  <option value="RESTOCK">Restock</option>
-                  <option value="WRITE_OFF">Write-off</option>
-                </select>
-              </li>
+        <h3>Record refund</h3>
+        <div className="admin-grid-2">
+          <input placeholder="Amount (cents)" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} />
+          <select value={refundMethod} onChange={(e) => setRefundMethod(e.target.value)}>
+            {REFUND_METHODS.map((m) => (
+              <option key={m} value={m}>
+                {m}
+              </option>
             ))}
-          </ul>
+          </select>
+          <input placeholder="Reason" value={refundReason} onChange={(e) => setRefundReason(e.target.value)} />
+          <input placeholder="Gateway / bank ref" value={refundRef} onChange={(e) => setRefundRef(e.target.value)} />
+        </div>
+        <ul className="admin-line-list">
+          {order.lines.map((l) => (
+            <li key={l.id}>
+              <span>
+                {l.name} × {l.quantity}
+              </span>
+              <select
+                value={lineDisposition[l.id] ?? 'RESTOCK'}
+                onChange={(e) => setLineDisposition((d) => ({ ...d, [l.id]: e.target.value }))}
+              >
+                <option value="RESTOCK">Restock</option>
+                <option value="WRITE_OFF">Write-off</option>
+              </select>
+            </li>
+          ))}
+        </ul>
+        <div className="admin-toolbar">
           <button
             type="button"
+            className="admin-btn admin-btn--primary admin-btn--sm"
             onClick={async () => {
               setError(null);
               const amountCents = Number(refundAmount);
@@ -349,29 +354,28 @@ export default function AdminOrderDetailPage() {
           <ul style={{ marginTop: '1rem', color: 'var(--muted)', paddingLeft: '1.2rem' }}>
             {refunds.map((r) => (
               <li key={r.id}>
-                {formatLkr(r.amountCents)} via {r.method} - {new Date(r.createdAt).toLocaleString()}
+                {formatLkr(r.amountCents)} via {r.method} — {new Date(r.createdAt).toLocaleString()}
                 {r.gatewayRef ? ` (${r.gatewayRef})` : ''}
               </li>
             ))}
           </ul>
         )}
-      </section>
+      </AdminSection>
 
       {order.timeline.length > 0 && (
-        <section style={{ marginTop: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.05rem' }}>Timeline</h2>
-          <ul style={{ color: 'var(--muted)', paddingLeft: '1.2rem' }}>
+        <AdminSection title="Timeline">
+          <ul style={{ color: 'var(--muted)', paddingLeft: '1.2rem', margin: 0 }}>
             {order.timeline.map((e) => (
               <li key={e.at + e.toStatus}>
-                {new Date(e.at).toLocaleString()} - {e.toStatus}
+                {new Date(e.at).toLocaleString()} — {e.toStatus}
                 {e.note ? ` (${e.note})` : ''}
               </li>
             ))}
           </ul>
-        </section>
+        </AdminSection>
       )}
 
-      {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+      {error && <p className="admin-alert admin-alert--error">{error}</p>}
     </main>
   );
 }

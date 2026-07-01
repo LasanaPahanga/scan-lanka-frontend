@@ -1,7 +1,6 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   adminReplySupport,
@@ -9,7 +8,9 @@ import {
   getAdminSupportChat,
   SupportConversation,
 } from '@/lib/support';
-import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
 
 export default function AdminSupportDetailPage() {
   const params = useParams();
@@ -28,7 +29,7 @@ export default function AdminSupportDetailPage() {
   if (!chat) {
     return (
       <main style={adminMain}>
-        <p style={mutedText}>Loading…</p>
+        <p className="admin-empty">Loading…</p>
       </main>
     );
   }
@@ -42,32 +43,27 @@ export default function AdminSupportDetailPage() {
   }
 
   const closed = chat.status === 'CLOSED';
+  const desc = [
+    chat.visitorName ?? 'Visitor',
+    chat.visitorEmail,
+    chat.pageContext ? `from ${chat.pageContext}` : null,
+    chat.status,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <main style={adminMain}>
-      <p>
-        <Link href="/admin/support">← Customer care</Link>
-      </p>
-      <h1>Chat #{chat.id}</h1>
-      <p style={mutedText}>
-        {chat.visitorName ?? 'Visitor'}
-        {chat.visitorEmail ? ` - ${chat.visitorEmail}` : ''}
-        {chat.pageContext ? ` · from ${chat.pageContext}` : ''} · {chat.status}
-      </p>
-      <section style={{ marginTop: '1rem' }}>
-        <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '0.5rem' }}>
+      <AdminPageHeader back={{ href: '/admin/support', label: 'Customer care' }} title={`Chat #${chat.id}`} description={desc} />
+
+      <AdminSection title="Conversation">
+        <ul className="admin-chat">
           {chat.messages.map((m) => (
             <li
               key={m.id}
-              style={{
-                padding: '0.5rem 0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                background: m.sender === 'ADMIN' ? 'var(--primary-light)' : 'var(--bg-muted)',
-                maxWidth: '85%',
-                marginLeft: m.sender === 'ADMIN' ? 'auto' : 0,
-              }}
+              className={`admin-chat-bubble ${m.sender === 'ADMIN' ? 'admin-chat-bubble--staff' : 'admin-chat-bubble--visitor'}`}
             >
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted)' }}>
+              <div className="admin-chat-meta">
                 {m.sender === 'ADMIN' ? 'You' : 'Visitor'} · {new Date(m.at).toLocaleString()}
               </div>
               <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
@@ -76,31 +72,29 @@ export default function AdminSupportDetailPage() {
         </ul>
         {!closed && (
           <form onSubmit={onReply} style={{ marginTop: '1rem' }}>
-            <textarea
-              style={{ ...fieldInput, width: '100%', minHeight: 80 }}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              placeholder="Reply to visitor…"
-              required
-            />
-            <button type="submit" style={{ ...primaryButton, marginTop: '0.5rem', width: 'auto' }}>
-              Send reply
-            </button>
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="Reply to visitor…" required style={{ width: '100%', minHeight: 88 }} />
+            <div className="admin-toolbar">
+              <button type="submit" className="admin-btn admin-btn--primary admin-btn--sm">
+                Send reply
+              </button>
+            </div>
           </form>
         )}
         {!closed && (
-          <button
-            type="button"
-            style={{ marginTop: '0.75rem', color: 'var(--danger)' }}
-            onClick={async () => {
-              await closeSupportChat(id);
-              await reload();
-            }}
-          >
-            Close conversation
-          </button>
+          <div className="admin-toolbar">
+            <button
+              type="button"
+              className="admin-btn admin-btn--danger admin-btn--sm"
+              onClick={async () => {
+                await closeSupportChat(id);
+                await reload();
+              }}
+            >
+              Close conversation
+            </button>
+          </div>
         )}
-      </section>
+      </AdminSection>
     </main>
   );
 }
