@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-const PHONE = '0706307685';
-const WHATSAPP_URL = 'https://wa.me/94706307685';
+const HOTLINE = '0717817447';
+const WHATSAPP_URL = 'https://wa.me/94717817447';
 
 /** Prominent offline contact CTA for returns/cancellations (16 FR-RETURN-1). */
 export function ContactReturnsCta({ compact }: { compact?: boolean }) {
@@ -27,8 +27,8 @@ export function ContactReturnsCta({ compact }: { compact?: boolean }) {
         .
       </p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
-        <a href={`tel:${PHONE}`} style={btn}>
-          Call {PHONE}
+        <a href={`tel:${HOTLINE}`} style={btn}>
+          Call 071 781 7447
         </a>
         <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={btn}>
           WhatsApp us

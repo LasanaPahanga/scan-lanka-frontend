@@ -131,6 +131,12 @@ h3 {
   transform: scale(1.06);
 }
 
+@media (hover: none) {
+  .zoom-hint {
+    display: none;
+  }
+}
+
 /* Animated-underline nav links (uppercase, like scanlanka.com) */
 .nav-link {
   position: relative;
@@ -688,11 +694,14 @@ textarea:focus {
 
   .admin-shell {
     flex-direction: column !important;
+    padding-left: 0 !important;
   }
 
   .admin-sidebar {
     width: 100% !important;
     flex: none !important;
+    position: static !important;
+    height: auto !important;
     border-right: none !important;
     border-bottom: 1px solid var(--border);
     padding: 1rem !important;

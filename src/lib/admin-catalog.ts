@@ -42,7 +42,7 @@ export interface AdminVariant {
 }
 
 export interface DeliveryAttrs {
-  weightKg: number | null;
+  boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null;
   lorryColomboCents: number | null;
   lorrySuburbCents: number | null;
   lorryOuterCents: number | null;
@@ -151,12 +151,21 @@ export interface StoredImageView {
   url: string;
   preview: boolean;
 }
+
+export const adminListProductImages = (id: number) =>
+  api<StoredImageView[]>(`/api/admin/products/${id}/images`);
+
 export function adminUploadProductImage(id: number, file: File, isPreview: boolean) {
   const form = new FormData();
   form.append('file', file);
-  form.append('isPreview', String(isPreview));
   return apiForm<StoredImageView>(`/api/admin/products/${id}/images?isPreview=${isPreview}`, form);
 }
+
+export const adminSetProductImagePreview = (productId: number, imageId: number) =>
+  api<StoredImageView>(`/api/admin/products/${productId}/images/${imageId}/preview`, { method: 'PATCH' });
+
+export const adminDeleteProductImage = (productId: number, imageId: number) =>
+  api<void>(`/api/admin/products/${productId}/images/${imageId}`, { method: 'DELETE' });
 
 /** Prefix backend-served media paths with the API base for <img src>. */
 export function adminMediaUrl(path: string | null): string | null {

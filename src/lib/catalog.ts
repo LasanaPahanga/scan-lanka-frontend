@@ -42,7 +42,7 @@ export interface ProductDetail {
   priceMaxCents: number | null;
   availability: string;
   whatsappOnly: boolean;
-  weightKg: number | null;
+  boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null;
   couriable: boolean;
   imageUrls: string[];
   specGroups: SpecGroup[];
@@ -53,6 +53,9 @@ export interface ResolvedVariant {
   sku: string;
   priceCents: number;
   availability: string;
+  whatsappOnly: boolean;
+  boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null;
+  couriable: boolean;
 }
 
 export interface ParentFacet {

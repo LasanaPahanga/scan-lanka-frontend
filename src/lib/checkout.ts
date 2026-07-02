@@ -57,16 +57,21 @@ export interface Billing {
 const toItems = (items: GuestCartItem[]) =>
   items.map((i) => ({ productId: i.productId, variantId: i.variantId, quantity: i.quantity }));
 
-export const fetchDeliveryOptions = (items: GuestCartItem[], postalCode: string) =>
+export const fetchDeliveryOptions = (items: GuestCartItem[], postalCode: string, city?: string) =>
   api<DeliveryOptionsResult>('/api/checkout/delivery-options', {
     method: 'POST',
-    body: JSON.stringify({ items: toItems(items), postalCode }),
+    body: JSON.stringify({ items: toItems(items), postalCode, city: city?.trim() || undefined }),
   });
 
-export const quoteCheckout = (items: GuestCartItem[], deliveryMethod: DeliveryMethod, postalCode: string) =>
+export const quoteCheckout = (
+  items: GuestCartItem[],
+  deliveryMethod: DeliveryMethod,
+  postalCode: string,
+  city?: string,
+) =>
   api<QuoteResult>('/api/checkout/quote', {
     method: 'POST',
-    body: JSON.stringify({ items: toItems(items), deliveryMethod, postalCode }),
+    body: JSON.stringify({ items: toItems(items), deliveryMethod, postalCode, city: city?.trim() || undefined }),
   });
 
 export async function uploadBankSlip(orderNumber: string, file: File): Promise<void> {
@@ -148,8 +153,8 @@ export function railReason(code: string | null | undefined): string {
   switch (code) {
     case 'MIN_BILL_NOT_MET':
       return 'Order must exceed Rs 6,000 for company lorry. Add items, use courier, or contact us.';
-    case 'MISSING_WEIGHT':
-      return 'One or more items cannot be sent by courier (missing weight).';
+    case 'MISSING_SIZE_TIER':
+      return 'One or more items cannot be sent by courier (board size not set).';
     case 'NOT_SERVICEABLE_POSTAL':
       return 'We do not deliver to this postal code.';
     case 'METHOD_DISABLED':

@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import {
+  BoardSizeTier,
   CourierRateView,
   CourierZone,
   DeliveryMethodView,
@@ -22,7 +23,20 @@ import { getTaxConfig, putTaxConfig, TaxConfigView } from '@/lib/admin';
 import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
 
 const LORRY_ZONES: LorryZone[] = ['COLOMBO', 'SUBURB', 'OUTER'];
-const COURIER_ZONES: CourierZone[] = ['COLOMBO_1_15', 'OTHER', 'JAFFNA_NORTH'];
+const COURIER_ZONES: CourierZone[] = ['CITY_LIMITS', 'SUBURBS', 'OUTSTATION', 'FARAWAY'];
+const SIZE_TIERS: BoardSizeTier[] = ['UNDER_2FT', 'BETWEEN_2FT_6FT'];
+
+const ZONE_LABELS: Record<CourierZone, string> = {
+  CITY_LIMITS: 'City Limits',
+  SUBURBS: 'Suburbs',
+  OUTSTATION: 'Outstation',
+  FARAWAY: 'Far Away',
+};
+
+const TIER_LABELS: Record<BoardSizeTier, string> = {
+  UNDER_2FT: 'Below 2 ft',
+  BETWEEN_2FT_6FT: 'Between 2 ft & 6 ft',
+};
 
 export default function AdminDeliveryPage() {
   const [rates, setRates] = useState<CourierRateView[]>([]);
@@ -33,7 +47,7 @@ export default function AdminDeliveryPage() {
   const [postalZone, setPostalZone] = useState<PostalZoneView | null>(null);
   const [postalDraft, setPostalDraft] = useState({
     lorryZone: 'COLOMBO' as LorryZone,
-    courierZone: 'OTHER' as CourierZone,
+    courierZone: 'CITY_LIMITS' as CourierZone,
     district: '',
     province: '',
   });
@@ -50,13 +64,12 @@ export default function AdminDeliveryPage() {
     void reload().catch(() => {});
   }, []);
 
-  async function saveRate(zone: CourierZone, baseRupees: string, perKgRupees: string) {
+  async function saveRate(zone: CourierZone, sizeTier: BoardSizeTier, flatRupees: string) {
     setMsg(null);
-    await upsertCourierRate(zone, {
-      baseCents: Math.round(Number(baseRupees) * 100),
-      perKgCents: Math.round(Number(perKgRupees) * 100),
+    await upsertCourierRate(zone, sizeTier, {
+      flatCents: Math.round(Number(flatRupees) * 100),
     });
-    setMsg(`Courier rate for ${zone} saved.`);
+    setMsg(`Courier rate for ${ZONE_LABELS[zone]} / ${TIER_LABELS[sizeTier]} saved.`);
     await reload();
   }
 
@@ -150,30 +163,45 @@ export default function AdminDeliveryPage() {
       </section>
 
       <section style={section}>
-        <h2 style={h2}>Courier rate card (Citrek estimate)</h2>
-        {COURIER_ZONES.map((zone) => {
-          const row = rates.find((r) => r.zone === zone) ?? { zone, baseCents: 0, perKgCents: 0 };
-          return (
-            <form
-              key={zone}
-              style={{ display: 'grid', gap: '0.5rem', marginBottom: '1rem', maxWidth: 420 }}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const fd = new FormData(e.currentTarget);
-                void saveRate(zone, String(fd.get('base')), String(fd.get('perKg')));
-              }}
-            >
-              <strong>{zone}</strong>
-              <input style={fieldInput} name="base" type="number" step="0.01" placeholder="Base (Rs)"
-                defaultValue={row.baseCents / 100} />
-              <input style={fieldInput} name="perKg" type="number" step="0.01" placeholder="Per kg (Rs)"
-                defaultValue={row.perKgCents / 100} />
-              <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
-                Save {zone}
-              </button>
-            </form>
-          );
-        })}
+        <h2 style={h2}>Courier rate card (flat rate by board size)</h2>
+        {COURIER_ZONES.map((zone) => (
+          <div key={zone} style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{ZONE_LABELS[zone]}</h3>
+            <div style={rateTierRow}>
+              {SIZE_TIERS.map((sizeTier) => {
+                const row = rates.find((r) => r.zone === zone && r.sizeTier === sizeTier) ?? {
+                  zone,
+                  sizeTier,
+                  flatCents: 0,
+                };
+                return (
+                  <form
+                    key={sizeTier}
+                    style={rateTierForm}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const fd = new FormData(e.currentTarget);
+                      void saveRate(zone, sizeTier, String(fd.get('flat')));
+                    }}
+                  >
+                    <strong style={{ fontSize: '0.9rem' }}>{TIER_LABELS[sizeTier]}</strong>
+                    <input
+                      style={fieldInput}
+                      name="flat"
+                      type="number"
+                      step="0.01"
+                      placeholder="Flat rate (Rs)"
+                      defaultValue={row.flatCents / 100}
+                    />
+                    <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+                      Save
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </section>
 
       <section style={section}>
@@ -208,7 +236,7 @@ export default function AdminDeliveryPage() {
           >
             {COURIER_ZONES.map((z) => (
               <option key={z} value={z}>
-                Courier: {z}
+                Courier: {ZONE_LABELS[z]}
               </option>
             ))}
           </select>
@@ -236,7 +264,7 @@ export default function AdminDeliveryPage() {
           </div>
           {postalZone && (
             <p style={mutedText}>
-              Current: lorry {postalZone.lorryZone}, courier {postalZone.courierZone}
+              Current: lorry {postalZone.lorryZone}, courier {ZONE_LABELS[postalZone.courierZone]}
               {postalZone.district ? ` · ${postalZone.district}` : ''}
             </p>
           )}
@@ -274,3 +302,17 @@ export default function AdminDeliveryPage() {
 const section = { marginTop: '2rem' } as const;
 const h2 = { fontSize: '1.1rem', marginBottom: '0.75rem' } as const;
 const label = { display: 'grid', gap: '0.35rem', fontSize: '0.9rem' } as const;
+const rateTierRow = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: '1rem',
+  maxWidth: 720,
+} as const;
+const rateTierForm = {
+  display: 'grid',
+  gap: '0.5rem',
+  padding: '0.75rem',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  background: 'var(--surface)',
+} as const;

@@ -121,7 +121,7 @@ export default function CheckoutPage() {
       return;
     }
     let cancelled = false;
-    fetchDeliveryOptions(items, form.postalCode.trim())
+    fetchDeliveryOptions(items, form.postalCode.trim(), form.city.trim() || undefined)
       .then((opts) => {
         if (cancelled) return;
         setDeliveryOptions(opts);
@@ -139,7 +139,7 @@ export default function CheckoutPage() {
     return () => {
       cancelled = true;
     };
-  }, [items, form.postalCode, placed]);
+  }, [items, form.postalCode, form.city, placed]);
 
   useEffect(() => {
     if (items.length === 0 || placed || !deliveryMethod || !form.postalCode.trim()) {
@@ -147,13 +147,13 @@ export default function CheckoutPage() {
       return;
     }
     let cancelled = false;
-    quoteCheckout(items, deliveryMethod, form.postalCode.trim())
+    quoteCheckout(items, deliveryMethod, form.postalCode.trim(), form.city.trim() || undefined)
       .then((q) => !cancelled && setQuote(q))
       .catch(() => !cancelled && setQuote(null));
     return () => {
       cancelled = true;
     };
-  }, [items, deliveryMethod, form.postalCode, placed]);
+  }, [items, deliveryMethod, form.postalCode, form.city, placed]);
 
   function applyAddress(a: SavedAddress) {
     setForm((f) => ({

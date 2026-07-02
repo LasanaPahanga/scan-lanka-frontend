@@ -18,7 +18,7 @@ export function GeoProvider({ children }: { children: React.ReactNode }) {
     currency: 'LKR',
     isSriLanka: true,
     canCheckout: true,
-    whatsappNumber: '0706307685',
+    whatsappNumber: '0717817447',
     indicativePricing: false,
     loading: true,
     countryOverride: null,

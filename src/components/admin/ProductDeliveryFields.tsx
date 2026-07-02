@@ -30,20 +30,23 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
         />
         WhatsApp / quote only (no online checkout)
       </label>
-      <input
+      <select
         style={fieldInput}
-        type="number"
-        step="0.001"
-        min="0"
-        placeholder="Weight (kg) - required for courier"
-        value={value.weightKg ?? ''}
+        value={value.boardSizeTier ?? ''}
         onChange={(e) =>
           onChange({
             ...value,
-            weightKg: e.target.value.trim() === '' ? null : Number(e.target.value),
+            boardSizeTier:
+              e.target.value === ''
+                ? null
+                : (e.target.value as 'UNDER_2FT' | 'BETWEEN_2FT_6FT'),
           })
         }
-      />
+      >
+        <option value="">Board size tier — required for courier</option>
+        <option value="UNDER_2FT">Below 2 ft</option>
+        <option value="BETWEEN_2FT_6FT">Between 2 ft &amp; 6 ft</option>
+      </select>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '0.5rem' }}>
         <input
           style={fieldInput}
@@ -75,8 +78,8 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
       </div>
       {!compact && (
         <p style={{ ...mutedText, margin: 0, fontSize: '0.8rem' }}>
-          Leave lorry price blank if admin arranges cost manually for that zone. Rs 6,000 minimum bill is global
-          (Delivery settings).
+          Courier charges are flat rates by board size and delivery area — weight is not used. Leave lorry price
+          blank if admin arranges cost manually for that zone. Rs 6,000 minimum bill is global (Delivery settings).
         </p>
       )}
     </div>

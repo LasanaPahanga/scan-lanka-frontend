@@ -17,17 +17,25 @@
   flex: 1;
   min-height: 100vh;
   align-items: stretch;
+  padding-left: var(--admin-sidebar-w);
 }
 
 .admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20;
   width: var(--admin-sidebar-w);
-  flex: 0 0 var(--admin-sidebar-w);
+  height: 100vh;
+  height: 100dvh;
   padding: 1.25rem 1rem;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .admin-sidebar-brand {
@@ -606,14 +614,18 @@
 @media (max-width: 900px) {
   .admin-shell {
     flex-direction: column;
+    padding-left: 0;
   }
 
   .admin-sidebar {
+    position: static;
     width: 100%;
+    height: auto;
     flex: none;
     border-right: none;
     border-bottom: 1px solid var(--border);
     padding: 1rem;
+    overflow-y: visible;
   }
 
   .admin-nav {

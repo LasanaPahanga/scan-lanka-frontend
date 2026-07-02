@@ -100,20 +100,20 @@ export function Footer() {
               Malabe, Sri Lanka.
               <br />
               <br />
-              <a href="tel:0705307685" className="footer-link">
-                Hotline: 070 5 307 685
+              <a href="tel:0717817447" className="footer-link">
+                Hotline: 071 781 7447
+              </a>
+              <br />
+              <a href="https://wa.me/94717817447" className="footer-link" target="_blank" rel="noreferrer">
+                WhatsApp: 071 781 7447
               </a>
               <br />
               <a href="tel:0714307685" className="footer-link">
-                071 4 307 685
+                Phone: 071 430 7685
               </a>
               <br />
-              <a href="tel:0114209115" className="footer-link">
-                011 4 209 115
-              </a>
-              <br />
-              <a href="mailto:scanlk@sltnet.lk" className="footer-link">
-                scanlk@sltnet.lk
+              <a href="mailto:scanlankagroup.info@gmail.com" className="footer-link">
+                scanlankagroup.info@gmail.com
               </a>
             </address>
           </div>

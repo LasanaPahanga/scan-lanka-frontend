@@ -1,13 +1,14 @@
 import { api } from './api';
 
 export type DeliveryMethod = 'COMPANY_LORRY' | 'COURIER';
-export type CourierZone = 'COLOMBO_1_15' | 'OTHER' | 'JAFFNA_NORTH';
+export type CourierZone = 'CITY_LIMITS' | 'SUBURBS' | 'OUTSTATION' | 'FARAWAY';
+export type BoardSizeTier = 'UNDER_2FT' | 'BETWEEN_2FT_6FT';
 export type LorryZone = 'COLOMBO' | 'SUBURB' | 'OUTER';
 
 export interface CourierRateView {
   zone: CourierZone;
-  baseCents: number;
-  perKgCents: number;
+  sizeTier: BoardSizeTier;
+  flatCents: number;
 }
 
 export interface DeliverySettingsView {
@@ -29,8 +30,12 @@ export interface PostalZoneView {
 
 export const listCourierRates = () => api<CourierRateView[]>('/api/admin/courier-rate-card');
 
-export const upsertCourierRate = (zone: CourierZone, body: { baseCents: number; perKgCents: number }) =>
-  api<CourierRateView>(`/api/admin/courier-rate-card/${zone}`, {
+export const upsertCourierRate = (
+  zone: CourierZone,
+  sizeTier: BoardSizeTier,
+  body: { flatCents: number },
+) =>
+  api<CourierRateView>(`/api/admin/courier-rate-card/${zone}/${sizeTier}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   });

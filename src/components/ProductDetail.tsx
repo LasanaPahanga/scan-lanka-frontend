@@ -8,6 +8,7 @@ import { useGeo } from '@/components/GeoProvider';
 import { t } from '@/lib/i18n';
 import { useCart } from '@/components/CartProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
+import { ProductImageGallery } from '@/components/ProductImageGallery';
 
 function stockLabel(availability: string): string | null {
   if (availability === 'OUT_OF_STOCK') return 'Out of stock';
@@ -20,9 +21,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { geo } = useGeo();
   const [added, setAdded] = useState(false);
   const images = product.imageUrls.map(mediaUrl).filter(Boolean) as string[];
-  const [imageIndex, setImageIndex] = useState(0);
-  const activeImage = images[imageIndex] ?? null;
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [resolved, setResolved] = useState<ResolvedVariant | null>(null);
   const [resolveError, setResolveError] = useState(false);
@@ -59,7 +57,18 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     product.priceMode === 'SINGLE' ? product.availability : resolved?.availability ?? '';
   const inStock = currentAvailability !== 'OUT_OF_STOCK';
   const stockMsg = stockLabel(currentAvailability);
-  const whatsappOnly = product.whatsappOnly;
+  const whatsappOnly =
+    product.priceMode === 'VARIANT' && resolved ? resolved.whatsappOnly : product.whatsappOnly;
+  const boardSizeTier =
+    product.priceMode === 'VARIANT' && resolved
+      ? resolved.boardSizeTier
+      : product.boardSizeTier;
+  const couriable =
+    product.priceMode === 'VARIANT' && resolved
+      ? resolved.couriable
+      : product.couriable;
+  const courierPendingSize =
+    product.priceMode === 'VARIANT' && !allSelected && product.couriable && !resolved;
   const canAddToCart =
     geo.canCheckout &&
     !whatsappOnly &&
@@ -77,58 +86,17 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     availability: product.availability,
   };
 
-  const showPrev = () => setImageIndex((i) => Math.max(0, i - 1));
-  const showNext = () => setImageIndex((i) => Math.min(images.length - 1, i + 1));
-
   return (
     <main className="page">
       <Link href="/products" className="icon-link" style={{ display: 'inline-flex', marginBottom: '1.25rem' }}>
         ← Back to products
       </Link>
       <div className="product-detail-layout" style={layout}>
-        <div>
-          <div
-            style={{ ...mainImg, position: 'relative' }}
-            onTouchStart={(e) => setTouchStartX(e.changedTouches[0]?.clientX ?? null)}
-            onTouchEnd={(e) => {
-              if (touchStartX == null || images.length < 2) return;
-              const dx = touchStartX - (e.changedTouches[0]?.clientX ?? touchStartX);
-              if (Math.abs(dx) > 40) {
-                if (dx > 0) showNext();
-                else showPrev();
-              }
-              setTouchStartX(null);
-            }}
-          >
-            <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 2 }}>
-              <WishlistToggle product={chip} />
-            </div>
-            {activeImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={activeImage}
-                alt={product.name}
-                style={{ width: '100%', maxHeight: 460, objectFit: 'contain', borderRadius: 'var(--radius-sm)' }}
-              />
-            ) : (
-              <div style={imgPlaceholder}>No image</div>
-            )}
-          </div>
-          {images.length > 1 && (
-            <div style={thumbs}>
-              {images.map((src, idx) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={src}
-                  src={src}
-                  alt=""
-                  onClick={() => setImageIndex(idx)}
-                  style={{ ...thumb, outline: idx === imageIndex ? '2px solid var(--primary)' : 'none' }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+        <ProductImageGallery
+          images={images}
+          alt={product.name}
+          cornerAction={<WishlistToggle product={chip} />}
+        />
 
         <div>
           <h1 className="page-title" style={{ marginTop: 0 }}>{product.name}</h1>
@@ -200,10 +168,15 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             ) : (
               <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
                 <li>Company lorry - prepaid online (orders over Rs 6,000)</li>
-                {product.couriable ? (
-                  <li>Courier (Citrek) - pay on delivery{product.weightKg ? ` (~${product.weightKg} kg)` : ''}</li>
+                {courierPendingSize ? (
+                  <li>Courier (Citrek) - select a size for details</li>
+                ) : couriable ? (
+                  <li>
+                    Courier (Citrek) - pay on delivery
+                    {boardSizeTier === 'UNDER_2FT' ? ' (below 2 ft)' : boardSizeTier === 'BETWEEN_2FT_6FT' ? ' (2–6 ft)' : ''}
+                  </li>
                 ) : (
-                  <li>Courier not available for this item (weight not set)</li>
+                  <li>Courier not available for this item (board size not set)</li>
                 )}
               </ul>
             )}
@@ -236,28 +209,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 }
 
 const layout = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem' } as const;
-const mainImg = {
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius)',
-  boxShadow: 'var(--shadow)',
-  padding: '1.25rem',
-  minHeight: 240,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-} as const;
-const imgPlaceholder = { padding: '4rem', textAlign: 'center', color: 'var(--muted)' } as const;
-const thumbs = { display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' } as const;
-const thumb = {
-  width: 64,
-  height: 64,
-  objectFit: 'cover',
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border)',
-  cursor: 'pointer',
-  background: 'var(--surface)',
-} as const;
 const optBtn = {
   padding: '0.5rem 0.9rem',
   border: '1px solid var(--border)',

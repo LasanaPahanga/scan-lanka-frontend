@@ -1,34 +1,43 @@
 'use client';
 
-import { useState } from 'react';
-import { adminUploadProductImage, adminMediaUrl } from '@/lib/admin-catalog';
+import { useCallback, useEffect, useState } from 'react';
+import {
+  StoredImageView,
+  adminDeleteProductImage,
+  adminListProductImages,
+  adminMediaUrl,
+  adminSetProductImagePreview,
+  adminUploadProductImage,
+} from '@/lib/admin-catalog';
 import { mutedText, secondaryButton } from '@/components/formStyles';
 
-export function ProductImageManager({
-  productId,
-  initialUrls,
-}: {
-  productId: number;
-  initialUrls: string[];
-}) {
-  const [urls, setUrls] = useState<string[]>(initialUrls);
+export function ProductImageManager({ productId }: { productId: number }) {
+  const [images, setImages] = useState<StoredImageView[]>([]);
   const [file, setFile] = useState<File | null>(null);
-  const [isPreview, setIsPreview] = useState(initialUrls.length === 0);
+  const [isPreview, setIsPreview] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const reload = useCallback(async () => {
+    const rows = await adminListProductImages(productId);
+    setImages(rows);
+    setIsPreview(rows.length === 0);
+  }, [productId]);
+
+  useEffect(() => {
+    void reload().catch(() => setImages([]));
+  }, [reload]);
 
   async function upload() {
     if (!file) return;
     setBusy(true);
     setError(null);
     try {
-      const stored = await adminUploadProductImage(productId, file, isPreview);
-      setUrls((u) => [...u, stored.url]);
+      await adminUploadProductImage(productId, file, isPreview);
       setFile(null);
-      setIsPreview(false);
-      // reset the file input
       const input = document.getElementById('img-input') as HTMLInputElement | null;
       if (input) input.value = '';
+      await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
@@ -36,35 +45,124 @@ export function ProductImageManager({
     }
   }
 
-  return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius)', padding: '1rem', background: 'var(--surface)' }}>
-      <strong>Images</strong>
-      <p style={mutedText}>Images are re-encoded to PNG on upload. Mark one as the preview (shown on cards).</p>
+  async function remove(imageId: number) {
+    setBusy(true);
+    setError(null);
+    try {
+      await adminDeleteProductImage(productId, imageId);
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed');
+    } finally {
+      setBusy(false);
+    }
+  }
 
-      {urls.length > 0 && (
-        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', margin: '0.5rem 0' }}>
-          {urls.map((u) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={u}
-              src={adminMediaUrl(u) ?? ''}
-              alt=""
-              style={{ width: 90, height: 90, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }}
-            />
+  async function makePreview(imageId: number) {
+    setBusy(true);
+    setError(null);
+    try {
+      await adminSetProductImagePreview(productId, imageId);
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div style={box}>
+      <strong>Product gallery</strong>
+      <p style={mutedText}>
+        Upload <strong>multiple photos</strong>. Customers can swipe or pick thumbnails on the product page.
+        Mark one image as the <strong>preview</strong> — that thumbnail appears on product cards in the shop.
+      </p>
+
+      {images.length > 0 ? (
+        <div style={{ display: 'grid', gap: '0.75rem', margin: '0.75rem 0' }}>
+          {images.map((img, idx) => (
+            <div key={img.id} style={row}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={adminMediaUrl(img.url) ?? ''}
+                alt=""
+                style={thumb}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>
+                  Image {idx + 1}
+                  {img.preview && <span style={badge}>Preview (shop card)</span>}
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
+                  {!img.preview && (
+                    <button
+                      type="button"
+                      style={{ ...secondaryButton, width: 'auto', padding: '0.35rem 0.65rem', fontSize: '0.82rem' }}
+                      disabled={busy}
+                      onClick={() => void makePreview(img.id)}
+                    >
+                      Set as preview
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    style={{ ...secondaryButton, width: 'auto', padding: '0.35rem 0.65rem', fontSize: '0.82rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                    disabled={busy}
+                    onClick={() => void remove(img.id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
+      ) : (
+        <p style={{ ...mutedText, margin: '0.5rem 0' }}>No images yet — upload at least one photo below.</p>
       )}
 
-      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
         <input id="img-input" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         <label style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.88rem' }}>
-          <input type="checkbox" checked={isPreview} onChange={(e) => setIsPreview(e.target.checked)} /> Set as preview
+          <input type="checkbox" checked={isPreview} onChange={(e) => setIsPreview(e.target.checked)} />
+          Set as preview
         </label>
-        <button type="button" style={{ ...secondaryButton, width: 'auto' }} onClick={upload} disabled={!file || busy}>
-          {busy ? 'Uploading…' : 'Upload'}
+        <button type="button" style={{ ...secondaryButton, width: 'auto' }} onClick={() => void upload()} disabled={!file || busy}>
+          {busy ? 'Uploading…' : images.length === 0 ? 'Upload image' : 'Add another image'}
         </button>
       </div>
-      {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{error}</p>}
+      {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
     </div>
   );
 }
+
+const box = {
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius)',
+  padding: '1rem',
+  background: 'var(--surface)',
+} as const;
+const row = {
+  display: 'flex',
+  gap: '0.75rem',
+  alignItems: 'flex-start',
+  padding: '0.5rem',
+  border: '1px solid var(--border)',
+  borderRadius: 8,
+  background: 'var(--bg, #fff)',
+} as const;
+const thumb = {
+  width: 90,
+  height: 90,
+  objectFit: 'cover' as const,
+  borderRadius: 8,
+  border: '1px solid var(--border)',
+  flexShrink: 0,
+};
+const badge = {
+  marginLeft: '0.5rem',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  color: 'var(--primary)',
+} as const;

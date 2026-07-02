@@ -8,8 +8,8 @@ import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
 import { CountrySelector } from '@/components/CountrySelector';
 
-const HOTLINE = '070 5 307 685';
-const EMAIL = 'scanlk@sltnet.lk';
+const HOTLINE = '071 781 7447';
+const EMAIL = 'scanlankagroup.info@gmail.com';
 
 const NAV = [
   { href: '/', label: 'Home' },

@@ -17,7 +17,7 @@ import { ProductImageManager } from './ProductImageManager';
 import { ProductDeliveryFields } from './ProductDeliveryFields';
 
 const emptyDelivery = (): DeliveryAttrs => ({
-  weightKg: null,
+  boardSizeTier: null,
   lorryColomboCents: null,
   lorrySuburbCents: null,
   lorryOuterCents: null,
@@ -108,7 +108,7 @@ export function ProductForm({ existing, categories }: Props) {
           stockQty: isVariant ? undefined : stock.trim() === '' ? null : Number(stock),
           singlePriceCents: isVariant ? undefined : rupeesToCents(priceRupees),
         });
-        router.push('/admin/products');
+        router.push(`/admin/products/${existing.id}`);
         router.refresh();
         return;
       }
@@ -347,7 +347,7 @@ export function ProductForm({ existing, categories }: Props) {
         <div style={builderBox}>
           <strong>Variants &amp; shipping</strong>
           <p style={mutedText}>
-            Set weight and lorry charges per size. Names and prices are listed for reference - change
+            Set board size tier and lorry charges per size. Names and prices are listed for reference — change
             visibility and descriptions above.
           </p>
           {variantDeliveryMsg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{variantDeliveryMsg}</p>}
@@ -387,6 +387,10 @@ export function ProductForm({ existing, categories }: Props) {
         </Field>
       )}
 
+      {isEdit && existing && (
+        <ProductImageManager productId={existing.id} />
+      )}
+
       <div style={{ display: 'flex', gap: '0.75rem' }}>
         <button type="submit" style={{ ...primaryButton, width: 'auto' }} disabled={saving}>
           {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Create product'}
@@ -395,10 +399,6 @@ export function ProductForm({ existing, categories }: Props) {
           Cancel
         </button>
       </div>
-
-      {isEdit && existing && (
-        <ProductImageManager productId={existing.id} initialUrls={existing.imageUrls} />
-      )}
     </form>
   );
 }
