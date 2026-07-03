@@ -5,7 +5,23 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { adminAcceptQuote, adminConvertQuote, adminQuoteMessage, getAdminQuote, QuoteView } from '@/lib/quotes';
 import { formatLkr } from '@/lib/money';
-import { fieldInput, mutedText, adminMain, primaryButton } from '@/components/formStyles';
+import { adminMain } from '@/components/formStyles';
+import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
+import { AdminSection } from '@/components/admin/AdminSection';
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case 'NEW':
+    case 'QUOTED':
+      return 'admin-badge admin-badge--primary';
+    case 'NEGOTIATING':
+      return 'admin-badge admin-badge--warn';
+    case 'ACCEPTED':
+      return 'admin-badge admin-badge--success';
+    default:
+      return 'admin-badge admin-badge--muted';
+  }
+}
 
 export default function AdminQuoteDetailPage() {
   const params = useParams();
@@ -24,7 +40,7 @@ export default function AdminQuoteDetailPage() {
   if (!quote) {
     return (
       <main style={adminMain}>
-        <p style={mutedText}>Loading…</p>
+        <p className="admin-empty">Loading…</p>
       </main>
     );
   }
@@ -39,63 +55,136 @@ export default function AdminQuoteDetailPage() {
 
   return (
     <main style={adminMain}>
-      <p>
-        <Link href="/admin/quotes">← Quotes</Link>
-      </p>
-      <h1>Quote #{quote.id}</h1>
-      <p style={mutedText}>
-        {quote.requesterName} - {quote.email} - {quote.phone} · {quote.status}
-      </p>
-      {quote.quotedTotalCents != null && <p>Quoted: {formatLkr(quote.quotedTotalCents)}</p>}
-      <ul>
-        {quote.items.map((i) => (
-          <li key={i.id}>
-            {i.name} × {i.quantity}
-          </li>
-        ))}
-      </ul>
-      <section style={{ marginTop: '1rem' }}>
-        <h2 style={{ fontSize: '1rem' }}>Thread</h2>
-        <ul style={{ paddingLeft: '1rem', color: 'var(--muted)' }}>
-          {quote.thread.map((m) => (
-            <li key={m.id}>
-              {m.sender}: {m.body}
-            </li>
-          ))}
-        </ul>
-        <form onSubmit={onReply} style={{ marginTop: '1rem' }}>
-          <textarea style={{ ...fieldInput, width: '100%', minHeight: 80 }} value={body} onChange={(e) => setBody(e.target.value)} required />
-          <input style={{ ...fieldInput, marginTop: '0.5rem' }} placeholder="Quoted price (cents, optional)" value={price} onChange={(e) => setPrice(e.target.value)} />
-          <button type="submit" style={{ ...primaryButton, marginTop: '0.5rem' }}>
-            Send admin reply
-          </button>
-        </form>
-        {quote.status !== 'ACCEPTED' && quote.status !== 'CONVERTED' && (
-          <button
-            type="button"
-            style={{ ...primaryButton, marginTop: '0.75rem', width: 'auto' }}
-            onClick={async () => {
-              await adminAcceptQuote(id);
-              await reload();
-            }}
-          >
-            Mark quote accepted (admin)
-          </button>
-        )}
-        {quote.status === 'ACCEPTED' && (
-          <button
-            type="button"
-            style={{ marginTop: '0.75rem' }}
-            onClick={async () => {
-              const res = await adminConvertQuote(id);
-              setOrderNumber(res.orderNumber);
-            }}
-          >
-            Convert to order
-          </button>
-        )}
-        {orderNumber && <p>Created order: {orderNumber}</p>}
-      </section>
+      <AdminPageHeader
+        back={{ href: '/admin/quotes', label: 'Quote requests' }}
+        title={`Quote #${quote.id}`}
+        description={`${quote.requesterName} · ${quote.email} · ${quote.phone}`}
+        actions={<span className={statusBadgeClass(quote.status)}>{quote.status}</span>}
+      />
+
+      <div className="admin-stat-grid" style={{ marginBottom: '1.25rem' }}>
+        <div className="admin-stat-card">
+          <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>
+            {quote.country ?? '—'}
+          </div>
+          <div className="admin-stat-label">Country</div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>
+            {quote.quotedTotalCents != null ? formatLkr(quote.quotedTotalCents) : '—'}
+          </div>
+          <div className="admin-stat-label">Quoted total</div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>
+            {new Date(quote.createdAt).toLocaleDateString()}
+          </div>
+          <div className="admin-stat-label">Submitted</div>
+        </div>
+      </div>
+
+      <div className="admin-chat-layout">
+        <AdminSection title="Requested items">
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th style={{ textAlign: 'right' }}>Qty</th>
+                  <th>Note</th>
+                </tr>
+              </thead>
+              <tbody>
+                {quote.items.map((i) => (
+                  <tr key={i.id}>
+                    <td style={{ fontWeight: 600 }}>{i.name}</td>
+                    <td style={{ textAlign: 'right' }}>{i.quantity}</td>
+                    <td style={{ color: 'var(--muted)' }}>{i.note ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </AdminSection>
+
+        <AdminSection title="Conversation">
+          {quote.thread.length === 0 ? (
+            <p className="admin-empty" style={{ margin: 0 }}>No messages yet.</p>
+          ) : (
+            <ul className="admin-chat">
+              {quote.thread.map((m) => (
+                <li
+                  key={m.id}
+                  className={`admin-chat-bubble ${m.sender === 'ADMIN' ? 'admin-chat-bubble--staff' : 'admin-chat-bubble--visitor'}`}
+                >
+                  <div className="admin-chat-meta">
+                    {m.sender === 'ADMIN' ? 'You' : quote.requesterName} · {new Date(m.at).toLocaleString()}
+                    {m.quotedPriceCents != null && ` · ${formatLkr(m.quotedPriceCents)}`}
+                  </div>
+                  <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <form onSubmit={onReply} style={{ marginTop: '1rem' }}>
+            <textarea
+              className="admin-field"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              placeholder="Reply to customer…"
+              required
+              style={{ width: '100%', minHeight: 88 }}
+            />
+            <div className="admin-toolbar" style={{ marginTop: '0.65rem' }}>
+              <input
+                className="admin-field"
+                placeholder="Quoted price (cents, optional)"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                style={{ maxWidth: 220 }}
+              />
+              <button type="submit" className="admin-btn admin-btn--primary admin-btn--sm">
+                Send reply
+              </button>
+            </div>
+          </form>
+
+          <div className="admin-toolbar" style={{ marginTop: '1rem' }}>
+            {quote.status !== 'ACCEPTED' && quote.status !== 'CONVERTED' && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--secondary admin-btn--sm"
+                onClick={async () => {
+                  await adminAcceptQuote(id);
+                  await reload();
+                }}
+              >
+                Mark accepted
+              </button>
+            )}
+            {quote.status === 'ACCEPTED' && (
+              <button
+                type="button"
+                className="admin-btn admin-btn--primary admin-btn--sm"
+                onClick={async () => {
+                  const res = await adminConvertQuote(id);
+                  setOrderNumber(res.orderNumber);
+                  await reload();
+                }}
+              >
+                Convert to order
+              </button>
+            )}
+          </div>
+          {orderNumber && (
+            <p className="admin-alert admin-alert--success" style={{ marginTop: '0.75rem' }}>
+              Created order:{' '}
+              <Link href={`/admin/orders/${encodeURIComponent(orderNumber)}`}>{orderNumber}</Link>
+            </p>
+          )}
+        </AdminSection>
+      </div>
     </main>
   );
 }

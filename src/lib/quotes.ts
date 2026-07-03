@@ -2,10 +2,11 @@ import { CAPTCHA_TOKEN } from '@/lib/geo';
 import { api } from './api';
 
 export interface QuoteItemInput {
-  productId: number;
+  productId?: number;
   variantId?: number;
   quantity: number;
   note?: string;
+  name?: string;
 }
 
 export interface QuoteView {
@@ -17,6 +18,7 @@ export interface QuoteView {
   status: string;
   quotedTotalCents: number | null;
   expiresAt: string | null;
+  createdAt: string;
   items: { id: number; name: string; quantity: number; note: string | null }[];
   thread: { id: number; sender: string; body: string; quotedPriceCents: number | null; at: string }[];
 }

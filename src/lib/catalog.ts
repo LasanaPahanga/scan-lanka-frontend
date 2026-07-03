@@ -164,3 +164,7 @@ export const resolveVariant = (productId: number, selectedOptionIds: number[]) =
     method: 'POST',
     body: JSON.stringify({ selectedOptionIds }),
   });
+
+/** Client-side product search (quote form, etc.). */
+export const searchProducts = (q: string, size = 8) =>
+  api<ProductPage>(`/api/products${buildQuery({ q, size })}`);

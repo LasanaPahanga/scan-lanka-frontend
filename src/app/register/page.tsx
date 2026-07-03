@@ -20,6 +20,8 @@ export default function RegisterPage() {
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendInfo, setResendInfo] = useState<string | null>(null);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -35,6 +37,23 @@ export default function RegisterPage() {
     }
   }
 
+  async function onResend() {
+    setResending(true);
+    setResendInfo(null);
+    try {
+      const res = await authApi.resendVerification(email);
+      if (res.alreadyVerified) {
+        setResendInfo('This email is already verified. You can sign in now.');
+      } else {
+        setResendInfo('If that account needs verification, we sent a new code. Check spam too.');
+      }
+    } catch (err) {
+      setResendInfo(err instanceof ApiError ? err.message : 'Could not resend code.');
+    } finally {
+      setResending(false);
+    }
+  }
+
   if (done) {
     const verifyHref = `/verify-email?email=${encodeURIComponent(email)}`;
     return (
@@ -47,6 +66,20 @@ export default function RegisterPage() {
         <a href={verifyHref} style={textLink}>
           Enter verification code
         </a>
+        <p style={{ ...mutedText, marginTop: '1rem' }}>
+          Didn&apos;t get a code?{' '}
+          <button type="button" onClick={onResend} disabled={resending} style={textLink}>
+            {resending ? 'Sending…' : 'Resend code'}
+          </button>
+        </p>
+        {resendInfo && <p style={mutedText}>{resendInfo}</p>}
+        {resendInfo?.includes('already verified') && (
+          <p style={{ ...mutedText, marginTop: '0.5rem' }}>
+            <a href="/login" style={textLink}>
+              Go to sign in
+            </a>
+          </p>
+        )}
         <p style={{ ...mutedText, marginTop: '1rem' }}>
           <a href="/login" style={textLink}>
             Back to sign in

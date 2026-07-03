@@ -19,6 +19,7 @@ function stockLabel(availability: string): string | null {
 export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { add } = useCart();
   const { geo } = useGeo();
+  const quoteHref = `/quote?productId=${product.id}&name=${encodeURIComponent(product.name)}`;
   const [added, setAdded] = useState(false);
   const images = product.imageUrls.map(mediaUrl).filter(Boolean) as string[];
   const [selected, setSelected] = useState<Record<number, number>>({});
@@ -109,7 +110,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {!geo.canCheckout && (
             <p style={{ marginTop: '0.75rem' }}>
               {t('geo.noCheckout')}{' '}
-              <Link href="/quote" style={{ color: 'var(--primary)' }}>
+              <Link href={quoteHref} style={{ color: 'var(--primary)' }}>
                 Request a quote
               </Link>{' '}
               or{' '}
@@ -160,7 +161,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
                   contact
                 </Link>{' '}
                 or{' '}
-                <Link href="/quote" style={{ color: 'var(--primary)' }}>
+                <Link href={quoteHref} style={{ color: 'var(--primary)' }}>
                   quote
                 </Link>{' '}
                 not available for standard online checkout.

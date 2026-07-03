@@ -25,6 +25,11 @@ export const authApi = {
     api<void>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password, name }) }),
   verifyEmail: (email: string, code: string) =>
     api<void>('/api/auth/verify-email', { method: 'POST', body: JSON.stringify({ email, code }) }),
+  resendVerification: (email: string) =>
+    api<{ ok: boolean; alreadyVerified?: boolean }>('/api/auth/verify-email/resend', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
   forgotPassword: (email: string) =>
     api<{ ok: boolean }>('/api/auth/password/forgot', { method: 'POST', body: JSON.stringify({ email }) }),
   resetPassword: (email: string, code: string, newPassword: string) =>

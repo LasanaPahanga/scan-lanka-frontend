@@ -22,12 +22,15 @@ export default function VerifyEmailForm() {
   const [email, setEmail] = useState(searchParams.get('email') ?? '');
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [resending, setResending] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
       await authApi.verifyEmail(email, code);
       await refresh();
@@ -36,6 +39,25 @@ export default function VerifyEmailForm() {
       setError(err instanceof ApiError ? err.message : 'Invalid or expired code.');
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function onResend() {
+    if (!email) return;
+    setResending(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const res = await authApi.resendVerification(email);
+      if (res.alreadyVerified) {
+        setInfo('This email is already verified. You can sign in now.');
+      } else {
+        setInfo('If that account needs verification, we sent a new code. Check spam too.');
+      }
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not resend code.');
+    } finally {
+      setResending(false);
     }
   }
 
@@ -62,11 +84,18 @@ export default function VerifyEmailForm() {
           required
         />
         {error && <p style={dangerText}>{error}</p>}
+        {info && <p style={mutedText}>{info}</p>}
         <button style={primaryButton} type="submit" disabled={busy}>
           {busy ? 'Verifying…' : 'Verify email'}
         </button>
       </form>
       <p style={{ ...mutedText, marginTop: '1rem' }}>
+        Didn&apos;t get a code?{' '}
+        <button type="button" onClick={onResend} disabled={resending || !email} style={textLink}>
+          {resending ? 'Sending…' : 'Resend code'}
+        </button>
+      </p>
+      <p style={{ ...mutedText, marginTop: '0.5rem' }}>
         <a href="/login" style={textLink}>
           Back to sign in
         </a>

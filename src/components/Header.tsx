@@ -7,6 +7,7 @@ import { useCart } from '@/components/CartProvider';
 import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
 import { CountrySelector } from '@/components/CountrySelector';
+import { NotificationBell } from '@/components/NotificationBell';
 
 const HOTLINE = '071 781 7447';
 const EMAIL = 'scanlankagroup.info@gmail.com';
@@ -64,6 +65,11 @@ export function Header() {
           <div className="header-util-meta">
             <span className="util-tagline">Manufacturer &amp; supplier since 1998</span>
             <CountrySelector />
+            {user && (
+              <button type="button" onClick={() => void logout()} className="header-signout-btn">
+                Sign out
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -111,6 +117,7 @@ export function Header() {
           </form>
 
           <div className="header-actions">
+            <NotificationBell />
             <Link href="/wishlist" className="icon-link" aria-label="Wishlist">
               ♡ <span style={countPill}>{wishlistCount}</span>
             </Link>
@@ -118,14 +125,9 @@ export function Header() {
               🛒 <span style={countPill}>{cartCount}</span>
             </Link>
             {user ? (
-              <>
-                <Link href="/account" className="icon-link header-account-link">
-                  Account
-                </Link>
-                <button type="button" onClick={() => void logout()} className="header-signout-btn" style={ghostBtn}>
-                  Sign out
-                </button>
-              </>
+              <Link href="/account" className="icon-link header-account-link">
+                Account
+              </Link>
             ) : (
               <Link href="/login" className="icon-link header-login-link">
                 Login
@@ -151,6 +153,18 @@ export function Header() {
               <Link href="/admin" className="nav-link nav-link-admin-mobile" onClick={() => setMenuOpen(false)}>
                 Admin
               </Link>
+            )}
+            {user && (
+              <button
+                type="button"
+                className="header-signout-btn header-signout-btn--nav"
+                onClick={() => {
+                  setMenuOpen(false);
+                  void logout();
+                }}
+              >
+                Sign out
+              </button>
             )}
           </div>
           {user?.role === 'ADMIN' && (
@@ -239,12 +253,4 @@ const countPill = {
   alignItems: 'center',
   justifyContent: 'center',
   padding: '0 5px',
-} as const;
-const ghostBtn = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--muted)',
-  cursor: 'pointer',
-  fontSize: '0.9rem',
-  padding: 0,
 } as const;

@@ -6,6 +6,7 @@ import { ProductChip } from '@/lib/catalog';
 import { ProductCard } from '@/components/ProductCard';
 import { ClientLogos } from '@/components/ClientLogos';
 import { HeroVideoCrossfade } from '@/components/HeroVideoCrossfade';
+import { HomeBannerCarousel } from '@/components/HomeBannerCarousel';
 import { Reveal } from '@/components/Reveal';
 
 const CATEGORIES = [
@@ -69,6 +70,8 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
           ))}
         </div>
       </section>
+
+      {home.banners.length > 0 && <HomeBannerCarousel banners={home.banners} />}
 
       <div className="container" style={{ padding: '3rem 1.25rem' }}>
         {hasRows ? (
