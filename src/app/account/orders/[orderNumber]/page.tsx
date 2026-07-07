@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
+import { BankSlipUpload } from '@/components/BankSlipUpload';
 import { ContactReturnsCta } from '@/components/ContactReturnsCta';
 import { OrderThread } from '@/components/OrderThread';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
@@ -82,6 +83,13 @@ function OrderDetailView() {
           Tracking ({order.carrier ?? 'carrier'}): <strong>{order.trackingRef}</strong>
         </p>
       )}
+
+      <BankSlipUpload
+        orderNumber={order.orderNumber}
+        status={order.status}
+        deliveryMethod={order.deliveryMethod}
+        deliveryPayment={order.deliveryPayment}
+      />
 
       <section style={{ marginTop: '1.5rem' }}>
         <h2 style={{ fontSize: '1.05rem' }}>Items</h2>

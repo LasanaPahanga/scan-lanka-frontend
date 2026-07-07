@@ -397,7 +397,7 @@ export function ProductForm({ existing, categories }: Props) {
       )}
 
       {isEdit && existing && (
-        <ProductImageManager productId={existing.id} />
+        <ProductImageManager productId={existing.id} variants={isVariant ? existing.variants : undefined} />
       )}
 
       <div style={{ display: 'flex', gap: '0.75rem' }}>

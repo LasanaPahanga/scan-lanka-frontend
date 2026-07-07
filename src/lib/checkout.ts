@@ -77,10 +77,11 @@ export const quoteCheckout = (
     body: JSON.stringify({ items: toItems(items), deliveryMethod, postalCode, city: city?.trim() || undefined }),
   });
 
-export async function uploadBankSlip(orderNumber: string, file: File): Promise<void> {
+export async function uploadBankSlip(orderNumber: string, file: File, email?: string): Promise<void> {
   const fd = new FormData();
   fd.append('orderNumber', orderNumber);
   fd.append('file', file);
+  if (email) fd.append('email', email);
   const res = await fetch(`${getApiBase()}/api/payments/bank-transfer/slip`, {
     method: 'POST',
     credentials: 'include',

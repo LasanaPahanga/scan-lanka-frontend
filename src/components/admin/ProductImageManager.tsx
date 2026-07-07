@@ -7,16 +7,24 @@ import {
   adminListProductImages,
   adminMediaUrl,
   adminSetProductImagePreview,
+  adminSetProductImageVariant,
   adminUploadProductImage,
 } from '@/lib/admin-catalog';
 import { mutedText, secondaryButton } from '@/components/formStyles';
 
-export function ProductImageManager({ productId }: { productId: number }) {
+export interface ImageManagerVariant {
+  id: number;
+  sku: string;
+}
+
+export function ProductImageManager({ productId, variants }: { productId: number; variants?: ImageManagerVariant[] }) {
   const [images, setImages] = useState<StoredImageView[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [isPreview, setIsPreview] = useState(true);
+  const [uploadVariantId, setUploadVariantId] = useState<number | ''>('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasVariants = Boolean(variants && variants.length > 0);
 
   const reload = useCallback(async () => {
     const rows = await adminListProductImages(productId);
@@ -33,13 +41,27 @@ export function ProductImageManager({ productId }: { productId: number }) {
     setBusy(true);
     setError(null);
     try {
-      await adminUploadProductImage(productId, file, isPreview);
+      await adminUploadProductImage(productId, file, isPreview, uploadVariantId === '' ? null : uploadVariantId);
       setFile(null);
+      setUploadVariantId('');
       const input = document.getElementById('img-input') as HTMLInputElement | null;
       if (input) input.value = '';
       await reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function changeVariant(imageId: number, variantId: number | '') {
+    setBusy(true);
+    setError(null);
+    try {
+      await adminSetProductImageVariant(productId, imageId, variantId === '' ? null : variantId);
+      await reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed');
     } finally {
       setBusy(false);
     }
@@ -77,6 +99,12 @@ export function ProductImageManager({ productId }: { productId: number }) {
       <p style={mutedText}>
         Upload <strong>multiple photos</strong>. Customers can swipe or pick thumbnails on the product page.
         Mark one image as the <strong>preview</strong> — that thumbnail appears on product cards in the shop.
+        {hasVariants && (
+          <>
+            {' '}Tag a photo to a specific size and it replaces the gallery when a customer picks that size on
+            the product page — untagged photos ("All sizes") show by default.
+          </>
+        )}
       </p>
 
       {images.length > 0 ? (
@@ -94,6 +122,21 @@ export function ProductImageManager({ productId }: { productId: number }) {
                   Image {idx + 1}
                   {img.preview && <span style={badge}>Preview (shop card)</span>}
                 </div>
+                {hasVariants && (
+                  <div style={{ marginTop: '0.4rem' }}>
+                    <select
+                      value={img.variantId ?? ''}
+                      disabled={busy}
+                      onChange={(e) => void changeVariant(img.id, e.target.value === '' ? '' : Number(e.target.value))}
+                      style={{ fontSize: '0.82rem', padding: '0.2rem 0.4rem' }}
+                    >
+                      <option value="">All sizes (default)</option>
+                      {variants!.map((v) => (
+                        <option key={v.id} value={v.id}>{v.sku}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.4rem' }}>
                   {!img.preview && (
                     <button
@@ -124,8 +167,25 @@ export function ProductImageManager({ productId }: { productId: number }) {
 
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
         <input id="img-input" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        {hasVariants && (
+          <select
+            value={uploadVariantId}
+            onChange={(e) => setUploadVariantId(e.target.value === '' ? '' : Number(e.target.value))}
+            style={{ fontSize: '0.88rem', padding: '0.3rem 0.4rem' }}
+          >
+            <option value="">All sizes (default)</option>
+            {variants!.map((v) => (
+              <option key={v.id} value={v.id}>{v.sku}</option>
+            ))}
+          </select>
+        )}
         <label style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center', fontSize: '0.88rem' }}>
-          <input type="checkbox" checked={isPreview} onChange={(e) => setIsPreview(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={isPreview}
+            disabled={uploadVariantId !== ''}
+            onChange={(e) => setIsPreview(e.target.checked)}
+          />
           Set as preview
         </label>
         <button type="button" style={{ ...secondaryButton, width: 'auto' }} onClick={() => void upload()} disabled={!file || busy}>

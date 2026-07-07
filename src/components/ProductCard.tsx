@@ -1,14 +1,18 @@
+'use client';
+
 import Link from 'next/link';
 import { ProductChip, mediaUrl } from '@/lib/catalog';
-import { formatLkr, formatRange } from '@/lib/money';
+import { formatDisplayPrice, formatDisplayRange } from '@/lib/displayMoney';
+import { useGeo } from '@/components/GeoProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
 
 export function ProductCard({ product }: { product: ProductChip }) {
+  const { geo } = useGeo();
   const img = mediaUrl(product.previewImageUrl);
   const price =
     product.priceMode === 'SINGLE'
-      ? formatLkr(product.priceCents)
-      : formatRange(product.priceMinCents, product.priceMaxCents);
+      ? formatDisplayPrice(product.priceCents, geo)
+      : formatDisplayRange(product.priceMinCents, product.priceMaxCents, geo);
 
   return (
     <Link href={`/products/${product.slug}`} className="card-hover" style={card}>

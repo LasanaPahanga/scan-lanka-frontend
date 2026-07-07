@@ -21,7 +21,6 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   const { geo } = useGeo();
   const quoteHref = `/quote?productId=${product.id}&name=${encodeURIComponent(product.name)}`;
   const [added, setAdded] = useState(false);
-  const images = product.imageUrls.map(mediaUrl).filter(Boolean) as string[];
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [resolved, setResolved] = useState<ResolvedVariant | null>(null);
   const [resolveError, setResolveError] = useState(false);
@@ -46,6 +45,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
       cancelled = true;
     };
   }, [allSelected, selected, priceAffecting, product.id, product.priceMode]);
+
+  const images = useMemo(() => {
+    const variantId = resolved?.variantId ?? null;
+    const forVariant = variantId != null ? product.imageUrls.filter((i) => i.variantId === variantId) : [];
+    const pool = forVariant.length > 0 ? forVariant : product.imageUrls.filter((i) => i.variantId == null);
+    const fallback = pool.length > 0 ? pool : product.imageUrls;
+    return fallback.map((i) => mediaUrl(i.url)).filter(Boolean) as string[];
+  }, [product.imageUrls, resolved]);
 
   const priceLabel =
     product.priceMode === 'SINGLE'
@@ -79,7 +86,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
     id: product.id,
     slug: product.slug,
     name: product.name,
-    previewImageUrl: product.imageUrls[0] ?? null,
+    previewImageUrl: product.imageUrls[0]?.url ?? null,
     priceMode: product.priceMode,
     priceCents: product.singlePriceCents,
     priceMinCents: product.priceMinCents,

@@ -10,3 +10,13 @@ export function formatDisplayPrice(lkrCents: number | null | undefined, geo: Ret
   const dollars = (foreign / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   return `${dollars} (indicative)`;
 }
+
+export function formatDisplayRange(
+  minCents: number | null | undefined,
+  maxCents: number | null | undefined,
+  geo: ReturnType<typeof useGeo>['geo'],
+) {
+  if (minCents == null || maxCents == null) return '';
+  if (minCents === maxCents) return formatDisplayPrice(minCents, geo);
+  return `${formatDisplayPrice(minCents, geo)} – ${formatDisplayPrice(maxCents, geo)}`;
+}

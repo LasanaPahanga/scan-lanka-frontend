@@ -30,6 +30,10 @@ export interface Variant {
   optionsSignature: string;
   availability: string;
 }
+export interface ProductImageRef {
+  url: string;
+  variantId: number | null; // null = product-level default image
+}
 export interface ProductDetail {
   id: number;
   slug: string;
@@ -44,7 +48,7 @@ export interface ProductDetail {
   whatsappOnly: boolean;
   boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null;
   couriable: boolean;
-  imageUrls: string[];
+  imageUrls: ProductImageRef[];
   specGroups: SpecGroup[];
   variants: Variant[];
 }

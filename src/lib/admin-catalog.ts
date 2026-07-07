@@ -175,19 +175,27 @@ export interface StoredImageView {
   id: number;
   url: string;
   preview: boolean;
+  variantId: number | null;
 }
 
 export const adminListProductImages = (id: number) =>
   api<StoredImageView[]>(`/api/admin/products/${id}/images`);
 
-export function adminUploadProductImage(id: number, file: File, isPreview: boolean) {
+export function adminUploadProductImage(id: number, file: File, isPreview: boolean, variantId?: number | null) {
   const form = new FormData();
   form.append('file', file);
-  return apiForm<StoredImageView>(`/api/admin/products/${id}/images?isPreview=${isPreview}`, form);
+  const variantParam = variantId != null ? `&variantId=${variantId}` : '';
+  return apiForm<StoredImageView>(`/api/admin/products/${id}/images?isPreview=${isPreview}${variantParam}`, form);
 }
 
 export const adminSetProductImagePreview = (productId: number, imageId: number) =>
   api<StoredImageView>(`/api/admin/products/${productId}/images/${imageId}/preview`, { method: 'PATCH' });
+
+export const adminSetProductImageVariant = (productId: number, imageId: number, variantId: number | null) =>
+  api<StoredImageView>(`/api/admin/products/${productId}/images/${imageId}/variant`, {
+    method: 'PATCH',
+    body: JSON.stringify({ variantId }),
+  });
 
 export const adminDeleteProductImage = (productId: number, imageId: number) =>
   api<void>(`/api/admin/products/${productId}/images/${imageId}`, { method: 'DELETE' });

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { lookupOrderDetail } from '@/lib/orders';
 import { formatLkr } from '@/lib/money';
 import { ApiError } from '@/lib/api';
+import { BankSlipUpload } from '@/components/BankSlipUpload';
 import { ContactReturnsCta } from '@/components/ContactReturnsCta';
 import { OrderThread } from '@/components/OrderThread';
 import { OrderStatusBadge } from '@/components/OrderStatusBadge';
@@ -73,6 +74,13 @@ export default function OrderLookupPage() {
               Tracking: {detail.carrier ?? 'Carrier'} - <strong>{detail.trackingRef}</strong>
             </p>
           )}
+          <BankSlipUpload
+            orderNumber={detail.orderNumber}
+            status={detail.status}
+            deliveryMethod={detail.deliveryMethod}
+            deliveryPayment={detail.deliveryPayment}
+            email={email.trim()}
+          />
           <ul style={{ paddingLeft: '1.2rem' }}>
             {detail.lines.map((l) => (
               <li key={`${l.sku}-${l.quantity}`}>
