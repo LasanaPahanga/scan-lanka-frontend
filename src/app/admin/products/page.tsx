@@ -90,9 +90,14 @@ export default function AdminProductsPage() {
         title="Products"
         description="Add, edit, hide or delete products. Inactive products are hidden from the shop."
         actions={
-          <Link href="/admin/products/new" className="admin-btn admin-btn--primary admin-btn--sm">
-            + New product
-          </Link>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <Link href="/admin/products/bulk-images" className="admin-btn admin-btn--secondary admin-btn--sm">
+              Bulk image import
+            </Link>
+            <Link href="/admin/products/new" className="admin-btn admin-btn--primary admin-btn--sm">
+              + New product
+            </Link>
+          </div>
         }
       />
 

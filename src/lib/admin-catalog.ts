@@ -200,6 +200,42 @@ export const adminSetProductImageVariant = (productId: number, imageId: number, 
 export const adminDeleteProductImage = (productId: number, imageId: number) =>
   api<void>(`/api/admin/products/${productId}/images/${imageId}`, { method: 'DELETE' });
 
+export type BulkImportRowStatus =
+  | 'OK_VARIANT'
+  | 'OK_PRODUCT'
+  | 'NO_PRODUCT'
+  | 'SIZE_NOT_MATCHED'
+  | 'BAD_IMAGE'
+  | 'NOT_AN_IMAGE';
+
+export interface BulkImportRow {
+  filename: string;
+  productSlug: string;
+  sizeToken: string | null;
+  productId: number | null;
+  productName: string | null;
+  variantId: number | null;
+  sizeLabel: string | null;
+  status: BulkImportRowStatus;
+  message: string | null;
+}
+
+export interface BulkImportReport {
+  totalEntries: number;
+  imageEntries: number;
+  matchedVariant: number;
+  matchedProduct: number;
+  unmatched: number;
+  rows: BulkImportRow[];
+}
+
+/** dryRun=true → preview mapping only; false → actually store the mappable images. */
+export function adminBulkImportImages(zip: File, dryRun: boolean) {
+  const form = new FormData();
+  form.append('file', zip);
+  return apiForm<BulkImportReport>(`/api/admin/products/images/bulk-import?dryRun=${dryRun}`, form);
+}
+
 /** Prefix backend-served media paths with the API base for <img src>. */
 export function adminMediaUrl(path: string | null): string | null {
   if (!path) return null;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   StoredImageView,
   adminDeleteProductImage,
@@ -19,10 +20,11 @@ export interface ImageManagerVariant {
 
 export function ProductImageManager({ productId, variants }: { productId: number; variants?: ImageManagerVariant[] }) {
   const [images, setImages] = useState<StoredImageView[]>([]);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isPreview, setIsPreview] = useState(true);
   const [uploadVariantId, setUploadVariantId] = useState<number | ''>('');
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const hasVariants = Boolean(variants && variants.length > 0);
 
@@ -37,12 +39,17 @@ export function ProductImageManager({ productId, variants }: { productId: number
   }, [reload]);
 
   async function upload() {
-    if (!file) return;
+    if (files.length === 0) return;
     setBusy(true);
     setError(null);
+    const variantId = uploadVariantId === '' ? null : uploadVariantId;
     try {
-      await adminUploadProductImage(productId, file, isPreview, uploadVariantId === '' ? null : uploadVariantId);
-      setFile(null);
+      for (let i = 0; i < files.length; i++) {
+        setProgress(`Uploading ${i + 1} of ${files.length}…`);
+        // Only the first file can claim the preview slot; the rest are gallery images.
+        await adminUploadProductImage(productId, files[i], isPreview && i === 0, variantId);
+      }
+      setFiles([]);
       setUploadVariantId('');
       const input = document.getElementById('img-input') as HTMLInputElement | null;
       if (input) input.value = '';
@@ -50,6 +57,7 @@ export function ProductImageManager({ productId, variants }: { productId: number
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
     } finally {
+      setProgress(null);
       setBusy(false);
     }
   }
@@ -166,7 +174,13 @@ export function ProductImageManager({ productId, variants }: { productId: number
       )}
 
       <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid var(--border)' }}>
-        <input id="img-input" type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input
+          id="img-input"
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => setFiles(e.target.files ? Array.from(e.target.files) : [])}
+        />
         {hasVariants && (
           <select
             value={uploadVariantId}
@@ -188,10 +202,14 @@ export function ProductImageManager({ productId, variants }: { productId: number
           />
           Set as preview
         </label>
-        <button type="button" style={{ ...secondaryButton, width: 'auto' }} onClick={() => void upload()} disabled={!file || busy}>
-          {busy ? 'Uploading…' : images.length === 0 ? 'Upload image' : 'Add another image'}
+        <button type="button" style={{ ...secondaryButton, width: 'auto' }} onClick={() => void upload()} disabled={files.length === 0 || busy}>
+          {busy ? (progress ?? 'Uploading…') : files.length > 1 ? `Upload ${files.length} images` : images.length === 0 ? 'Upload image' : 'Add another image'}
         </button>
       </div>
+      <p style={{ ...mutedText, margin: '0.35rem 0 0' }}>
+        Tip: you can select several photos at once. To attach many images across the whole catalog in one
+        go, use the <Link href="/admin/products/bulk-images" style={{ color: 'var(--primary)' }}>bulk image import</Link>.
+      </p>
       {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.5rem' }}>{error}</p>}
     </div>
   );
