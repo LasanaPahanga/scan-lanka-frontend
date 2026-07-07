@@ -39,6 +39,8 @@ export interface OrderDetail {
   deliveryCodCents: number;
   fulfilmentType: string;
   deliveryPayment: string;
+  deliveryMethod: string; // "COMPANY_LORRY" | "COURIER" (17)
+  courierEstimateCents: number; // Domex estimate, display-only - 0 for lorry orders
   carrier: string | null;
   trackingRef: string | null;
   shipStreet: string | null;

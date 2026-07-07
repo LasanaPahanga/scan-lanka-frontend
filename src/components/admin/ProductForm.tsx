@@ -21,6 +21,14 @@ const emptyDelivery = (): DeliveryAttrs => ({
   lorryColomboCents: null,
   lorrySuburbCents: null,
   lorryOuterCents: null,
+  lorryColomboGateCents: null,
+  lorrySuburbGateCents: null,
+  lorryOuterGateCents: null,
+  lorryColomboEnabled: true,
+  lorrySuburbEnabled: true,
+  lorryOuterEnabled: true,
+  lorryOuterWhatsapp: false,
+  courierOuterBlocked: false,
   whatsappOnly: false,
 });
 
@@ -238,7 +246,7 @@ export function ProductForm({ existing, categories }: Props) {
               style={fieldInput}
               type="number"
               min="0"
-              step="1"
+              step="0.01"
               value={priceRupees}
               onChange={(e) => setPriceRupees(e.target.value)}
             />
@@ -318,6 +326,7 @@ export function ProductForm({ existing, categories }: Props) {
                             style={{ ...fieldInput, padding: '0.4rem' }}
                             type="number"
                             min="0"
+                            step="0.01"
                             value={comboPrices[key] ?? ''}
                             onChange={(e) => setComboPrices((p) => ({ ...p, [key]: e.target.value }))}
                           />

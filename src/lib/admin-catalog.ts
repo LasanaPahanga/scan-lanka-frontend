@@ -42,10 +42,18 @@ export interface AdminVariant {
 }
 
 export interface DeliveryAttrs {
-  boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null;
+  boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null; // null = not couriable (lorry only)
   lorryColomboCents: number | null;
   lorrySuburbCents: number | null;
   lorryOuterCents: number | null;
+  lorryColomboGateCents: number | null; // min bill per zone (null = no gate)
+  lorrySuburbGateCents: number | null;
+  lorryOuterGateCents: number | null;
+  lorryColomboEnabled: boolean; // per-zone lorry switch (off = lorry hidden for that zone)
+  lorrySuburbEnabled: boolean;
+  lorryOuterEnabled: boolean;
+  lorryOuterWhatsapp: boolean; // outer lorry = contact us (glass, key holders, 6x4/8x4)
+  courierOuterBlocked: boolean; // no courier to outstation/faraway (6x3/6x4/8x4)
   whatsappOnly: boolean;
 }
 
@@ -139,6 +147,23 @@ export const adminUpdateVariantDelivery = (productId: number, variantId: number,
     method: 'PATCH',
     body: JSON.stringify({ delivery }),
   });
+
+export const adminUpdateProductDelivery = (productId: number, delivery: DeliveryAttrs) =>
+  api<void>(`/api/admin/products/${productId}/delivery`, {
+    method: 'PATCH',
+    body: JSON.stringify({ delivery }),
+  });
+
+/** One row per size across the whole catalog (08/17, owner 2026-07-07) — the lorry-pricing overview. */
+export interface LorryPricingRow {
+  productId: number;
+  productName: string;
+  variantId: number | null;
+  sizeLabel: string | null;
+  delivery: DeliveryAttrs;
+}
+
+export const adminListLorryPricing = () => api<LorryPricingRow[]>('/api/admin/products/lorry-pricing');
 
 export const adminSetProductActive = (id: number, active: boolean) =>
   api<void>(`/api/admin/products/${id}/active`, { method: 'PATCH', body: JSON.stringify({ active }) });

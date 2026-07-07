@@ -7,9 +7,15 @@ export interface PostalCode {
   zoneName: string;
 }
 
+export interface DistrictSummary {
+  district: string;
+  count: number;
+}
+
 export interface DeliveryZone {
   zone: string;
-  postalCodes: string[];
+  totalCodes: number;
+  districts: DistrictSummary[];
 }
 
 export const fetchPostalCodes = (q?: string) =>

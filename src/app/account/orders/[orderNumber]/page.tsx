@@ -96,12 +96,23 @@ function OrderDetailView() {
 
       <section style={{ marginTop: '1rem' }}>
         <Row label="Subtotal" value={formatLkr(order.subtotalCents)} />
-        <Row label="Delivery" value={formatLkr(order.deliveryCents)} />
+        {order.deliveryMethod === 'COURIER' ? (
+          <Row label="Courier fee (approx., pay on delivery)" value={formatLkr(order.courierEstimateCents)} />
+        ) : (
+          <Row label="Lorry delivery" value={formatLkr(order.deliveryCents)} />
+        )}
         <Row label="Tax" value={formatLkr(order.taxCents)} />
         <Row label="Total paid online" value={formatLkr(order.totalCents)} bold />
-        {order.deliveryCodCents > 0 && (
-          <Row label="Delivery (COD)" value={formatLkr(order.deliveryCodCents)} muted />
-        )}
+        {order.deliveryPayment === 'COD' &&
+          (order.deliveryMethod === 'COURIER' ? (
+            <Row
+              label="Approx. total on delivery (to the courier)"
+              value={formatLkr(order.subtotalCents + order.taxCents + order.courierEstimateCents)}
+              muted
+            />
+          ) : (
+            <Row label="Cash on delivery" value={formatLkr(order.deliveryCodCents)} muted />
+          ))}
       </section>
 
       {order.timeline.length > 0 && (

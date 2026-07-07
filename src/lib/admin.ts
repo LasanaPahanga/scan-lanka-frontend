@@ -48,6 +48,8 @@ export interface OrderDetail {
   contactPhone: string;
   fulfilmentType: string;
   deliveryPayment: string;
+  deliveryMethod: string; // "COMPANY_LORRY" | "COURIER" (17)
+  courierEstimateCents: number; // Domex estimate, display-only - 0 for lorry orders
   subtotalCents: number;
   deliveryCents: number;
   taxCents: number;

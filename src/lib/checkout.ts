@@ -3,6 +3,7 @@ import { getApiBase } from './api-base';
 import { GuestCartItem } from './cart';
 
 export type DeliveryMethod = 'COMPANY_LORRY' | 'COURIER';
+export type PaymentChoice = 'ONLINE' | 'COD';
 
 export interface DeliveryOption {
   method: DeliveryMethod;
@@ -11,6 +12,8 @@ export interface DeliveryOption {
   prepaidCents: number;
   courierEstimateCents: number;
   someArranged: boolean;
+  addMoreCents: number; // MIN_BILL_NOT_MET: how much more unlocks the lorry
+  blockingItems: string[]; // OVERSIZE_OUTER / UNAVAILABLE_ITEMS: the item names in the way
 }
 
 export interface DeliveryOptionsResult {
@@ -134,6 +137,7 @@ export function submitToPayHere(result: InitiateResult, customer: PayHereCustome
 export const placeOrder = (body: {
   items: GuestCartItem[];
   deliveryMethod: DeliveryMethod;
+  paymentChoice?: PaymentChoice; // lorry only: ONLINE (default) or COD; courier is always COD
   ship: Address;
   billing?: Billing | null;
   contactName: string;
@@ -146,21 +150,37 @@ export const placeOrder = (body: {
   });
 
 export function railLabel(method: DeliveryMethod): string {
-  return method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Citrek)';
+  return method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Domex)';
 }
 
-export function railReason(code: string | null | undefined): string {
+const rupees = (cents: number) => `Rs ${(cents / 100).toLocaleString('en-LK')}`;
+
+export function railReason(code: string | null | undefined, option?: DeliveryOption): string {
   switch (code) {
     case 'MIN_BILL_NOT_MET':
-      return 'Order must exceed Rs 6,000 for company lorry. Add items, use courier, or contact us.';
+      return option && option.addMoreCents > 0
+        ? `Add ${rupees(option.addMoreCents)} more to unlock company lorry delivery, or use the courier.`
+        : 'Order is below the minimum bill for company lorry. Add items or use the courier.';
+    case 'UNAVAILABLE_ITEMS':
+      return `Company lorry is not available to your area for: ${
+        option?.blockingItems.join(', ') ?? 'some items'
+      }. Use the courier instead.`;
+    case 'WHATSAPP_OUTER':
+      return 'Lorry delivery to your area for these items is arranged separately - please contact us.';
+    case 'OVERSIZE_OUTER':
+      return `Too large for courier to your area: ${
+        option?.blockingItems.join(', ') ?? 'some items'
+      }. Remove them, use the company lorry, or contact us.`;
     case 'MISSING_SIZE_TIER':
-      return 'One or more items cannot be sent by courier (board size not set).';
+      return 'One or more items cannot be sent by courier (lorry delivery only).';
     case 'NOT_SERVICEABLE_POSTAL':
       return 'We do not deliver to this postal code.';
     case 'METHOD_DISABLED':
       return 'This delivery option is currently unavailable.';
     case 'WHATSAPP_ONLY':
       return 'These items are sold via WhatsApp or quote only.';
+    case 'COURIER_IS_COD_ONLY':
+      return 'Courier orders are paid on delivery - online payment is not available.';
     default:
       return code ?? 'Unavailable';
   }

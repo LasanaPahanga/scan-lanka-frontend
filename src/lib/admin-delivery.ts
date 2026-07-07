@@ -12,7 +12,13 @@ export interface CourierRateView {
 }
 
 export interface DeliverySettingsView {
-  lorryMinBillCents: number;
+  lorryMinBillCents: number; // retired global gate (per-cell min bills since 2026-07-03)
+  // Owner 2026-07-07: unconditional ceiling on the WHOLE Colombo/Suburb lorry total on every order,
+  // any size; also doubles as the flat charge for a gated cell (no own price) that met its own
+  // threshold. Outer has no cap (gateMetOuterCents unaffected).
+  lorryCapColomboCents: number;
+  lorryCapSuburbCents: number;
+  gateMetOuterCents: number;
 }
 
 export interface DeliveryMethodView {

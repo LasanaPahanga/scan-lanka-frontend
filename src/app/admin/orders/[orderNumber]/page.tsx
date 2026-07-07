@@ -140,6 +140,19 @@ export default function AdminOrderDetailPage() {
         </ul>
       </AdminSection>
 
+      <AdminSection title="Totals">
+        <p>Subtotal: {formatLkr(order.subtotalCents)}</p>
+        {order.deliveryMethod === 'COURIER' ? (
+          <p>Courier fee (approx., pay on delivery): {formatLkr(order.courierEstimateCents)}</p>
+        ) : (
+          <p>Lorry delivery: {formatLkr(order.deliveryCents)}</p>
+        )}
+        <p>Tax: {formatLkr(order.taxCents)}</p>
+        <p>
+          <strong>Paid online: {formatLkr(order.totalCents)}</strong>
+        </p>
+      </AdminSection>
+
       <AdminSection title="Order status">
         <div className="admin-toolbar" style={{ marginTop: 0 }}>
           <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)}>
@@ -188,7 +201,11 @@ export default function AdminOrderDetailPage() {
 
       {order.deliveryPayment === 'COD' && (
         <AdminSection title="Cash on delivery">
-          <p>Estimated delivery: {formatLkr(order.deliveryCodCents)}</p>
+          <p>
+            {order.deliveryMethod === 'COURIER'
+              ? `Approx. total to collect (courier): ${formatLkr(order.subtotalCents + order.taxCents + order.courierEstimateCents)}`
+              : `Cash to collect: ${formatLkr(order.deliveryCodCents)}`}
+          </p>
           <div className="admin-toolbar" style={{ marginTop: 0 }}>
             <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => codReceived(orderNumber).then(reload)}>
               Mark COD received

@@ -13,6 +13,7 @@ import {
   DeliveryMethod,
   DeliveryOption,
   DeliveryOptionsResult,
+  PaymentChoice,
   PlacedResult,
   QuoteResult,
   fetchDeliveryOptions,
@@ -48,6 +49,10 @@ export default function CheckoutPage() {
 
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod | null>(null);
   const [method, setMethod] = useState<PaymentMethod>('CARD');
+  // Lorry only - courier is always COD regardless of this. Reset to ONLINE whenever the rail changes
+  // away from COMPANY_LORRY so a stale COD choice never leaks into a later courier/lorry re-selection.
+  const [paymentChoice, setPaymentChoice] = useState<PaymentChoice>('ONLINE');
+  const [codDueCents, setCodDueCents] = useState(0);
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipUploaded, setSlipUploaded] = useState(false);
   const [slipError, setSlipError] = useState<string | null>(null);
@@ -80,8 +85,12 @@ export default function CheckoutPage() {
   const [methods, setMethods] = useState<PaymentMethods | null>(null);
 
   const canUseSaved = user?.role === 'CUSTOMER' && user.emailVerified;
-  const needsOnlinePayment = deliveryMethod === 'COMPANY_LORRY' && (quote?.onlineTotalCents ?? 0) > 0;
   const isCourier = deliveryMethod === 'COURIER';
+  // Courier is always COD, no choice to make. Lorry can be prepaid online or paid cash on delivery -
+  // the admin can disable COD globally (methods.deliveryCod); default to online-only until we know.
+  const codEligible = deliveryMethod === 'COMPANY_LORRY' && (methods?.deliveryCod ?? true);
+  const needsOnlinePayment =
+    deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'ONLINE' && (quote?.onlineTotalCents ?? 0) > 0;
 
   useEffect(() => {
     fetchPaymentMethods()
@@ -142,6 +151,10 @@ export default function CheckoutPage() {
   }, [items, form.postalCode, form.city, placed]);
 
   useEffect(() => {
+    if (deliveryMethod !== 'COMPANY_LORRY') setPaymentChoice('ONLINE');
+  }, [deliveryMethod]);
+
+  useEffect(() => {
     if (items.length === 0 || placed || !deliveryMethod || !form.postalCode.trim()) {
       setQuote(null);
       return;
@@ -176,10 +189,14 @@ export default function CheckoutPage() {
     if (!deliveryMethod) return;
     setBusy(true);
     setError(null);
+    if (deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'COD') {
+      setCodDueCents(quote?.onlineTotalCents ?? 0); // door total: same math as the online total (FR-PAY-16)
+    }
     try {
       const result = await placeOrder({
         items,
         deliveryMethod,
+        paymentChoice: deliveryMethod === 'COMPANY_LORRY' ? paymentChoice : undefined,
         ship: {
           street: form.street,
           city: form.city,
@@ -264,6 +281,12 @@ export default function CheckoutPage() {
               </>
             ) : null}
             .
+          </p>
+        )}
+        {!isCourier && paymentChoice === 'COD' && (
+          <p style={{ color: 'var(--muted)' }}>
+            Nothing is charged online - pay <strong>{formatLkr(codDueCents)}</strong> in cash to the driver
+            when your order arrives.
           </p>
         )}
         {needsOnlinePayment && method === 'BANK' && !slipUploaded && (
@@ -465,6 +488,24 @@ export default function CheckoutPage() {
           )}
         </section>
 
+        {deliveryMethod === 'COMPANY_LORRY' && codEligible && (
+          <section style={card}>
+            <h3 style={ch3}>How would you like to pay?</h3>
+            <label style={{ display: 'block' }}>
+              <input
+                type="radio"
+                checked={paymentChoice === 'ONLINE'}
+                onChange={() => setPaymentChoice('ONLINE')}
+              />{' '}
+              Pay online now (card or bank transfer)
+            </label>
+            <label style={{ display: 'block' }}>
+              <input type="radio" checked={paymentChoice === 'COD'} onChange={() => setPaymentChoice('COD')} />{' '}
+              Cash on delivery - pay the driver when your order arrives
+            </label>
+          </section>
+        )}
+
         {needsOnlinePayment && (
           <section style={card}>
             <h3 style={ch3}>Payment method</h3>
@@ -490,7 +531,10 @@ export default function CheckoutPage() {
               <Row label="Subtotal" value={formatLkr(quote.subtotalCents)} />
               {deliveryMethod === 'COMPANY_LORRY' && (
                 <>
-                  <Row label="Lorry delivery (pay now)" value={formatLkr(quote.deliveryCents)} />
+                  <Row
+                    label={paymentChoice === 'COD' ? 'Lorry delivery (cash on delivery)' : 'Lorry delivery (pay now)'}
+                    value={formatLkr(quote.deliveryCents)}
+                  />
                   {quote.someArranged && (
                     <p style={mutedNote}>Some items may need a separate delivery cost - we&apos;ll contact you.</p>
                   )}
@@ -508,6 +552,11 @@ export default function CheckoutPage() {
                 <>
                   <Row label="Pay online now" value={formatLkr(0)} />
                   <Row label="Approx. total on delivery" value={formatLkr(quote.approxTotalCents)} bold />
+                </>
+              ) : deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'COD' ? (
+                <>
+                  <Row label="Pay online now" value={formatLkr(0)} />
+                  <Row label="Cash on delivery" value={formatLkr(quote.onlineTotalCents)} bold />
                 </>
               ) : (
                 <Row label="Pay now" value={formatLkr(quote.onlineTotalCents)} bold />
@@ -565,17 +614,17 @@ function RailCard({
       />
       <strong>{railLabel(opt.method)}</strong>
       {opt.method === 'COMPANY_LORRY' && opt.available && (
-        <span style={{ color: 'var(--muted)' }}> · Pay product + delivery online (card or bank)</span>
+        <span style={{ color: 'var(--muted)' }}> · Pay product + delivery online (card or bank) or cash on delivery</span>
       )}
       {opt.method === 'COURIER' && opt.available && (
         <span style={{ color: 'var(--muted)' }}>
           {' '}
-          · No online payment; courier collects ~{formatLkr(opt.courierEstimateCents)} + product on delivery
+          · No online payment; Domex collects ~{formatLkr(opt.courierEstimateCents)} + product on delivery
         </span>
       )}
       {disabled && opt.reason && (
         <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-          {railReason(opt.reason)}
+          {railReason(opt.reason, opt)}
         </div>
       )}
     </label>

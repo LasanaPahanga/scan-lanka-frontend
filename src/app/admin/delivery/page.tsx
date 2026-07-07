@@ -19,6 +19,7 @@ import {
   upsertCourierRate,
   upsertPostalZone,
 } from '@/lib/admin-delivery';
+import Link from 'next/link';
 import { getTaxConfig, putTaxConfig, TaxConfigView } from '@/lib/admin';
 import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
 
@@ -109,30 +110,55 @@ export default function AdminDeliveryPage() {
   return (
     <main style={adminMain}>
       <h1>Delivery &amp; tax</h1>
-      <p style={mutedText}>Two-rail delivery: company lorry (prepaid online) and courier Citrek (full COD).</p>
+      <p style={mutedText}>
+        Two-rail delivery: company lorry (card / bank transfer / cash on delivery) and courier Domex
+        (full COD). Per-product lorry prices, min bills and on/off switches live on the product form —
+        or see them all at once in the{' '}
+        <Link href="/admin/delivery/lorry-pricing" style={{ color: 'var(--primary)' }}>
+          lorry pricing overview
+        </Link>
+        .
+      </p>
       {msg && <p style={{ color: 'var(--primary)' }}>{msg}</p>}
 
       <section style={section}>
-        <h2 style={h2}>Global lorry settings</h2>
+        <h2 style={h2}>Lorry delivery cap</h2>
+        <p style={mutedText}>
+          The whole Colombo/Suburb lorry delivery charge is always capped at these amounts — no matter
+          how many items, which per-product prices would otherwise sum higher, or how small the order
+          is. The same amount also doubles as the flat charge for a small/gated item (no own price)
+          whose own minimum bill is met. Outer has no cap — its flat charge is separate.
+        </p>
         {settings && (
           <form
+            style={{ display: 'grid', gap: '0.5rem', maxWidth: 420 }}
             onSubmit={async (e) => {
               e.preventDefault();
-              const rupees = (e.currentTarget.elements.namedItem('minBill') as HTMLInputElement).value;
-              await putDeliverySettings({ lorryMinBillCents: Math.round(Number(rupees) * 100) });
-              setMsg('Lorry minimum bill updated.');
+              const fd = new FormData(e.currentTarget);
+              await putDeliverySettings({
+                ...settings,
+                lorryCapColomboCents: Math.round(Number(fd.get('capColombo')) * 100),
+                lorryCapSuburbCents: Math.round(Number(fd.get('capSuburb')) * 100),
+                gateMetOuterCents: Math.round(Number(fd.get('gmOuter')) * 100),
+              });
+              setMsg('Lorry delivery cap updated.');
               await reload();
             }}
           >
             <label style={label}>
-              Minimum product subtotal for lorry (Rs, must exceed this amount)
-              <input
-                style={fieldInput}
-                name="minBill"
-                type="number"
-                step="0.01"
-                defaultValue={settings.lorryMinBillCents / 100}
-              />
+              Colombo cap (Rs)
+              <input style={fieldInput} name="capColombo" type="number" step="0.01" min="0"
+                defaultValue={settings.lorryCapColomboCents / 100} />
+            </label>
+            <label style={label}>
+              Suburb cap — Gampaha/Kalutara (Rs)
+              <input style={fieldInput} name="capSuburb" type="number" step="0.01" min="0"
+                defaultValue={settings.lorryCapSuburbCents / 100} />
+            </label>
+            <label style={label}>
+              Outer flat charge (Rs, no cap)
+              <input style={fieldInput} name="gmOuter" type="number" step="0.01" min="0"
+                defaultValue={settings.gateMetOuterCents / 100} />
             </label>
             <button type="submit" style={{ ...primaryButton, width: 'auto', marginTop: '0.5rem' }}>
               Save
@@ -155,7 +181,7 @@ export default function AdminDeliveryPage() {
                     await reload();
                   }}
                 />{' '}
-                {m.method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Citrek)'}
+                {m.method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Domex)'}
               </label>
             </li>
           ))}
@@ -176,7 +202,10 @@ export default function AdminDeliveryPage() {
                 };
                 return (
                   <form
-                    key={sizeTier}
+                    // Remount once the real rate loads: `defaultValue` on an uncontrolled input only
+                    // applies at mount, so a key of just `sizeTier` never picks up the async-fetched
+                    // flatCents and the field is stuck showing its initial (pre-fetch) value forever.
+                    key={`${sizeTier}-${row.flatCents}`}
                     style={rateTierForm}
                     onSubmit={(e) => {
                       e.preventDefault();

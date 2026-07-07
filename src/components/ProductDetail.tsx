@@ -168,16 +168,16 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               </p>
             ) : (
               <ul style={{ margin: 0, paddingLeft: '1.1rem', color: 'var(--muted)', fontSize: '0.9rem' }}>
-                <li>Company lorry - prepaid online (orders over Rs 6,000)</li>
+                <li>Company lorry - pay online or cash on delivery</li>
                 {courierPendingSize ? (
-                  <li>Courier (Citrek) - select a size for details</li>
+                  <li>Courier (Domex) - select a size for details</li>
                 ) : couriable ? (
                   <li>
-                    Courier (Citrek) - pay on delivery
-                    {boardSizeTier === 'UNDER_2FT' ? ' (below 2 ft)' : boardSizeTier === 'BETWEEN_2FT_6FT' ? ' (2–6 ft)' : ''}
+                    Courier (Domex) - pay on delivery
+                    {boardSizeTier === 'UNDER_2FT' ? ' (below 2 ft)' : boardSizeTier === 'BETWEEN_2FT_6FT' ? ' (2–6 ft rate)' : ''}
                   </li>
                 ) : (
-                  <li>Courier not available for this item (board size not set)</li>
+                  <li>Courier not available for this item (lorry delivery only)</li>
                 )}
               </ul>
             )}
