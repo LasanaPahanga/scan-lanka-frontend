@@ -110,7 +110,7 @@ export function ProductImageManager({ productId, variants }: { productId: number
         {hasVariants && (
           <>
             {' '}Tag a photo to a specific size and it replaces the gallery when a customer picks that size on
-            the product page — untagged photos ("All sizes") show by default.
+            the product page — untagged photos (&quot;All sizes&quot;) show by default.
           </>
         )}
       </p>

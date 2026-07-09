@@ -1,4 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+const API_BASE =
+  process.env.SERVER_API_BASE ??
+  process.env.NEXT_PUBLIC_API_BASE ??
+  'http://localhost:8080';
 
 /** Server-side fetch that never throws — returns null when the API is unreachable. */
 export async function safeServerFetch(
