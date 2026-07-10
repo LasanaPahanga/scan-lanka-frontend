@@ -203,6 +203,7 @@ export const adminDeleteProductImage = (productId: number, imageId: number) =>
 export type BulkImportRowStatus =
   | 'OK_VARIANT'
   | 'OK_PRODUCT'
+  | 'DUPLICATE'
   | 'NO_PRODUCT'
   | 'SIZE_NOT_MATCHED'
   | 'BAD_IMAGE'
@@ -225,6 +226,7 @@ export interface BulkImportReport {
   imageEntries: number;
   matchedVariant: number;
   matchedProduct: number;
+  duplicate: number;
   unmatched: number;
   rows: BulkImportRow[];
 }

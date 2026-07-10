@@ -12,6 +12,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 const STATUS_LABEL: Record<BulkImportRowStatus, { text: string; color: string }> = {
   OK_VARIANT: { text: 'Matched to size', color: 'var(--primary)' },
   OK_PRODUCT: { text: 'Product image', color: 'var(--primary)' },
+  DUPLICATE: { text: 'Skipped — already on product', color: 'var(--muted)' },
   SIZE_NOT_MATCHED: { text: 'Skipped — size not recognised', color: 'var(--accent, #b45309)' },
   NO_PRODUCT: { text: 'Skipped — no matching product', color: 'var(--danger)' },
   BAD_IMAGE: { text: 'Not a valid image', color: 'var(--danger)' },
@@ -123,6 +124,9 @@ export default function BulkImagesPage() {
             {applied ? 'Imported' : 'Will import'}:{' '}
             <strong>{report.matchedVariant}</strong> matched to a size,{' '}
             <strong>{report.matchedProduct}</strong> as general product images.{' '}
+            {report.duplicate > 0 && (
+              <span>{report.duplicate} already on their product (skipped). </span>
+            )}
             {report.unmatched > 0 && (
               <span style={{ color: 'var(--danger)' }}>
                 {report.unmatched} need attention (see below).
