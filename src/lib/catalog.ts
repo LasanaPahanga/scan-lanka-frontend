@@ -1,5 +1,5 @@
 import { api } from './api';
-import { API_BASE, safeServerFetch } from './server-fetch';
+import { safeServerFetch } from './server-fetch';
 
 export interface ProductChip {
   id: number;
@@ -95,10 +95,14 @@ export interface ProductListParams {
   size?: number;
 }
 
-/** Prefix backend-served media paths with the API base for <img src>. */
+/**
+ * Media URL for <img src>. Backend paths (/api/media/...) are left relative so the browser loads them
+ * same-origin through the /api proxy (Next rewrite in dev, Vercel proxy in prod) — an absolute cross-
+ * origin URL is blocked by the page CSP (img-src 'self'). External URLs pass through unchanged.
+ */
 export function mediaUrl(path: string | null): string | null {
   if (!path) return null;
-  return path.startsWith('/') ? `${API_BASE}${path}` : path;
+  return path;
 }
 
 function buildQuery(params: ProductListParams): string {

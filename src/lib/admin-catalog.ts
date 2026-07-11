@@ -238,8 +238,11 @@ export function adminBulkImportImages(zip: File, dryRun: boolean) {
   return apiForm<BulkImportReport>(`/api/admin/products/images/bulk-import?dryRun=${dryRun}`, form);
 }
 
-/** Prefix backend-served media paths with the API base for <img src>. */
+/**
+ * Media URL for admin <img src>. Kept relative so it loads same-origin through the /api proxy — an
+ * absolute cross-origin URL is blocked by the page CSP (img-src 'self'). External URLs pass through.
+ */
 export function adminMediaUrl(path: string | null): string | null {
   if (!path) return null;
-  return path.startsWith('/') ? `${API_BASE}${path}` : path;
+  return path;
 }
