@@ -4,11 +4,15 @@ import { FormEvent, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   AdminProductDetail,
+  AdminSpecGroup,
+  AdminVariant,
   CreateProductBody,
   DeliveryAttrs,
   GroupInput,
   VariantInput,
+  adminAddVariant,
   adminCreateProduct,
+  adminDeleteVariant,
   adminUpdateProduct,
   adminUpdateVariantDelivery,
 } from '@/lib/admin-catalog';
@@ -78,7 +82,6 @@ export function ProductForm({ existing, categories }: Props) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [delivery, setDelivery] = useState<DeliveryAttrs>(existing?.delivery ?? emptyDelivery());
-  const [variantDeliveryMsg, setVariantDeliveryMsg] = useState<string | null>(null);
 
   // Build the option matrix for the variant builder (create mode only).
   const optionLists = useMemo(
@@ -351,33 +354,13 @@ export function ProductForm({ existing, categories }: Props) {
         </div>
       )}
 
-      {/* Variant edit + per-size delivery */}
+      {/* Variant add / delete + per-size delivery */}
       {isEdit && isVariant && (
-        <div style={builderBox}>
-          <strong>Variants &amp; shipping</strong>
-          <p style={mutedText}>
-            Set board size tier and lorry charges per size. Names and prices are listed for reference — change
-            visibility and descriptions above.
-          </p>
-          {variantDeliveryMsg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{variantDeliveryMsg}</p>}
-          <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '1rem' }}>
-            {existing!.variants.map((v) => (
-              <li key={v.id} style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
-                <strong style={{ fontSize: '0.9rem' }}>
-                  {v.sku} - Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
-                </strong>
-                <div style={{ marginTop: '0.5rem' }}>
-                  <VariantDeliveryEditor
-                    productId={existing!.id}
-                    variantId={v.id}
-                    initial={v.delivery}
-                    onSaved={() => setVariantDeliveryMsg(`Saved shipping for ${v.sku}`)}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <VariantManager
+          productId={existing!.id}
+          specGroups={existing!.specGroups}
+          initialVariants={existing!.variants}
+        />
       )}
 
       {isEdit && !isVariant && (
@@ -438,6 +421,162 @@ const builderBox = {
 } as const;
 const cellHead = { textAlign: 'left' as const, padding: '0.35rem 0.5rem', color: 'var(--muted)', fontSize: '0.78rem' };
 const cell = { padding: '0.25rem 0.5rem', borderTop: '1px solid var(--border)' } as const;
+
+/** Add / delete sizes on an existing variant product, plus per-size shipping. Manages its own list. */
+function VariantManager({
+  productId,
+  specGroups,
+  initialVariants,
+}: {
+  productId: number;
+  specGroups: AdminSpecGroup[];
+  initialVariants: AdminVariant[];
+}) {
+  const priceGroups = useMemo(() => specGroups.filter((g) => g.priceAffecting), [specGroups]);
+  // option id -> value, to turn a variant's signature into a readable size label
+  const optionValueById = useMemo(() => {
+    const m = new Map<number, string>();
+    priceGroups.forEach((g) => g.options.forEach((o) => m.set(o.id, o.value)));
+    return m;
+  }, [priceGroups]);
+  const sizeLabel = (signature: string) =>
+    signature
+      .split('-')
+      .map((tok) => optionValueById.get(Number(tok)) ?? tok)
+      .join(' · ');
+
+  const [variants, setVariants] = useState<AdminVariant[]>(initialVariants);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<number | null>(null);
+
+  // add-size form
+  const [newValues, setNewValues] = useState<string[]>(priceGroups.map(() => ''));
+  const [newPrice, setNewPrice] = useState('');
+  const [newStock, setNewStock] = useState('');
+  const [adding, setAdding] = useState(false);
+
+  async function add() {
+    const values = newValues.map((v) => v.trim());
+    if (values.some((v) => v === '')) {
+      setError('Enter a value for every option.');
+      return;
+    }
+    const price = Math.round(Number(newPrice) * 100);
+    if (!price || price <= 0) {
+      setError('Enter a valid price.');
+      return;
+    }
+    setAdding(true);
+    setError(null);
+    setMsg(null);
+    try {
+      const v = await adminAddVariant(productId, values, price, newStock.trim() === '' ? null : Number(newStock));
+      setVariants((prev) => [
+        ...prev,
+        { id: v.id, sku: v.sku, priceCents: v.priceCents, optionsSignature: v.signature, availability: 'IN_STOCK', delivery: emptyDelivery() },
+      ]);
+      setNewValues(priceGroups.map(() => ''));
+      setNewPrice('');
+      setNewStock('');
+      setMsg(`Added size ${values.join(' · ')}.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not add the size.');
+    } finally {
+      setAdding(false);
+    }
+  }
+
+  async function remove(v: AdminVariant) {
+    if (!window.confirm(`Delete size "${sizeLabel(v.optionsSignature)}"? This can't be undone.`)) return;
+    setBusyId(v.id);
+    setError(null);
+    setMsg(null);
+    try {
+      await adminDeleteVariant(productId, v.id);
+      setVariants((prev) => prev.filter((x) => x.id !== v.id));
+      setMsg('Size deleted.');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not delete the size.');
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  return (
+    <div style={builderBox}>
+      <strong>Sizes &amp; shipping</strong>
+      <p style={mutedText}>
+        Add a size that was missed, or delete a wrong one. Set the board size tier and lorry charges per size below.
+        A size that has already been ordered can&apos;t be deleted.
+      </p>
+      {msg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{msg}</p>}
+      {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{error}</p>}
+
+      <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: '1rem' }}>
+        {variants.map((v) => (
+          <li key={v.id} style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <strong style={{ fontSize: '0.9rem' }}>
+                {sizeLabel(v.optionsSignature)} — Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
+              </strong>
+              <button
+                type="button"
+                style={{ ...secondaryButton, width: 'auto', padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
+                disabled={busyId === v.id || variants.length <= 1}
+                title={variants.length <= 1 ? 'A product must keep at least one size' : undefined}
+                onClick={() => void remove(v)}
+              >
+                {busyId === v.id ? 'Deleting…' : 'Delete size'}
+              </button>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <VariantDeliveryEditor
+                productId={productId}
+                variantId={v.id}
+                initial={v.delivery}
+                onSaved={() => setMsg(`Saved shipping for ${sizeLabel(v.optionsSignature)}.`)}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div style={{ borderTop: '1px solid var(--border)', marginTop: '1rem', paddingTop: '0.75rem' }}>
+        <strong style={{ fontSize: '0.9rem' }}>Add a size</strong>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'flex-end', marginTop: '0.5rem' }}>
+          {priceGroups.map((g, i) => (
+            <label key={g.id} style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+              {g.name}
+              <input
+                style={{ ...fieldInput, display: 'block', width: 120 }}
+                value={newValues[i] ?? ''}
+                placeholder={g.name.toLowerCase().includes('size') ? 'e.g. 2 x 3' : ''}
+                onChange={(e) => setNewValues((prev) => prev.map((x, j) => (j === i ? e.target.value : x)))}
+              />
+            </label>
+          ))}
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+            Price (Rs)
+            <input style={{ ...fieldInput, display: 'block', width: 120 }} type="number" min="0" step="0.01"
+              value={newPrice} onChange={(e) => setNewPrice(e.target.value)} />
+          </label>
+          <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+            Stock (optional)
+            <input style={{ ...fieldInput, display: 'block', width: 120 }} type="number" min="0"
+              value={newStock} onChange={(e) => setNewStock(e.target.value)} />
+          </label>
+          <button type="button" style={{ ...primaryButton, width: 'auto' }} disabled={adding} onClick={() => void add()}>
+            {adding ? 'Adding…' : 'Add size'}
+          </button>
+        </div>
+        <p style={{ ...mutedText, marginTop: '0.4rem' }}>
+          New sizes start with no lorry charges — set their shipping in the list above after adding.
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function VariantDeliveryEditor({
   productId,

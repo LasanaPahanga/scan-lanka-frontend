@@ -171,6 +171,23 @@ export const adminSetProductActive = (id: number, active: boolean) =>
 export const adminDeleteProduct = (id: number) =>
   api<{ outcome: string }>(`/api/admin/products/${id}`, { method: 'DELETE' });
 
+export interface AddedVariant {
+  id: number;
+  sku: string;
+  priceCents: number;
+  signature: string;
+}
+
+/** Add one variant (size) to an existing variant product. optionValues = one per price-affecting group. */
+export const adminAddVariant = (productId: number, optionValues: string[], priceCents: number, stockQty: number | null) =>
+  api<AddedVariant>(`/api/admin/products/${productId}/variants`, {
+    method: 'POST',
+    body: JSON.stringify({ optionValues, priceCents, stockQty }),
+  });
+
+export const adminDeleteVariant = (productId: number, variantId: number) =>
+  api<void>(`/api/admin/products/${productId}/variants/${variantId}`, { method: 'DELETE' });
+
 export interface StoredImageView {
   id: number;
   url: string;
