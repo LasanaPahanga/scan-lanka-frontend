@@ -2,6 +2,11 @@
    Matches scanlanka.com: clean white/airy surfaces, brand blue, near-black text,
    light hero, restrained motion. Existing variable names are preserved. */
 :root {
+  /* Belt-and-suspenders for the viewport meta tag above: some in-app
+     webviews only honor the CSS property, not the <meta> tag. Keeps native
+     form controls (checkboxes, selects, scrollbars) light on Android/iOS
+     even when the OS or browser is set to dark mode. */
+  color-scheme: only light;
   --bg: #ffffff;
   --bg-muted: #f5f7fa;
   --surface: #ffffff;
@@ -850,6 +855,37 @@ textarea:focus {
 
   .header-util-inner {
     padding: 0.55rem 0 0.7rem;
+    /* Keep the hotline and country selector on a single tidy row instead of
+       wrapping onto two lines; the label text below is hidden to make room. */
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .header-util-contact {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+
+  .util-hotline-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .header-util-meta {
+    flex-shrink: 0;
+  }
+
+  .country-selector-label {
+    display: none;
+  }
+
+  .country-selector-select {
+    font-size: 0.82rem;
+    padding: 0.15rem 0.3rem;
   }
 
   .header-main-bar {
@@ -1088,6 +1124,14 @@ textarea:focus {
   .fab-widget svg {
     width: 26px !important;
     height: 26px !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Very narrow phones (iPhone SE and similar): drop the "Hotline" word so
+     the number + country selector still fit on one line without clipping. */
+  .util-hotline-word {
+    display: none;
   }
 }
 

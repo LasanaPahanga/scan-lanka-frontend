@@ -67,8 +67,8 @@ export function Header() {
       <div className="header-util-bar" style={utilBar}>
         <div className="container header-util-inner">
           <div className="header-util-contact">
-            <a href={`tel:${HOTLINE.replace(/\s/g, '')}`} style={utilItem}>
-              ☎ <span className="util-hotline-text">Hotline {HOTLINE}</span>
+            <a href={`tel:${HOTLINE.replace(/\s/g, '')}`} className="util-hotline-link" style={utilItem}>
+              ☎ <span className="util-hotline-text"><span className="util-hotline-word">Hotline </span>{HOTLINE}</span>
             </a>
             <a href={`mailto:${EMAIL}`} className="util-email" style={utilItem}>
               ✉ {EMAIL}

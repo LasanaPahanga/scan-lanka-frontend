@@ -14,12 +14,14 @@ const COUNTRIES = [
 export function CountrySelector() {
   const { geo, setCountry } = useGeo();
   return (
-    <label style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
-      {t('geo.country')}:{' '}
+    <label className="country-selector" style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+      <span className="country-selector-label">{t('geo.country')}:</span>{' '}
       <select
         value={geo.country}
         onChange={(e) => setCountry(e.target.value)}
+        className="country-selector-select"
         style={{ marginLeft: '0.25rem' }}
+        aria-label={t('geo.country')}
       >
         {COUNTRIES.map((c) => (
           <option key={c.code} value={c.code}>
