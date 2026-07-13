@@ -7,6 +7,7 @@ import { WhatsAppButton } from '@/components/WhatsAppButton';
 import { CustomerCareWidget } from '@/components/CustomerCareWidget';
 import { CookieConsent } from '@/components/CookieConsent';
 import { IntroSplash } from '@/components/IntroSplash';
+import { MobileTabBar } from '@/components/MobileTabBar';
 
 /** Storefront chrome is hidden on admin routes for a focused console UI. */
 export function StorefrontChrome({ children }: { children: React.ReactNode }) {
@@ -26,6 +27,7 @@ export function StorefrontChrome({ children }: { children: React.ReactNode }) {
       <WhatsAppButton />
       <CustomerCareWidget />
       <CookieConsent />
+      <MobileTabBar />
     </>
   );
 }

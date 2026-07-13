@@ -32,6 +32,18 @@ export function Header() {
   const [q, setQ] = useState('');
   const [logoError, setLogoError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  // Render the notification bell in the brand row on phones (the actions row
+  // is replaced by the bottom tab bar there) and in the actions row on desktop.
+  // One instance only: each bell polls the inbox on an interval.
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 900px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -92,6 +104,11 @@ export function Header() {
               )}
             </Link>
 
+            {isMobile && (
+              <span className="header-bell-mobile">
+                <NotificationBell />
+              </span>
+            )}
             <button
               type="button"
               className="header-menu-btn"
@@ -117,7 +134,7 @@ export function Header() {
           </form>
 
           <div className="header-actions">
-            <NotificationBell />
+            {!isMobile && <NotificationBell />}
             <Link href="/wishlist" className="icon-link" aria-label="Wishlist">
               ♡ <span style={countPill}>{wishlistCount}</span>
             </Link>

@@ -81,7 +81,7 @@ export function HeroVideoCrossfade() {
     <div style={wrap} aria-hidden="true">
       <video ref={ref0} src={SOURCES[0]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }} />
       <video ref={ref1} src={SOURCES[1]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }} />
-      <div style={{ ...scrim, opacity: ready ? 1 : 0, transition: 'opacity 0.6s ease' }} />
+      <div className="hero-scrim" style={{ ...scrim, opacity: ready ? 1 : 0, transition: 'opacity 0.6s ease' }} />
     </div>
   );
 }
