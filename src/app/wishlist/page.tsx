@@ -20,7 +20,7 @@ export default function WishlistPage() {
           </Link>
         </p>
       ) : (
-        <div style={grid}>
+        <div className="product-grid" style={{ marginTop: '1.5rem' }}>
           {items.map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -29,10 +29,3 @@ export default function WishlistPage() {
     </main>
   );
 }
-
-const grid = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-  gap: '1.25rem',
-  marginTop: '1.5rem',
-} as const;

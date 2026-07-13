@@ -16,7 +16,7 @@ export function CategoryTiles({
   const total = categories.reduce((n, c) => n + c.count, 0);
 
   return (
-    <nav style={wrap} aria-label="Product categories">
+    <nav className="category-tiles" style={wrap} aria-label="Product categories">
       <Link href="/products" style={{ ...tile, ...(active ? null : tileActive) }}>
         <span style={tileName}>All products</span>
         <span style={tileCount}>{total} Products</span>

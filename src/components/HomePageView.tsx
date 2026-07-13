@@ -61,7 +61,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
 
       {/* Trust strip */}
       <section style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)' }}>
-        <div className="container" style={trustGrid}>
+        <div className="container trust-grid">
           {TRUST.map((x) => (
             <div key={x.t} style={trustItem}>
               <strong style={{ color: 'var(--primary)' }}>{x.t}</strong>
@@ -90,7 +90,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
                   </Link>
                 </div>
               </Reveal>
-              <div style={productGrid}>
+              <div className="product-grid">
                 {row.products.map((p, i) => (
                   <Reveal key={p.id} delay={i * 50}>
                     <ProductCard product={p} />
@@ -109,7 +109,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
                 </Link>
               </div>
             </Reveal>
-            <div style={productGrid}>
+            <div className="product-grid">
               {home.featured.map((p, i) => (
                 <Reveal key={p.id} delay={i * 50}>
                   <ProductCard product={p} />
@@ -210,12 +210,6 @@ const heroTitle = {
 } as const;
 const heroText = { fontSize: '1.05rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 } as const;
 
-const trustGrid = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-  gap: '1rem',
-  padding: '1.4rem 1.25rem',
-} as const;
 const trustItem = { display: 'flex', flexDirection: 'column' as const, gap: '0.15rem' };
 
 const sectionHead = {
@@ -257,12 +251,6 @@ const catIcon = {
   justifyContent: 'center',
   background: 'var(--primary-light)',
   borderRadius: 999,
-} as const;
-
-const productGrid = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-  gap: '1.5rem',
 } as const;
 
 const ctaBand = { background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)' } as const;

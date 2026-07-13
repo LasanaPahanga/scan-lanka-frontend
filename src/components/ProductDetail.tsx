@@ -95,7 +95,7 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
   };
 
   return (
-    <main className="page">
+    <main className="page pdp-page">
       <Link href="/products" className="icon-link" style={{ display: 'inline-flex', marginBottom: '1.25rem' }}>
         ← Back to products
       </Link>
@@ -190,23 +190,30 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
             )}
           </div>
 
-          <button
-            type="button"
-            disabled={!canAddToCart}
-            onClick={() => {
-              void add({
-                productId: product.id,
-                variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
-                quantity: 1,
-                name: product.name,
-              });
-              setAdded(true);
-              setTimeout(() => setAdded(false), 2000);
-            }}
-            style={{ ...addBtn, opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
-          >
-            {added ? 'Added ✓' : whatsappOnly ? 'Contact us to order' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
-          </button>
+          <div className="pdp-buybar">
+            <div className="pdp-buybar-price">
+              <span className="pdp-buybar-price-label">Price</span>
+              <strong>{priceLabel || '—'}</strong>
+            </div>
+            <button
+              type="button"
+              className="pdp-add-btn"
+              disabled={!canAddToCart}
+              onClick={() => {
+                void add({
+                  productId: product.id,
+                  variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
+                  quantity: 1,
+                  name: product.name,
+                });
+                setAdded(true);
+                setTimeout(() => setAdded(false), 2000);
+              }}
+              style={{ opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
+            >
+              {added ? 'Added ✓' : whatsappOnly ? 'Contact us to order' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
+            </button>
+          </div>
 
           {product.description && <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>{product.description}</p>}
           {product.details && <p style={{ whiteSpace: 'pre-line' }}>{product.details}</p>}
@@ -218,12 +225,14 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
 
 const layout = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2.5rem' } as const;
 const optBtn = {
-  padding: '0.5rem 0.9rem',
+  padding: '0.5rem 1rem',
+  minHeight: 44,
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius)',
   background: 'var(--surface)',
   cursor: 'pointer',
   fontWeight: 500,
+  fontSize: '0.92rem',
   transition: 'border-color 0.15s var(--ease), background 0.15s var(--ease)',
 } as const;
 const optBtnActive = { borderColor: 'var(--primary)', background: 'var(--primary)', color: 'var(--primary-contrast)' } as const;
@@ -234,15 +243,4 @@ const deliveryBox = {
   background: 'var(--bg-muted)',
   borderRadius: 'var(--radius-sm)',
   border: '1px solid var(--border)',
-} as const;
-const addBtn = {
-  padding: '0.85rem 1.75rem',
-  background: 'var(--primary)',
-  color: 'var(--primary-contrast)',
-  border: 'none',
-  borderRadius: 'var(--radius)',
-  fontSize: '1rem',
-  fontWeight: 600,
-  marginTop: '0.5rem',
-  transition: 'background 0.18s var(--ease)',
 } as const;
