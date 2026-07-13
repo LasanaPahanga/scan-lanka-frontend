@@ -31,7 +31,7 @@ export function ProductBrowseToolbar({ facets, q, category, parentId, sort }: Br
   );
 
   return (
-    <div style={bar}>
+    <div className="browse-toolbar" style={bar}>
       <input
         type="search"
         placeholder="Search products…"

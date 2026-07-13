@@ -21,7 +21,7 @@ export default function CartPage() {
       <main style={wrap}>
         <h1 className="page-title">Your cart</h1>
         <p style={{ color: 'var(--muted)' }}>Your cart is empty.</p>
-        <Link href="/products" style={{ color: 'var(--primary)' }}>
+        <Link href="/products" className="btn btn-primary">
           Browse products
         </Link>
       </main>
@@ -31,68 +31,61 @@ export default function CartPage() {
   return (
     <main style={wrap}>
       <h1 className="page-title">Your cart</h1>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1rem' }}>
-        <tbody>
-          {lines.map((line) => (
-            <tr key={line.key} style={{ borderBottom: '1px solid var(--border)' }}>
-              <td style={td}>
-                <div style={{ fontWeight: 600 }}>{line.name}</div>
-                {line.status === 'CAPPED' && (
-                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Limited to available stock</div>
-                )}
-                {line.status === 'OUT_OF_STOCK' && (
-                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>Out of stock</div>
-                )}
-                {line.status === 'UNAVAILABLE' && (
-                  <div style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>No longer available</div>
-                )}
-              </td>
-              <td style={td}>
-                <input
-                  type="number"
-                  min={1}
-                  value={line.quantity}
-                  onChange={(e) => void setQuantity(line, Number(e.target.value))}
-                  style={{ width: 60, padding: '0.3rem' }}
-                />
-              </td>
-              <td style={{ ...td, textAlign: 'right' }}>
-                {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '-'}
-              </td>
-              <td style={{ ...td, textAlign: 'right' }}>
-                <button
-                  type="button"
-                  onClick={() => void remove(line)}
-                  style={{ border: 'none', background: 'none', color: 'var(--danger)', cursor: 'pointer' }}
-                >
-                  Remove
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ul className="cart-lines" style={{ listStyle: 'none', padding: 0 }}>
+        {lines.map((line) => (
+          <li key={line.key} className="cart-line">
+            <div className="cart-line-info">
+              <div className="cart-line-name">{line.name}</div>
+              {line.status === 'CAPPED' && <div className="cart-line-warning">Limited to available stock</div>}
+              {line.status === 'OUT_OF_STOCK' && <div className="cart-line-warning">Out of stock</div>}
+              {line.status === 'UNAVAILABLE' && <div className="cart-line-warning">No longer available</div>}
+            </div>
+            <div className="cart-qty" role="group" aria-label={`Quantity for ${line.name}`}>
+              <button
+                type="button"
+                aria-label="Decrease quantity"
+                disabled={line.quantity <= 1}
+                onClick={() => void setQuantity(line, line.quantity - 1)}
+              >
+                −
+              </button>
+              <span className="cart-qty-value" aria-live="polite">
+                {line.quantity}
+              </span>
+              <button
+                type="button"
+                aria-label="Increase quantity"
+                onClick={() => void setQuantity(line, line.quantity + 1)}
+              >
+                +
+              </button>
+            </div>
+            <div className="cart-line-total">
+              {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '-'}
+            </div>
+            <button type="button" className="cart-remove" onClick={() => void remove(line)}>
+              Remove
+            </button>
+          </li>
+        ))}
+      </ul>
 
-      <div style={{ textAlign: 'right', marginTop: '1.25rem', fontSize: '1.2rem' }}>
-        Subtotal: <strong>{priced ? formatLkr(priced.subtotalCents) : '…'}</strong>
-      </div>
-      <div style={{ textAlign: 'right', marginTop: '1rem' }}>
-        <Link href="/checkout" style={checkout}>
-          Checkout
+      <div className="cart-summary">
+        <div className="cart-summary-total">
+          <span>Subtotal</span>
+          <strong>{priced ? formatLkr(priced.subtotalCents) : '…'}</strong>
+        </div>
+        <Link href="/checkout" className="cart-checkout-btn">
+          Checkout →
         </Link>
       </div>
+      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
+        <Link href="/products" className="cart-continue-link">
+          ← Continue shopping
+        </Link>
+      </p>
     </main>
   );
 }
 
 const wrap = { maxWidth: 820, margin: '0 auto', padding: '2.5rem 1.25rem 3.5rem' } as const;
-const td = { padding: '0.75rem 0.5rem', verticalAlign: 'middle' } as const;
-const checkout = {
-  display: 'inline-block',
-  padding: '0.7rem 1.6rem',
-  background: 'var(--accent)',
-  color: 'var(--primary-contrast)',
-  borderRadius: 'var(--radius)',
-  fontSize: '1rem',
-  textDecoration: 'none',
-} as const;

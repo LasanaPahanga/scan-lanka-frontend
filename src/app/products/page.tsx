@@ -67,7 +67,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         </p>
       ) : (
         <>
-          <div style={grid}>
+          <div className="product-grid">
             {products.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}
@@ -80,9 +80,3 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
     </main>
   );
 }
-
-const grid = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-  gap: '1.25rem',
-} as const;
