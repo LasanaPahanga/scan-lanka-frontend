@@ -27,6 +27,11 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  // Storefront is light-only by design (brand blue on white). Without this,
+  // some Android browsers (Chrome/Samsung Internet "force dark") auto-invert
+  // pages that don't declare a color scheme, muddying the brand palette.
+  colorScheme: 'only light',
+  themeColor: '#1a6db5',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

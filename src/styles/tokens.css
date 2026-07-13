@@ -2,6 +2,11 @@
    Matches scanlanka.com: clean white/airy surfaces, brand blue, near-black text,
    light hero, restrained motion. Existing variable names are preserved. */
 :root {
+  /* Belt-and-suspenders for the viewport meta tag above: some in-app
+     webviews only honor the CSS property, not the <meta> tag. Keeps native
+     form controls (checkboxes, selects, scrollbars) light on Android/iOS
+     even when the OS or browser is set to dark mode. */
+  color-scheme: only light;
   --bg: #ffffff;
   --bg-muted: #f5f7fa;
   --surface: #ffffff;
