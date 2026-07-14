@@ -21,6 +21,5 @@ const nextConfig = {
 
 module.exports = nextConfig;
 
-
-
+// vercel deploy trigger
 
