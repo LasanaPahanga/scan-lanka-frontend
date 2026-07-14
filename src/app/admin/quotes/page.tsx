@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { listAdminQuotes, QuoteView } from '@/lib/quotes';
+import { listAdminQuotes, QuoteView, formatQuotePhone } from '@/lib/quotes';
 import { formatLkr } from '@/lib/money';
 import { adminMain } from '@/components/formStyles';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -15,6 +15,12 @@ const STATUS_FILTERS = [
   { id: 'ACCEPTED', label: 'Accepted' },
   { id: 'REJECTED', label: 'Rejected' },
   { id: 'EXPIRED', label: 'Expired' },
+] as const;
+
+const SCOPE_FILTERS = [
+  { id: '', label: 'All' },
+  { id: 'LOCAL', label: 'Local' },
+  { id: 'INTL', label: 'International' },
 ] as const;
 
 function statusBadgeClass(status: string): string {
@@ -43,16 +49,17 @@ function itemsSummary(items: QuoteView['items']): string {
 
 export default function AdminQuotesPage() {
   const [status, setStatus] = useState('');
+  const [scope, setScope] = useState('');
   const [quotes, setQuotes] = useState<QuoteView[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    listAdminQuotes(status || undefined)
+    listAdminQuotes(status || undefined, scope || undefined)
       .then((p) => setQuotes(p.content))
       .catch(() => setQuotes([]))
       .finally(() => setLoading(false));
-  }, [status]);
+  }, [status, scope]);
 
   const counts = useMemo(() => {
     const open = quotes.filter((q) => ['NEW', 'NEGOTIATING', 'QUOTED'].includes(q.status)).length;
@@ -90,6 +97,19 @@ export default function AdminQuotesPage() {
         ))}
       </div>
 
+      <div className="admin-filter-bar" style={{ marginBottom: '1.25rem' }}>
+        {SCOPE_FILTERS.map((f) => (
+          <button
+            key={f.id || 'all-scope'}
+            type="button"
+            onClick={() => setScope(f.id)}
+            className={`admin-filter-chip${scope === f.id ? ' admin-filter-chip--active' : ''}`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <p className="admin-empty">Loading quotes…</p>
       ) : quotes.length === 0 ? (
@@ -101,6 +121,7 @@ export default function AdminQuotesPage() {
               <tr>
                 <th>Quote</th>
                 <th>Customer</th>
+                <th>Phone</th>
                 <th>Products</th>
                 <th>Status</th>
                 <th>Country</th>
@@ -118,6 +139,7 @@ export default function AdminQuotesPage() {
                     <div style={{ fontWeight: 600 }}>{q.requesterName}</div>
                     <div className="admin-inbox-time">{q.email}</div>
                   </td>
+                  <td className="admin-inbox-time">{formatQuotePhone(q)}</td>
                   <td style={{ maxWidth: 280, color: 'var(--muted)' }}>{itemsSummary(q.items)}</td>
                   <td>
                     <span className={statusBadgeClass(q.status)}>{formatStatus(q.status)}</span>

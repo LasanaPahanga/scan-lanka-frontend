@@ -6,7 +6,7 @@ import { formatDisplayPrice, formatDisplayRange } from '@/lib/displayMoney';
 import { useGeo } from '@/components/GeoProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
 
-export function ProductCard({ product }: { product: ProductChip }) {
+export function ProductCard({ product, priority = false }: { product: ProductChip; priority?: boolean }) {
   const { geo } = useGeo();
   const img = mediaUrl(product.previewImageUrl);
   const price =
@@ -20,7 +20,14 @@ export function ProductCard({ product }: { product: ProductChip }) {
         <WishlistToggle product={product} />
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={img} alt={product.name} className="zoom" loading="lazy" />
+          <img
+            src={img}
+            alt={product.name}
+            className="zoom"
+            loading={priority ? 'eager' : 'lazy'}
+            decoding="async"
+            {...(priority ? { fetchPriority: 'high' as const } : {})}
+          />
         ) : (
           <div className="product-card-noimg">No image</div>
         )}
@@ -36,5 +43,15 @@ export function ProductCard({ product }: { product: ProductChip }) {
         )}
       </div>
     </Link>
+  );
+}
+
+export function CartGlyph() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="9" cy="20" r="1.4" />
+      <circle cx="17.5" cy="20" r="1.4" />
+      <path d="M2.5 3.5h2.6l2.3 12h10.8l2.3-8.8H6.1" />
+    </svg>
   );
 }

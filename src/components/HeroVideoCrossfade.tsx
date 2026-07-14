@@ -13,6 +13,7 @@ export function HeroVideoCrossfade() {
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [secondLoaded, setSecondLoaded] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -64,6 +65,15 @@ export function HeroVideoCrossfade() {
       v.addEventListener('canplay', onReady);
     });
 
+    // Load the second (crossfade) video only once the first is playable, so it doesn't
+    // compete for bandwidth with the video the visitor actually sees first.
+    const firstVideo = videos[0];
+    const onFirstReady = () => {
+      if (!cancelled) setSecondLoaded(true);
+      firstVideo.removeEventListener('canplay', onFirstReady);
+    };
+    firstVideo.addEventListener('canplay', onFirstReady);
+
     void videos[0].play().catch(() => setFailed(true));
 
     return () => {
@@ -72,6 +82,7 @@ export function HeroVideoCrossfade() {
         v.removeEventListener('timeupdate', onTick);
         v.removeEventListener('canplay', onReady);
       });
+      firstVideo.removeEventListener('canplay', onFirstReady);
     };
   }, []);
 
@@ -79,8 +90,25 @@ export function HeroVideoCrossfade() {
 
   return (
     <div style={wrap} aria-hidden="true">
-      <video ref={ref0} src={SOURCES[0]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }} />
-      <video ref={ref1} src={SOURCES[1]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }} />
+      <video
+        ref={ref0}
+        src={SOURCES[0]}
+        muted
+        loop
+        autoPlay
+        playsInline
+        preload="auto"
+        style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }}
+      />
+      <video
+        ref={ref1}
+        src={secondLoaded ? SOURCES[1] : undefined}
+        muted
+        loop
+        playsInline
+        preload="auto"
+        style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }}
+      />
       <div className="hero-scrim" style={{ ...scrim, opacity: ready ? 1 : 0, transition: 'opacity 0.6s ease' }} />
     </div>
   );
@@ -104,10 +132,13 @@ const videoStyle = {
   willChange: 'opacity',
 } as const;
 
+// Light scrim only - no opaque/blurred box over the video (owner: it must read clearly).
+// Text legibility comes from a text-shadow glow on the copy itself (tokens.css
+// `.hero-inner h1, .hero-inner p`), so this can stay light without words disappearing.
 const scrim = {
   position: 'absolute',
   inset: 0,
   background:
-    'linear-gradient(105deg, rgba(248,250,252,0.93) 0%, rgba(248,250,252,0.82) 38%, rgba(248,250,252,0.45) 72%, rgba(248,250,252,0.25) 100%)',
+    'linear-gradient(105deg, rgba(248,250,252,0.5) 0%, rgba(248,250,252,0.38) 38%, rgba(248,250,252,0.2) 72%, rgba(248,250,252,0.08) 100%)',
   pointerEvents: 'none',
 } as const;

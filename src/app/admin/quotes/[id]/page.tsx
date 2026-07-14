@@ -3,7 +3,15 @@
 import { FormEvent, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { adminAcceptQuote, adminConvertQuote, adminQuoteMessage, getAdminQuote, QuoteView } from '@/lib/quotes';
+import {
+  adminAcceptQuote,
+  adminConvertQuote,
+  adminQuoteMessage,
+  adminUpdateQuoteCountry,
+  formatQuotePhone,
+  getAdminQuote,
+  QuoteView,
+} from '@/lib/quotes';
 import { formatLkr } from '@/lib/money';
 import { adminMain } from '@/components/formStyles';
 import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
@@ -30,8 +38,13 @@ export default function AdminQuoteDetailPage() {
   const [body, setBody] = useState('');
   const [price, setPrice] = useState('');
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [countryDraft, setCountryDraft] = useState('');
+  const [savingCountry, setSavingCountry] = useState(false);
 
-  const reload = () => getAdminQuote(id).then(setQuote).catch(() => setQuote(null));
+  const reload = () => getAdminQuote(id).then((q) => {
+    setQuote(q);
+    setCountryDraft(q.country ?? '');
+  }).catch(() => setQuote(null));
 
   useEffect(() => {
     void reload();
@@ -53,21 +66,55 @@ export default function AdminQuoteDetailPage() {
     await reload();
   }
 
+  async function onSaveCountry() {
+    setSavingCountry(true);
+    try {
+      await adminUpdateQuoteCountry(id, countryDraft.trim().toUpperCase());
+      await reload();
+    } finally {
+      setSavingCountry(false);
+    }
+  }
+
   return (
     <main style={adminMain}>
       <AdminPageHeader
         back={{ href: '/admin/quotes', label: 'Quote requests' }}
         title={`Quote #${quote.id}`}
-        description={`${quote.requesterName} · ${quote.email} · ${quote.phone}`}
+        description={`${quote.requesterName} · ${quote.email}`}
         actions={<span className={statusBadgeClass(quote.status)}>{quote.status}</span>}
       />
 
       <div className="admin-stat-grid" style={{ marginBottom: '1.25rem' }}>
         <div className="admin-stat-card">
           <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>
-            {quote.country ?? '—'}
+            {formatQuotePhone(quote)}
+          </div>
+          <div className="admin-stat-label">Phone</div>
+        </div>
+        <div className="admin-stat-card">
+          <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>
+            {quote.country === 'LK' ? 'Local (LK)' : quote.country ? `International (${quote.country})` : '—'}
           </div>
           <div className="admin-stat-label">Country</div>
+          <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem' }}>
+            <input
+              className="admin-field"
+              value={countryDraft}
+              onChange={(e) => setCountryDraft(e.target.value)}
+              placeholder="ISO code, e.g. LK"
+              maxLength={2}
+              style={{ width: 90, fontSize: '0.85rem' }}
+            />
+            <button
+              type="button"
+              className="admin-btn admin-btn--secondary admin-btn--sm"
+              disabled={savingCountry || countryDraft.trim().toUpperCase() === (quote.country ?? '')}
+              onClick={onSaveCountry}
+            >
+              {savingCountry ? 'Saving…' : 'Correct'}
+            </button>
+          </div>
         </div>
         <div className="admin-stat-card">
           <div className="admin-stat-value" style={{ fontSize: '1.15rem' }}>

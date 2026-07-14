@@ -1,10 +1,20 @@
 import type { Metadata, Viewport } from 'next';
+import { Playfair_Display } from 'next/font/google';
 import '../styles/tokens.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CartProvider } from '@/components/CartProvider';
 import { WishlistProvider } from '@/components/WishlistProvider';
 import { GeoProvider } from '@/components/GeoProvider';
 import { StorefrontChrome } from '@/components/StorefrontChrome';
+
+// Elegant serif display face for the homepage hero brand mark/headline only —
+// body/nav copy stays on the sans font in tokens.css (`--font`).
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  weight: ['700', '800'],
+  variable: '--font-display',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Scan Lanka - Boards & Teaching Equipment',
@@ -36,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={playfair.variable}>
       <body>
         <AuthProvider>
           <GeoProvider>

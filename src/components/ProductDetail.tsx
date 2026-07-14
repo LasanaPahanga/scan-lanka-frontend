@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ProductDetail, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
 import { formatDisplayPrice } from '@/lib/displayMoney';
 import { useGeo } from '@/components/GeoProvider';
@@ -9,6 +10,7 @@ import { t } from '@/lib/i18n';
 import { useCart } from '@/components/CartProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
 import { ProductImageGallery } from '@/components/ProductImageGallery';
+import { CartGlyph } from '@/components/ProductCard';
 
 function stockLabel(availability: string): string | null {
   if (availability === 'OUT_OF_STOCK') return 'Out of stock';
@@ -17,7 +19,8 @@ function stockLabel(availability: string): string | null {
 }
 
 export function ProductDetailView({ product }: { product: ProductDetail }) {
-  const { add } = useCart();
+  const { add, count } = useCart();
+  const router = useRouter();
   const { geo } = useGeo();
   const quoteHref = `/quote?productId=${product.id}&name=${encodeURIComponent(product.name)}`;
   const [added, setAdded] = useState(false);
@@ -195,24 +198,54 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
               <span className="pdp-buybar-price-label">Price</span>
               <strong>{priceLabel || '—'}</strong>
             </div>
-            <button
-              type="button"
-              className="pdp-add-btn"
-              disabled={!canAddToCart}
-              onClick={() => {
-                void add({
-                  productId: product.id,
-                  variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
-                  quantity: 1,
-                  name: product.name,
-                });
-                setAdded(true);
-                setTimeout(() => setAdded(false), 2000);
-              }}
-              style={{ opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
-            >
-              {added ? 'Added ✓' : whatsappOnly ? 'Contact us to order' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
-            </button>
+            <div className="pdp-buybar-actions">
+              <button
+                type="button"
+                className="pdp-add-btn"
+                disabled={!canAddToCart}
+                onClick={() => {
+                  void add({
+                    productId: product.id,
+                    variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
+                    quantity: 1,
+                    name: product.name,
+                  });
+                  setAdded(true);
+                  setTimeout(() => setAdded(false), 2000);
+                }}
+                style={{ opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
+              >
+                {added ? 'Added ✓' : whatsappOnly ? 'Contact us to order' : geo.canCheckout ? 'Add to cart' : 'Quote / contact only'}
+              </button>
+              {!whatsappOnly && geo.canCheckout && (
+                <button
+                  type="button"
+                  className="pdp-buynow-btn"
+                  disabled={!canAddToCart}
+                  style={{ opacity: canAddToCart ? 1 : 0.5, cursor: canAddToCart ? 'pointer' : 'not-allowed' }}
+                  onClick={() => {
+                    void add({
+                      productId: product.id,
+                      variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
+                      quantity: 1,
+                      name: product.name,
+                    }).then(() => router.push('/cart'));
+                  }}
+                >
+                  Buy now
+                </button>
+              )}
+              <button
+                type="button"
+                className="pdp-viewcart-btn"
+                aria-label="View cart"
+                title="View cart"
+                onClick={() => router.push('/cart')}
+              >
+                <CartGlyph />
+                {count > 0 && <span className="product-card-action-badge">{count > 99 ? '99+' : count}</span>}
+              </button>
+            </div>
           </div>
 
           {product.description && <p style={{ color: 'var(--muted)', marginTop: '1.5rem' }}>{product.description}</p>}

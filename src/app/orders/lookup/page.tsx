@@ -84,7 +84,7 @@ export default function OrderLookupPage() {
           <ul style={{ paddingLeft: '1.2rem' }}>
             {detail.lines.map((l) => (
               <li key={`${l.sku}-${l.quantity}`}>
-                {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
+                {l.name} × {l.quantity} @ {formatLkr(l.unitPriceCents)} = {formatLkr(l.lineTotalCents)}
               </li>
             ))}
           </ul>

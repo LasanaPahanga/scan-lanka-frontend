@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const SPLASH_KEY = 'sl_intro_splash_seen';
-const SPLASH_SECONDS = 3.5;
+const SPLASH_SECONDS = 2;
 const FADE_MS = 400;
 
 export function IntroSplash() {
@@ -72,6 +72,7 @@ export function IntroSplash() {
         ref={videoRef}
         className="intro-splash-video"
         src="/intro_splash.mp4"
+        poster="/logo.png"
         muted
         playsInline
         preload="auto"
