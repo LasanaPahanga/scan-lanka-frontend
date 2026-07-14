@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ProductDetail, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
+import { ProductDetail, ProductChip, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
 import { formatDisplayPrice } from '@/lib/displayMoney';
 import { useGeo } from '@/components/GeoProvider';
 import { t } from '@/lib/i18n';
@@ -11,6 +11,7 @@ import { useCart } from '@/components/CartProvider';
 import { WishlistToggle } from '@/components/WishlistToggle';
 import { ProductImageGallery } from '@/components/ProductImageGallery';
 import { CartGlyph } from '@/components/ProductCard';
+import { RecommendedProducts } from '@/components/RecommendedProducts';
 
 function stockLabel(availability: string): string | null {
   if (availability === 'OUT_OF_STOCK') return 'Out of stock';
@@ -18,7 +19,13 @@ function stockLabel(availability: string): string | null {
   return null;
 }
 
-export function ProductDetailView({ product }: { product: ProductDetail }) {
+export function ProductDetailView({
+  product,
+  related = [],
+}: {
+  product: ProductDetail;
+  related?: ProductChip[];
+}) {
   const { add, count } = useCart();
   const router = useRouter();
   const { geo } = useGeo();
@@ -252,6 +259,8 @@ export function ProductDetailView({ product }: { product: ProductDetail }) {
           {product.details && <p style={{ whiteSpace: 'pre-line' }}>{product.details}</p>}
         </div>
       </div>
+
+      <RecommendedProducts products={related} category={product.category} />
     </main>
   );
 }

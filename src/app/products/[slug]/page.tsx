@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getProduct } from '@/lib/catalog';
+import { getProduct, getRelatedProducts } from '@/lib/catalog';
 import { ProductDetailView } from '@/components/ProductDetail';
 import { JsonLd } from '@/components/JsonLd';
 
@@ -22,6 +22,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function ProductPage({ params }: { params: { slug: string } }) {
   const product = await getProduct(params.slug);
   if (!product) notFound();
+  const related = await getRelatedProducts(product, 4);
   const priceCents = (product.priceMode === 'SINGLE' ? product.singlePriceCents : product.priceMinCents) ?? 0;
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -42,7 +43,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   return (
     <>
       <JsonLd data={jsonLd} />
-      <ProductDetailView product={product} />
+      <ProductDetailView product={product} related={related} />
     </>
   );
 }

@@ -40,6 +40,8 @@ export interface ProductDetail {
   name: string;
   description: string | null;
   details: string | null;
+  category?: string | null;
+  parentProductId?: number | null;
   priceMode: 'SINGLE' | 'VARIANT';
   singlePriceCents: number | null;
   priceMinCents: number | null;
@@ -164,6 +166,27 @@ export async function getProduct(slug: string): Promise<ProductDetail | null> {
   } catch {
     return null;
   }
+}
+
+/**
+ * Same-category products for the PDP "Recommended" strip (home uses the same browse filter).
+ * Falls back to sibling products under the same parent when category is empty.
+ */
+export async function getRelatedProducts(
+  product: Pick<ProductDetail, 'id' | 'category' | 'parentProductId'>,
+  limit = 4,
+): Promise<ProductChip[]> {
+  const fetchPool = async (params: ProductListParams) =>
+    (await listProducts({ ...params, size: limit + 1 })).content.filter((p) => p.id !== product.id).slice(0, limit);
+
+  if (product.category?.trim()) {
+    const byCategory = await fetchPool({ category: product.category.trim() });
+    if (byCategory.length > 0) return byCategory;
+  }
+  if (product.parentProductId != null) {
+    return fetchPool({ parentId: product.parentProductId });
+  }
+  return [];
 }
 
 // Client-side, server-authoritative variant price.
