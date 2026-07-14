@@ -13,14 +13,14 @@ const HOTLINE = '071 781 7447';
 const EMAIL = 'scanlankagroup.info@gmail.com';
 
 const NAV = [
-  { href: '/', label: 'Home' },
-  { href: '/about', label: 'About Us' },
-  { href: '/products', label: 'Our Products' },
-  { href: '/clientele', label: 'Clientele' },
-  { href: '/quote', label: 'Request a Quote' },
-  { href: '/delivery', label: 'Delivery' },
-  { href: '/returns', label: 'Help Center' },
-  { href: '/contact', label: 'Contact Us' },
+  { href: '/', label: 'Home', highlight: false },
+  { href: '/about', label: 'About Us', highlight: false },
+  { href: '/products', label: 'Our Products', highlight: false },
+  { href: '/clientele', label: 'Clientele', highlight: false },
+  { href: '/quote', label: 'Bulk & Special Orders', highlight: true },
+  { href: '/delivery', label: 'Delivery', highlight: false },
+  { href: '/returns', label: 'Help Center', highlight: false },
+  { href: '/contact', label: 'Contact Us', highlight: false },
 ] as const;
 
 export function Header() {
@@ -162,7 +162,12 @@ export function Header() {
         <div className="container site-nav-inner">
           <div className="site-nav-list">
             {NAV.map((item) => (
-              <Link key={item.href} href={item.href} className="nav-link" onClick={() => setMenuOpen(false)}>
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link${item.highlight ? ' nav-link-highlight' : ''}`}
+                onClick={() => setMenuOpen(false)}
+              >
                 {item.label}
               </Link>
             ))}

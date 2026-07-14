@@ -93,8 +93,9 @@ export function HeroVideoCrossfade() {
       <video
         ref={ref0}
         src={SOURCES[0]}
-        poster="/CB-free-01herosection.png"
         muted
+        loop
+        autoPlay
         playsInline
         preload="auto"
         style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }}
@@ -103,6 +104,7 @@ export function HeroVideoCrossfade() {
         ref={ref1}
         src={secondLoaded ? SOURCES[1] : undefined}
         muted
+        loop
         playsInline
         preload="auto"
         style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }}
@@ -130,13 +132,13 @@ const videoStyle = {
   willChange: 'opacity',
 } as const;
 
-// Lighter than before (owner: "video must be a bit more visible") - legibility for the
-// text itself now comes from the frosted panel behind it (HomePageView `heroTextPanel`),
-// not from crushing the whole hero under a near-opaque scrim.
+// Light scrim only - no opaque/blurred box over the video (owner: it must read clearly).
+// Text legibility comes from a text-shadow glow on the copy itself (tokens.css
+// `.hero-inner h1, .hero-inner p`), so this can stay light without words disappearing.
 const scrim = {
   position: 'absolute',
   inset: 0,
   background:
-    'linear-gradient(105deg, rgba(248,250,252,0.72) 0%, rgba(248,250,252,0.58) 38%, rgba(248,250,252,0.32) 72%, rgba(248,250,252,0.16) 100%)',
+    'linear-gradient(105deg, rgba(248,250,252,0.5) 0%, rgba(248,250,252,0.38) 38%, rgba(248,250,252,0.2) 72%, rgba(248,250,252,0.08) 100%)',
   pointerEvents: 'none',
 } as const;

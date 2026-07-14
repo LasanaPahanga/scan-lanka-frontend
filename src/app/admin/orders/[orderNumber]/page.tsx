@@ -120,7 +120,12 @@ export default function AdminOrderDetailPage() {
           {order.lines.map((l) => (
             <li key={l.id}>
               <span>
-                {l.name} ({l.sku}) × {l.quantity} — {formatLkr(l.lineTotalCents)}
+                {l.name} ({l.sku}) × {l.quantity} @ {formatLkr(l.unitPriceCents)} = {formatLkr(l.lineTotalCents)}
+                {l.spec && l.spec !== 'STANDARD' && l.spec !== '—' && (
+                  <span className="admin-badge admin-badge--warn" style={{ marginLeft: '0.5rem' }}>
+                    {l.spec.replace('_', ' ')}
+                  </span>
+                )}
               </span>
               <select
                 value={l.status}

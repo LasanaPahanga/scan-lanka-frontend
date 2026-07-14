@@ -329,6 +329,36 @@ h3 {
 .nav-link:hover::after {
   transform: scaleX(1);
 }
+
+/* Bulk & Special Orders is the highest-value nav item for the business - an outlined,
+   pulsing pill (no solid fill, owner 2026-07-14) so it stands out from the plain-text
+   links around it without turning into a heavy button. */
+.nav-link-highlight {
+  padding: 0.5rem 1rem;
+  margin: 0 0.15rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--accent);
+  color: var(--accent) !important;
+  font-weight: 800;
+  animation: nav-highlight-pulse 2.2s ease-in-out infinite;
+}
+.nav-link-highlight::after {
+  display: none;
+}
+.nav-link-highlight:hover {
+  border-color: var(--accent-dark);
+  color: var(--accent-dark) !important;
+}
+
+@keyframes nav-highlight-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(43, 138, 214, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(43, 138, 214, 0);
+  }
+}
 .icon-link {
   text-decoration: none;
   color: var(--text);
@@ -590,7 +620,9 @@ textarea:focus {
 
 /* Quote / special-order page: bold header entrance - scale in + a one-time shine sweep
    (owner 2026-07-14; the global prefers-reduced-motion block above collapses this to a
-   no-op for users who asked for reduced motion). */
+   no-op for users who asked for reduced motion). The heading text stays a solid, always-
+   opaque color - the shine is a separate overlay so it can never make letters disappear
+   (an earlier background-clip:text version briefly hid part of the heading). */
 @keyframes quote-title-scale-in {
   from {
     opacity: 0;
@@ -602,30 +634,32 @@ textarea:focus {
   }
 }
 
-@keyframes quote-title-shine {
+@keyframes quote-title-shine-sweep {
   from {
-    background-position: -150% 0;
+    transform: translateX(-120%);
   }
   to {
-    background-position: 250% 0;
+    transform: translateX(120%);
   }
 }
 
 .quote-hero-title {
+  position: relative;
   display: inline-block;
-  background-image: linear-gradient(
-    100deg,
-    var(--primary) 40%,
-    #ffffff 50%,
-    var(--primary) 60%
-  );
-  background-size: 250% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation:
-    quote-title-scale-in 0.5s var(--ease) both,
-    quote-title-shine 1.4s ease-out 0.15s both;
+  overflow: hidden;
+  color: var(--primary);
+  animation: quote-title-scale-in 0.5s var(--ease) both;
+}
+
+.quote-hero-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.8) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: quote-title-shine-sweep 1.1s ease-out 0.3s both;
+  pointer-events: none;
+  mix-blend-mode: overlay;
 }
 
 .quote-contact-row {
@@ -652,6 +686,104 @@ textarea:focus {
 .quote-contact-icon:hover {
   border-color: var(--primary);
   color: var(--primary);
+}
+
+/* Country-code picker: a native <select> with ~195 options overflows small screens -
+   this shows a search box + a list capped to ~10 visible rows (rest scrolls). */
+.country-code-select {
+  position: relative;
+}
+
+.country-code-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.7rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  font-size: 0.95rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.country-code-caret {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+
+.country-code-panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  z-index: 30;
+  width: max(17rem, 100%);
+  max-width: 90vw;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  padding: 0.5rem;
+}
+
+.country-code-search {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 1rem; /* 16px - iOS Safari zooms in on focus below this */
+  margin-bottom: 0.4rem;
+  box-sizing: border-box;
+}
+
+.country-code-list {
+  /* ~10 rows visible at once (owner 2026-07-14); anything past that scrolls. */
+  max-height: 21rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: grid;
+  gap: 2px;
+}
+
+.country-code-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.55rem 0.6rem;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  text-align: left;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--text);
+}
+
+.country-code-option:hover,
+.country-code-option.is-selected {
+  background: var(--primary-light);
+}
+
+.country-code-option-dial {
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 3.4rem;
+  flex: 0 0 auto;
+}
+
+.country-code-option-name {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.country-code-empty {
+  padding: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -910,14 +1042,29 @@ textarea:focus {
   /* overridden below on narrow screens */
 }
 
-/* Frosted panel behind the hero headline so the copy stays readable at AA contrast
-   even as the background video/scrim is tuned to be more visible (owner request). */
+/* No opaque/blurred box behind the hero copy - the video must read clearly (owner
+   feedback: the frosted panel hid it). Legibility instead comes from a soft white
+   text-shadow glow on the headline/eyebrow/body text itself. */
 .hero-text-panel {
-  background: rgba(255, 255, 255, 0.42);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  border-radius: var(--radius-lg, var(--radius));
   padding: 1.75rem 2.25rem;
+}
+
+.hero-inner h1,
+.hero-inner p {
+  text-shadow:
+    0 0 16px rgba(255, 255, 255, 0.9),
+    0 0 6px rgba(255, 255, 255, 0.95),
+    0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+/* The outline CTA is transparent by default (.btn-outline) which disappears over a
+   busy video - give it a solid backing just in the hero so it reads clearly. */
+.hero-cta-outline {
+  background: #fff;
+  box-shadow: var(--shadow-md);
+}
+.hero-cta-outline:hover {
+  background: var(--primary);
 }
 
 @media (max-width: 900px) {
@@ -1609,45 +1756,8 @@ textarea:focus {
   color: var(--warning);
 }
 
-/* Add to cart / Buy now / View cart row on the product chip - shown on both mobile
-   and desktop grids (owner 2026-07-14, 04 FR-CART-9). */
-.product-card-actions {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.65rem;
-}
-
-.product-card-action {
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 0.45rem 0.5rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--primary);
-  background: #fff;
-  color: var(--primary);
-  cursor: pointer;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.product-card-action--primary {
-  background: var(--primary);
-  color: var(--primary-contrast, #fff);
-}
-
-.product-card-action--icon {
-  position: relative;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.1rem;
-  padding: 0.45rem;
-}
-
+/* Badge on the PDP view-cart icon (product chip itself has no action row - owner
+   2026-07-14 removed it, buying/adding happens on the product page). */
 .product-card-action-badge {
   position: absolute;
   top: -6px;
@@ -1956,9 +2066,33 @@ textarea:focus {
     white-space: nowrap;
   }
 
-  .pdp-add-btn {
+  .pdp-buybar-actions {
+    gap: 0.4rem;
+  }
+
+  .pdp-add-btn,
+  .pdp-buynow-btn {
     flex: 1 1 auto;
     min-width: 0;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.92rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pdp-viewcart-btn {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+/* On very narrow phones, three actions + a price block don't all fit comfortably -
+   drop the price here (it's already shown higher up the page) so Add to cart / Buy
+   now / View cart stay full-size, tappable, and un-clipped (owner: "mobile optimized"). */
+@media (max-width: 380px) {
+  .pdp-buybar-price {
+    display: none;
   }
 }
 
@@ -2151,15 +2285,15 @@ textarea:focus {
     min-height: min(380px, 62vh) !important;
   }
 
-  /* Hero copy is centered on phones: use an even (but lighter than before - owner:
-     "video must be a bit more visible") scrim; the frosted .hero-text-panel behind
-     the copy is what actually guarantees legibility now, not this overlay. */
+  /* Hero copy is centered on phones: a light scrim only (owner: "the video must be
+     visible clearly" - no opaque/blurred box). Legibility comes from the text-shadow
+     glow above, so this can stay light without the words disappearing. */
   .hero-scrim {
     background: linear-gradient(
       180deg,
-      rgba(248, 250, 252, 0.55) 0%,
-      rgba(248, 250, 252, 0.42) 55%,
-      rgba(248, 250, 252, 0.3) 100%
+      rgba(248, 250, 252, 0.32) 0%,
+      rgba(248, 250, 252, 0.22) 55%,
+      rgba(248, 250, 252, 0.14) 100%
     ) !important;
   }
 
@@ -2168,9 +2302,7 @@ textarea:focus {
   }
 
   .hero-text-panel {
-    background: rgba(255, 255, 255, 0.72) !important;
     padding: 1.25rem 1.25rem !important;
-    border-radius: var(--radius) !important;
   }
 
   /* Prevent iOS Safari from zooming into form fields (<16px triggers zoom) */

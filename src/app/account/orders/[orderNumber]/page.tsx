@@ -96,7 +96,7 @@ function OrderDetailView() {
         <ul>
           {order.lines.map((l) => (
             <li key={l.sku}>
-              {l.name} × {l.quantity} - {formatLkr(l.lineTotalCents)}
+              {l.name} × {l.quantity} @ {formatLkr(l.unitPriceCents)} = {formatLkr(l.lineTotalCents)}
             </li>
           ))}
         </ul>

@@ -10,20 +10,10 @@ import { submitQuote } from '@/lib/quotes';
 import { ApiError } from '@/lib/api';
 import { t } from '@/lib/i18n';
 import { dangerText, fieldInput, formStack, mutedText, pageWrap, primaryButton } from '@/components/formStyles';
+import { COUNTRY_CODES } from '@/lib/countryCodes';
+import { CountryCodeSelect } from '@/components/CountryCodeSelect';
 
 const CONTACT_EMAIL = 'scanlankagroup.info@gmail.com';
-
-// A short, common set of dialing codes - Sri Lanka defaults first since most requesters are
-// local institutions; the rest cover the international/foreign buyers this form also serves.
-const COUNTRY_CODES = [
-  { code: '+94', label: '🇱🇰 +94 (Sri Lanka)' },
-  { code: '+91', label: '🇮🇳 +91 (India)' },
-  { code: '+44', label: '🇬🇧 +44 (UK)' },
-  { code: '+1', label: '🇺🇸/🇨🇦 +1 (US/Canada)' },
-  { code: '+61', label: '🇦🇺 +61 (Australia)' },
-  { code: '+971', label: '🇦🇪 +971 (UAE)' },
-  { code: '+65', label: '🇸🇬 +65 (Singapore)' },
-] as const;
 
 export default function QuoteRequestForm() {
   const { geo } = useGeo();
@@ -31,7 +21,7 @@ export default function QuoteRequestForm() {
   const [form, setForm] = useState({
     requesterName: '',
     email: '',
-    countryCode: '+94',
+    countryIso: 'LK',
     phone: '',
     message: '',
     quantity: '1',
@@ -71,11 +61,12 @@ export default function QuoteRequestForm() {
     setBusy(true);
     setError(null);
     try {
+      const dial = COUNTRY_CODES.find((c) => c.iso === form.countryIso)?.dial ?? '+94';
       const res = await submitQuote({
         requesterName: form.requesterName,
         email: form.email,
-        phone: `${form.countryCode}${form.phone.replace(/\D/g, '')}`,
-        countryCode: form.countryCode,
+        phone: `${dial}${form.phone.replace(/\D/g, '')}`,
+        countryCode: dial,
         country: geo.country,
         message: form.message || undefined,
         items: [
@@ -148,21 +139,13 @@ export default function QuoteRequestForm() {
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           required
         />
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <select
-            style={{ ...fieldInput, width: 'auto', flex: '0 0 auto' }}
-            value={form.countryCode}
-            onChange={(e) => setForm({ ...form, countryCode: e.target.value })}
-            aria-label="Country code"
-          >
-            {COUNTRY_CODES.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <CountryCodeSelect
+            iso={form.countryIso}
+            onChange={(iso) => setForm({ ...form, countryIso: iso })}
+          />
           <input
-            style={{ ...fieldInput, flex: '1 1 auto' }}
+            style={{ ...fieldInput, flex: '1 1 10rem' }}
             placeholder="Phone / WhatsApp number"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
