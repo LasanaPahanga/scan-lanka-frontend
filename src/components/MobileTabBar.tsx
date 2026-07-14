@@ -9,7 +9,8 @@ import { useAuth } from '@/components/AuthProvider';
 /**
  * App-style bottom navigation for phones/tablets (hidden ≥ 901px via CSS).
  * Hidden on product detail pages, where the sticky buy bar owns the bottom
- * edge, and on checkout to keep the payment flow distraction-free.
+ * edge, and on /cart - which now carries the full checkout/payment flow inline
+ * (owner 2026-07-14, 04 FR-CART-10) - to keep that flow distraction-free.
  */
 export function MobileTabBar() {
   const pathname = usePathname() ?? '/';
@@ -18,7 +19,7 @@ export function MobileTabBar() {
   const { user } = useAuth();
 
   const isProductDetail = /^\/products\/[^/]+$/.test(pathname);
-  if (isProductDetail || pathname.startsWith('/checkout')) return null;
+  if (isProductDetail || pathname.startsWith('/cart')) return null;
 
   const accountHref = user ? '/account' : '/login';
   const items = [

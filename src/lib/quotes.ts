@@ -14,6 +14,7 @@ export interface QuoteView {
   requesterName: string;
   email: string;
   phone: string;
+  countryCode: string | null;
   country: string | null;
   status: string;
   quotedTotalCents: number | null;
@@ -32,6 +33,7 @@ export const submitQuote = (body: {
   requesterName: string;
   email: string;
   phone: string;
+  countryCode?: string;
   country?: string;
   message?: string;
   items: QuoteItemInput[];
@@ -59,11 +61,24 @@ export interface QuotePage {
   totalElements: number;
 }
 
-export const listAdminQuotes = (status?: string, page = 0) => {
+export const listAdminQuotes = (status?: string, scope?: string, page = 0) => {
   const params = new URLSearchParams({ page: String(page), size: '25' });
   if (status) params.set('status', status);
+  if (scope) params.set('scope', scope);
   return api<QuotePage>(`/api/admin/quotes?${params}`);
 };
+
+export const adminUpdateQuoteCountry = (id: number, country: string) =>
+  api<void>(`/api/admin/quotes/${id}/country`, {
+    method: 'PATCH',
+    body: JSON.stringify({ country }),
+  });
+
+export function formatQuotePhone(q: Pick<QuoteView, 'phone' | 'countryCode'>): string {
+  if (!q.phone) return '—';
+  if (q.phone.startsWith('+') || !q.countryCode) return q.phone;
+  return `${q.countryCode} ${q.phone}`;
+}
 
 export const getAdminQuote = (id: number) => api<QuoteView>(`/api/admin/quotes/${id}`);
 

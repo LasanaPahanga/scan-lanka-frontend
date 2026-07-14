@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 const HOTLINE = '0717817447';
 const WHATSAPP_URL = 'https://wa.me/94717817447';
+const EMAIL = 'scanlankagroup.info@gmail.com';
 
 /** Prominent offline contact CTA for returns/cancellations (16 FR-RETURN-1). */
 export function ContactReturnsCta({ compact }: { compact?: boolean }) {
@@ -32,6 +33,9 @@ export function ContactReturnsCta({ compact }: { compact?: boolean }) {
         </a>
         <a href={WHATSAPP_URL} target="_blank" rel="noreferrer" style={btn}>
           WhatsApp us
+        </a>
+        <a href={`mailto:${EMAIL}`} style={btn}>
+          Email us
         </a>
       </div>
     </section>

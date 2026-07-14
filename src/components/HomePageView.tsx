@@ -41,7 +41,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
       <section className="home-hero" style={hero}>
         <HeroVideoCrossfade />
         <div className="container hero-inner" style={heroInner}>
-          <div className="animate-up" style={heroContent}>
+          <div className="animate-up hero-text-panel" style={heroContent}>
             <p style={heroEyebrow}>Scan Lanka</p>
             <h1 style={heroTitle}>
               White Boards, Notice Boards <br />&amp; Teaching Equipment
@@ -76,7 +76,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
       <div className="container" style={{ padding: '3rem 1.25rem' }}>
         {hasRows ? (
           // Per-category product rows (matches scanlanka.com)
-          categoryRows.map((row) => (
+          categoryRows.map((row, rowIndex) => (
             <section key={row.category} style={{ marginBottom: '3rem' }}>
               <Reveal>
                 <div style={sectionHead}>
@@ -93,7 +93,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
               <div className="product-grid">
                 {row.products.map((p, i) => (
                   <Reveal key={p.id} delay={i * 50}>
-                    <ProductCard product={p} />
+                    <ProductCard product={p} priority={rowIndex === 0} />
                   </Reveal>
                 ))}
               </div>
@@ -112,7 +112,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
             <div className="product-grid">
               {home.featured.map((p, i) => (
                 <Reveal key={p.id} delay={i * 50}>
-                  <ProductCard product={p} />
+                  <ProductCard product={p} priority={i < 4} />
                 </Reveal>
               ))}
             </div>
@@ -195,18 +195,21 @@ const heroInner = {
   minHeight: 'min(520px, 85vh)',
 };
 const heroEyebrow = {
-  textTransform: 'uppercase' as const,
-  letterSpacing: '2px',
-  fontSize: '0.82rem',
-  color: 'var(--muted)',
+  fontFamily: 'var(--font-display)',
+  letterSpacing: '1px',
+  fontSize: 'clamp(1.5rem, 3.2vw, 2.1rem)',
+  color: 'var(--primary)',
   margin: 0,
   fontWeight: 700,
+  textShadow: '0 1px 12px rgba(255,255,255,0.6)',
 };
 const heroTitle = {
-  fontSize: 'clamp(2rem, 4.5vw, 3rem)',
+  fontFamily: 'var(--font-display)',
+  fontSize: 'clamp(2rem, 4.5vw, 3.1rem)',
   margin: '0.5rem 0 1rem',
   color: 'var(--text)',
   fontWeight: 800,
+  lineHeight: 1.15,
 } as const;
 const heroText = { fontSize: '1.05rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 } as const;
 

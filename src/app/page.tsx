@@ -4,6 +4,8 @@ import { HomePageView } from '@/components/HomePageView';
 
 export const revalidate = 120;
 
+const PINNED_CATEGORY = 'White Board';
+
 export const metadata = {
   title: 'Scan Lanka - Boards & Teaching Equipment',
   description: 'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
@@ -16,9 +18,16 @@ export default async function Home() {
   try {
     const [homeData, facets] = await Promise.all([fetchHome(), getFacets()]);
     home = homeData;
+    // Pin "White Board" first on the homepage (owner 2026-07-14, 14 FR-MERCH-5);
+    // everything else keeps the existing (alphabetical) order from the API.
+    const orderedCategories = [...facets.categories].sort((a, b) => {
+      if (a === PINNED_CATEGORY) return -1;
+      if (b === PINNED_CATEGORY) return 1;
+      return 0;
+    });
     rows = (
       await Promise.all(
-        facets.categories.slice(0, 6).map(async (category) => ({
+        orderedCategories.slice(0, 6).map(async (category) => ({
           category,
           products: (await listProducts({ category, size: 4 })).content,
         })),

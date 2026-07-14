@@ -82,6 +82,8 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
                 src={activeImage}
                 alt={alt}
                 draggable={false}
+                decoding="async"
+                fetchPriority="high"
                 style={{
                   width: '100%',
                   maxHeight: 460,
@@ -136,6 +138,8 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
                 key={src}
                 src={src}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 onClick={() => setImageIndex(idx)}
                 style={{ ...thumb, outline: idx === imageIndex ? '2px solid var(--primary)' : 'none' }}
               />

@@ -13,6 +13,7 @@ export function HeroVideoCrossfade() {
   const [active, setActive] = useState(0);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [secondLoaded, setSecondLoaded] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -64,6 +65,15 @@ export function HeroVideoCrossfade() {
       v.addEventListener('canplay', onReady);
     });
 
+    // Load the second (crossfade) video only once the first is playable, so it doesn't
+    // compete for bandwidth with the video the visitor actually sees first.
+    const firstVideo = videos[0];
+    const onFirstReady = () => {
+      if (!cancelled) setSecondLoaded(true);
+      firstVideo.removeEventListener('canplay', onFirstReady);
+    };
+    firstVideo.addEventListener('canplay', onFirstReady);
+
     void videos[0].play().catch(() => setFailed(true));
 
     return () => {
@@ -72,6 +82,7 @@ export function HeroVideoCrossfade() {
         v.removeEventListener('timeupdate', onTick);
         v.removeEventListener('canplay', onReady);
       });
+      firstVideo.removeEventListener('canplay', onFirstReady);
     };
   }, []);
 
@@ -79,8 +90,23 @@ export function HeroVideoCrossfade() {
 
   return (
     <div style={wrap} aria-hidden="true">
-      <video ref={ref0} src={SOURCES[0]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }} />
-      <video ref={ref1} src={SOURCES[1]} muted playsInline preload="auto" style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }} />
+      <video
+        ref={ref0}
+        src={SOURCES[0]}
+        poster="/CB-free-01herosection.png"
+        muted
+        playsInline
+        preload="auto"
+        style={{ ...videoStyle, opacity: active === 0 ? 1 : 0 }}
+      />
+      <video
+        ref={ref1}
+        src={secondLoaded ? SOURCES[1] : undefined}
+        muted
+        playsInline
+        preload="auto"
+        style={{ ...videoStyle, opacity: active === 1 ? 1 : 0 }}
+      />
       <div className="hero-scrim" style={{ ...scrim, opacity: ready ? 1 : 0, transition: 'opacity 0.6s ease' }} />
     </div>
   );
@@ -104,10 +130,13 @@ const videoStyle = {
   willChange: 'opacity',
 } as const;
 
+// Lighter than before (owner: "video must be a bit more visible") - legibility for the
+// text itself now comes from the frosted panel behind it (HomePageView `heroTextPanel`),
+// not from crushing the whole hero under a near-opaque scrim.
 const scrim = {
   position: 'absolute',
   inset: 0,
   background:
-    'linear-gradient(105deg, rgba(248,250,252,0.93) 0%, rgba(248,250,252,0.82) 38%, rgba(248,250,252,0.45) 72%, rgba(248,250,252,0.25) 100%)',
+    'linear-gradient(105deg, rgba(248,250,252,0.72) 0%, rgba(248,250,252,0.58) 38%, rgba(248,250,252,0.32) 72%, rgba(248,250,252,0.16) 100%)',
   pointerEvents: 'none',
 } as const;

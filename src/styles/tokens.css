@@ -588,6 +588,72 @@ textarea:focus {
   color: var(--primary);
 }
 
+/* Quote / special-order page: bold header entrance - scale in + a one-time shine sweep
+   (owner 2026-07-14; the global prefers-reduced-motion block above collapses this to a
+   no-op for users who asked for reduced motion). */
+@keyframes quote-title-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes quote-title-shine {
+  from {
+    background-position: -150% 0;
+  }
+  to {
+    background-position: 250% 0;
+  }
+}
+
+.quote-hero-title {
+  display: inline-block;
+  background-image: linear-gradient(
+    100deg,
+    var(--primary) 40%,
+    #ffffff 50%,
+    var(--primary) 60%
+  );
+  background-size: 250% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation:
+    quote-title-scale-in 0.5s var(--ease) both,
+    quote-title-shine 1.4s ease-out 0.15s both;
+}
+
+.quote-contact-row {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 1.5rem;
+}
+
+.quote-contact-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: var(--surface);
+}
+
+.quote-contact-icon:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -842,6 +908,16 @@ textarea:focus {
 
 .responsive-stack {
   /* overridden below on narrow screens */
+}
+
+/* Frosted panel behind the hero headline so the copy stays readable at AA contrast
+   even as the background video/scrim is tuned to be more visible (owner request). */
+.hero-text-panel {
+  background: rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius-lg, var(--radius));
+  padding: 1.75rem 2.25rem;
 }
 
 @media (max-width: 900px) {
@@ -1162,6 +1238,14 @@ textarea:focus {
   object-fit: cover;
   object-position: center center;
   background: #e8eef3;
+}
+
+/* Narrow phone aspect ratios crop the logo mark when cover-fitted; contain-fit keeps
+   the whole mark on screen against the same brand backdrop. */
+@media (max-width: 640px) {
+  .intro-splash-video {
+    object-fit: contain;
+  }
 }
 
 /* Account page */
@@ -1525,6 +1609,61 @@ textarea:focus {
   color: var(--warning);
 }
 
+/* Add to cart / Buy now / View cart row on the product chip - shown on both mobile
+   and desktop grids (owner 2026-07-14, 04 FR-CART-9). */
+.product-card-actions {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.65rem;
+}
+
+.product-card-action {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--primary);
+  background: #fff;
+  color: var(--primary);
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.product-card-action--primary {
+  background: var(--primary);
+  color: var(--primary-contrast, #fff);
+}
+
+.product-card-action--icon {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  padding: 0.45rem;
+}
+
+.product-card-action-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--danger, #d33);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+}
+
 @media (max-width: 640px) {
   .product-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1734,6 +1873,47 @@ textarea:focus {
   background: var(--primary-dark);
 }
 
+.pdp-buybar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pdp-buybar-actions .pdp-add-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pdp-buynow-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.85rem 1.5rem;
+  background: #fff;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  min-height: 48px;
+}
+
+.pdp-viewcart-btn {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
 @media (max-width: 900px) {
   .pdp-page {
     padding-bottom: 7.5rem;
@@ -1905,25 +2085,6 @@ textarea:focus {
   color: var(--text);
 }
 
-.cart-checkout-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.85rem 2rem;
-  min-height: 48px;
-  background: var(--primary);
-  color: var(--primary-contrast);
-  border-radius: var(--radius);
-  font-size: 1rem;
-  font-weight: 700;
-  text-decoration: none;
-  transition: background 0.18s var(--ease);
-}
-
-.cart-checkout-btn:hover {
-  background: var(--primary-dark);
-}
-
 .cart-continue-link {
   color: var(--primary);
   font-size: 0.9rem;
@@ -1938,10 +2099,6 @@ textarea:focus {
 
   .cart-line-info {
     flex-basis: 100%;
-  }
-
-  .cart-checkout-btn {
-    flex: 1 1 100%;
   }
 
   .cart-summary-total {
@@ -1994,19 +2151,26 @@ textarea:focus {
     min-height: min(380px, 62vh) !important;
   }
 
-  /* Hero copy is centered on phones: use an even scrim so it stays readable
-     over the busy video (the desktop gradient only covers the left half). */
+  /* Hero copy is centered on phones: use an even (but lighter than before - owner:
+     "video must be a bit more visible") scrim; the frosted .hero-text-panel behind
+     the copy is what actually guarantees legibility now, not this overlay. */
   .hero-scrim {
     background: linear-gradient(
       180deg,
-      rgba(248, 250, 252, 0.94) 0%,
-      rgba(248, 250, 252, 0.86) 55%,
-      rgba(248, 250, 252, 0.68) 100%
+      rgba(248, 250, 252, 0.55) 0%,
+      rgba(248, 250, 252, 0.42) 55%,
+      rgba(248, 250, 252, 0.3) 100%
     ) !important;
   }
 
   .hero-inner p {
     color: #33414f !important;
+  }
+
+  .hero-text-panel {
+    background: rgba(255, 255, 255, 0.72) !important;
+    padding: 1.25rem 1.25rem !important;
+    border-radius: var(--radius) !important;
   }
 
   /* Prevent iOS Safari from zooming into form fields (<16px triggers zoom) */
