@@ -84,6 +84,9 @@ export default function CartPage() {
     postalCode: '',
   });
   const [methods, setMethods] = useState<PaymentMethods | null>(null);
+  // Prevent the auto-save effect from writing empty form state before guest details hydrate
+  // from localStorage (otherwise the first paint wipes the user's saved checkout details).
+  const [guestHydrated, setGuestHydrated] = useState(false);
 
   const canUseSaved = user?.role === 'CUSTOMER' && user.emailVerified;
   const isCourier = deliveryMethod === 'COURIER';
@@ -126,25 +129,40 @@ export default function CartPage() {
 
   // Guests only: logged-in customers already get saved addresses above (05 FR-CHECKOUT-23).
   useEffect(() => {
-    if (canUseSaved) return;
-    const saved = loadGuestCheckoutDetails();
-    if (!saved) return;
-    setForm((f) => ({ ...f, ...saved.contact, ...saved.address }));
-    if (saved.billing) {
-      setBilling((b) => ({ ...b, ...saved.billing }));
-      setShowBilling(true);
+    if (canUseSaved) {
+      setGuestHydrated(true);
+      return;
     }
+    const saved = loadGuestCheckoutDetails();
+    if (saved) {
+      setForm((f) => ({ ...f, ...saved.contact, ...saved.address }));
+      if (saved.billing) {
+        setBilling((b) => ({ ...b, ...saved.billing! }));
+        setShowBilling(true);
+      }
+    }
+    setGuestHydrated(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canUseSaved]);
 
   useEffect(() => {
-    if (canUseSaved || placed) return;
+    if (canUseSaved || placed || !guestHydrated) return;
+    // Skip writing an all-empty snapshot — that would clear real saved data after "Forget".
+    const hasAnything =
+      form.contactName.trim() ||
+      form.contactPhone.trim() ||
+      form.contactEmail.trim() ||
+      form.street.trim() ||
+      form.city.trim() ||
+      form.province.trim() ||
+      form.postalCode.trim();
+    if (!hasAnything) return;
     saveGuestCheckoutDetails({
       contact: { contactName: form.contactName, contactPhone: form.contactPhone, contactEmail: form.contactEmail },
       address: { street: form.street, city: form.city, province: form.province, postalCode: form.postalCode },
       billing: showBilling ? billing : null,
     });
-  }, [canUseSaved, placed, form, showBilling, billing]);
+  }, [canUseSaved, placed, guestHydrated, form, showBilling, billing]);
 
   useEffect(() => {
     if (items.length === 0 || placed || !form.postalCode.trim()) {
@@ -248,6 +266,23 @@ export default function CartPage() {
         contactEmail: form.contactEmail,
       });
       savePendingOrder(result.orderNumber, form.contactEmail);
+      // Persist details for the next guest order on this browser/device.
+      if (!canUseSaved) {
+        saveGuestCheckoutDetails({
+          contact: {
+            contactName: form.contactName,
+            contactPhone: form.contactPhone,
+            contactEmail: form.contactEmail,
+          },
+          address: {
+            street: form.street,
+            city: form.city,
+            province: form.province,
+            postalCode: form.postalCode,
+          },
+          billing: showBilling ? billing : null,
+        });
+      }
       await clear();
 
       if (needsOnlinePayment && method === 'CARD') {
@@ -448,6 +483,12 @@ export default function CartPage() {
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: '1.5rem' }}>
           <section style={card}>
             <h3 style={ch3}>Contact</h3>
+            {!canUseSaved && (
+              <p style={savedHint}>
+                We keep your contact and delivery details on this device so you don&apos;t have to
+                retype them next time. Nothing is stored on our servers until you place an order.
+              </p>
+            )}
             <input style={input} placeholder="Full name" value={form.contactName}
               onChange={(e) => setField('contactName', e.target.value)} required />
             <input style={input} placeholder="Phone" value={form.contactPhone}
@@ -763,6 +804,12 @@ const button = {
   cursor: 'pointer',
 } as const;
 const mutedNote = { color: 'var(--muted)', fontSize: '0.85rem', margin: 0 } as const;
+const savedHint = {
+  color: 'var(--muted)',
+  fontSize: '0.85rem',
+  margin: '0 0 0.75rem',
+  lineHeight: 1.45,
+} as const;
 const forgetLink = {
   justifySelf: 'start',
   background: 'none',
