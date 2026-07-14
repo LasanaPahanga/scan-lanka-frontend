@@ -260,7 +260,7 @@ export function ProductDetailView({
         </div>
       </div>
 
-      <RecommendedProducts products={related} category={product.category} />
+      <RecommendedProducts products={related} category={product.category ?? null} />
     </main>
   );
 }
