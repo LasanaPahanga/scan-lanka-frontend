@@ -1952,6 +1952,12 @@ textarea:focus {
   .site-footer {
     padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 1.5rem);
   }
+
+  /* The bottom tab bar stays visible on /cart (owner 2026-07-14) - reserve room so it
+     never covers the Place order button or other bottom content. */
+  .cart-page-main {
+    padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 1.5rem) !important;
+  }
 }
 
 /* ── Product detail: sticky buy bar on phones ───────────────────────────── */

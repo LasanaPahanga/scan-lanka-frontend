@@ -319,7 +319,7 @@ export default function CartPage() {
 
   if (placed) {
     return (
-      <main style={wrap}>
+      <main className="cart-page-main" style={wrap}>
         <h1 style={{ color: 'var(--primary)' }}>Order placed</h1>
         <p>
           Your order number is <strong>{placed.orderNumber}</strong>.
@@ -386,7 +386,7 @@ export default function CartPage() {
 
   if (loading && lines.length === 0) {
     return (
-      <main style={wrap}>
+      <main className="cart-page-main" style={wrap}>
         <h1 className="page-title">Your cart</h1>
         <p style={{ color: 'var(--muted)' }}>Loading cart…</p>
       </main>
@@ -395,7 +395,7 @@ export default function CartPage() {
 
   if (lines.length === 0) {
     return (
-      <main style={wrap}>
+      <main className="cart-page-main" style={wrap}>
         <h1 className="page-title">Your cart</h1>
         <p style={{ color: 'var(--muted)' }}>Your cart is empty.</p>
         <Link href="/products" className="btn btn-primary">
@@ -412,7 +412,7 @@ export default function CartPage() {
     (!needsOnlinePayment || (methods && (methods.payhere || methods.bankTransfer)));
 
   return (
-    <main style={wrap}>
+    <main className="cart-page-main" style={wrap}>
       <h1 className="page-title">Your cart</h1>
       <ul className="cart-lines" style={{ listStyle: 'none', padding: 0 }}>
         {lines.map((line) => (
