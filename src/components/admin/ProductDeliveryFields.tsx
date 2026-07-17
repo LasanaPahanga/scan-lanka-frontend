@@ -108,6 +108,14 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
 
       <div style={{ display: 'grid', gap: '0.4rem' }}>
         <span style={{ ...mutedText, fontSize: '0.8rem' }}>Courier (Domex)</span>
+        <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem' }}>
+          <input
+            type="checkbox"
+            checked={value.courierEnabled}
+            onChange={(e) => onChange({ ...value, courierEnabled: e.target.checked })}
+          />
+          Courier offered for this item (off = in-house lorry only)
+        </label>
         <select
           style={fieldInput}
           value={value.boardSizeTier ?? ''}
@@ -122,8 +130,8 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
           }
         >
           <option value="">Not couriable (lorry only — e.g. glass)</option>
-          <option value="UNDER_2FT">Below 2 ft</option>
-          <option value="BETWEEN_2FT_6FT">2 ft &amp; above (2–6 ft rate)</option>
+          <option value="UNDER_2FT">Below 2 ft (weight rate only)</option>
+          <option value="BETWEEN_2FT_6FT">Above 2 ft (weight rate + handling fee)</option>
         </select>
         <label style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.85rem' }}>
           <input
@@ -137,11 +145,12 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
 
       {!compact && (
         <p style={{ ...mutedText, margin: 0, fontSize: '0.8rem' }}>
-          Courier (Domex) charges are flat rates by board size and delivery area — weight is not used.
-          Lorry per zone: untick to hide the lorry for that zone (customer uses the courier); leave the
-          price blank to arrange the cost manually after the order; set a min bill to require the order
-          to exceed it — with a price the price applies, without one the flat charge from Delivery
-          settings applies.
+          Courier (Domex) charges are weight-based per board (1st kg + additional kgs from the rate
+          card); packages above 2 ft add the area&apos;s handling fee — set the item&apos;s weight so
+          the estimate is right. Lorry per zone: untick to hide the lorry for that zone (customer uses
+          the courier); leave the price blank to arrange the cost manually after the order; set a min
+          bill to require the order to exceed it — with a price the price applies, without one the
+          flat charge from Delivery settings applies.
         </p>
       )}
     </div>

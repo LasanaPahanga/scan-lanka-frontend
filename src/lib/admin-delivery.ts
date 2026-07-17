@@ -5,10 +5,12 @@ export type CourierZone = 'CITY_LIMITS' | 'SUBURBS' | 'OUTSTATION' | 'FARAWAY';
 export type BoardSizeTier = 'UNDER_2FT' | 'BETWEEN_2FT_6FT';
 export type LorryZone = 'COLOMBO' | 'SUBURB' | 'OUTER';
 
+/** Domex weight rate per area (V48): per board, 1st kg + additional kgs; above-2ft adds handling. */
 export interface CourierRateView {
   zone: CourierZone;
-  sizeTier: BoardSizeTier;
-  flatCents: number;
+  firstKgCents: number;
+  addlKgCents: number;
+  handlingOver2ftCents: number;
 }
 
 export interface DeliverySettingsView {
@@ -38,10 +40,9 @@ export const listCourierRates = () => api<CourierRateView[]>('/api/admin/courier
 
 export const upsertCourierRate = (
   zone: CourierZone,
-  sizeTier: BoardSizeTier,
-  body: { flatCents: number },
+  body: { firstKgCents: number; addlKgCents: number; handlingOver2ftCents: number },
 ) =>
-  api<CourierRateView>(`/api/admin/courier-rate-card/${zone}/${sizeTier}`, {
+  api<CourierRateView>(`/api/admin/courier-rate-card/${zone}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   });

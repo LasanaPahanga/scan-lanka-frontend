@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from 'react';
 import {
-  BoardSizeTier,
   CourierRateView,
   CourierZone,
   DeliveryMethodView,
@@ -25,7 +24,6 @@ import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/fo
 
 const LORRY_ZONES: LorryZone[] = ['COLOMBO', 'SUBURB', 'OUTER'];
 const COURIER_ZONES: CourierZone[] = ['CITY_LIMITS', 'SUBURBS', 'OUTSTATION', 'FARAWAY'];
-const SIZE_TIERS: BoardSizeTier[] = ['UNDER_2FT', 'BETWEEN_2FT_6FT'];
 
 const ZONE_LABELS: Record<CourierZone, string> = {
   CITY_LIMITS: 'City Limits',
@@ -34,10 +32,6 @@ const ZONE_LABELS: Record<CourierZone, string> = {
   FARAWAY: 'Far Away',
 };
 
-const TIER_LABELS: Record<BoardSizeTier, string> = {
-  UNDER_2FT: 'Below 2 ft',
-  BETWEEN_2FT_6FT: 'Between 2 ft & 6 ft',
-};
 
 export default function AdminDeliveryPage() {
   const [rates, setRates] = useState<CourierRateView[]>([]);
@@ -65,12 +59,14 @@ export default function AdminDeliveryPage() {
     void reload().catch(() => {});
   }, []);
 
-  async function saveRate(zone: CourierZone, sizeTier: BoardSizeTier, flatRupees: string) {
+  async function saveRate(zone: CourierZone, firstKg: string, addlKg: string, handling: string) {
     setMsg(null);
-    await upsertCourierRate(zone, sizeTier, {
-      flatCents: Math.round(Number(flatRupees) * 100),
+    await upsertCourierRate(zone, {
+      firstKgCents: Math.round(Number(firstKg) * 100),
+      addlKgCents: Math.round(Number(addlKg) * 100),
+      handlingOver2ftCents: Math.round(Number(handling) * 100),
     });
-    setMsg(`Courier rate for ${ZONE_LABELS[zone]} / ${TIER_LABELS[sizeTier]} saved.`);
+    setMsg(`Courier rate for ${ZONE_LABELS[zone]} saved.`);
     await reload();
   }
 
@@ -189,48 +185,44 @@ export default function AdminDeliveryPage() {
       </section>
 
       <section style={section}>
-        <h2 style={h2}>Courier rate card (flat rate by board size)</h2>
-        {COURIER_ZONES.map((zone) => (
-          <div key={zone} style={{ marginBottom: '1.5rem' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '0.5rem' }}>{ZONE_LABELS[zone]}</h3>
-            <div style={rateTierRow}>
-              {SIZE_TIERS.map((sizeTier) => {
-                const row = rates.find((r) => r.zone === zone && r.sizeTier === sizeTier) ?? {
-                  zone,
-                  sizeTier,
-                  flatCents: 0,
-                };
-                return (
-                  <form
-                    // Remount once the real rate loads: `defaultValue` on an uncontrolled input only
-                    // applies at mount, so a key of just `sizeTier` never picks up the async-fetched
-                    // flatCents and the field is stuck showing its initial (pre-fetch) value forever.
-                    key={`${sizeTier}-${row.flatCents}`}
-                    style={rateTierForm}
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      const fd = new FormData(e.currentTarget);
-                      void saveRate(zone, sizeTier, String(fd.get('flat')));
-                    }}
-                  >
-                    <strong style={{ fontSize: '0.9rem' }}>{TIER_LABELS[sizeTier]}</strong>
-                    <input
-                      style={fieldInput}
-                      name="flat"
-                      type="number"
-                      step="0.01"
-                      placeholder="Flat rate (Rs)"
-                      defaultValue={row.flatCents / 100}
-                    />
-                    <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
-                      Save
-                    </button>
-                  </form>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <h2 style={h2}>Courier rate card (Domex, per board by weight)</h2>
+        <p style={mutedText}>
+          Per board: 1st kg + additional kgs. Packages above 2 ft add the area&apos;s handling fee on
+          top (per package). Weight comes from each product size.
+        </p>
+        {COURIER_ZONES.map((zone) => {
+          const row = rates.find((r) => r.zone === zone) ?? {
+            zone,
+            firstKgCents: 0,
+            addlKgCents: 0,
+            handlingOver2ftCents: 0,
+          };
+          return (
+            <form
+              // Remount once the real rate loads: `defaultValue` on an uncontrolled input only
+              // applies at mount, so a key of just the zone never picks up the async-fetched rates
+              // and the fields would be stuck showing their initial (pre-fetch) values forever.
+              key={`${zone}-${row.firstKgCents}-${row.addlKgCents}-${row.handlingOver2ftCents}`}
+              style={rateTierForm}
+              onSubmit={(e) => {
+                e.preventDefault();
+                const fd = new FormData(e.currentTarget);
+                void saveRate(zone, String(fd.get('first')), String(fd.get('addl')), String(fd.get('handling')));
+              }}
+            >
+              <strong style={{ fontSize: '0.9rem', minWidth: 110 }}>{ZONE_LABELS[zone]}</strong>
+              <input style={fieldInput} name="first" type="number" step="0.01"
+                placeholder="1st kg (Rs)" defaultValue={row.firstKgCents / 100} />
+              <input style={fieldInput} name="addl" type="number" step="0.01"
+                placeholder="Add kg (Rs)" defaultValue={row.addlKgCents / 100} />
+              <input style={fieldInput} name="handling" type="number" step="0.01"
+                placeholder="Above 2 ft handling (Rs)" defaultValue={row.handlingOver2ftCents / 100} />
+              <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+                Save
+              </button>
+            </form>
+          );
+        })}
       </section>
 
       <section style={section}>
@@ -331,17 +323,15 @@ export default function AdminDeliveryPage() {
 const section = { marginTop: '2rem' } as const;
 const h2 = { fontSize: '1.1rem', marginBottom: '0.75rem' } as const;
 const label = { display: 'grid', gap: '0.35rem', fontSize: '0.9rem' } as const;
-const rateTierRow = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
-  gap: '1rem',
-  maxWidth: 720,
-} as const;
 const rateTierForm = {
-  display: 'grid',
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'wrap',
   gap: '0.5rem',
   padding: '0.75rem',
+  marginBottom: '0.75rem',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius-sm)',
   background: 'var(--surface)',
+  maxWidth: 780,
 } as const;
