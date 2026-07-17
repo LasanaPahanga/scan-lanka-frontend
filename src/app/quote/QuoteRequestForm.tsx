@@ -71,7 +71,7 @@ export default function QuoteRequestForm() {
         message: form.message || undefined,
         items: [
           selectedProduct
-            ? { productId: selectedProduct.productId, quantity: Number(form.quantity) }
+            ? { productId: selectedProduct.productId, name: selectedProduct.name, quantity: Number(form.quantity) }
             : { name: customProductName.trim(), quantity: Number(form.quantity) },
         ],
       });
