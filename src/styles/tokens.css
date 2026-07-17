@@ -937,6 +937,16 @@ a.nav-group-title:hover {
 .nav-mobile-categories .nav-group-title {
   padding-top: 0.45rem;
 }
+.nav-mobile-products-toggle {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+.nav-mobile-view-all {
+  display: block;
+  padding: 0.45rem 0 0.15rem 1rem;
+}
 
 .header-actions {
   display: flex;
@@ -1297,6 +1307,11 @@ a.nav-group-title:hover {
 
   .site-nav .nav-link::after {
     display: none;
+  }
+
+  .site-nav .nav-mobile-products-toggle {
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
   }
 
   .nav-link-admin {

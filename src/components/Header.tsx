@@ -33,6 +33,7 @@ export function Header() {
   const [q, setQ] = useState('');
   const [logoError, setLogoError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   // Render the notification bell in the brand row on phones (the actions row
   // is replaced by the bottom tab bar there) and in the actions row on desktop.
   // One instance only: each bell polls the inbox on an interval.
@@ -48,10 +49,12 @@ export function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setProductsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
+    if (!menuOpen) setProductsOpen(false);
     return () => {
       document.body.style.overflow = '';
     };
@@ -169,10 +172,24 @@ export function Header() {
                 <span key={item.href} style={{ display: 'contents' }}>
                   {isMobile ? (
                     <>
-                      <Link href="/products" className="nav-link" onClick={() => setMenuOpen(false)}>
+                      <button
+                        type="button"
+                        className="nav-link nav-mobile-products-toggle"
+                        aria-expanded={productsOpen}
+                        aria-controls="mobile-products-panel"
+                        onClick={() => setProductsOpen((v) => !v)}
+                      >
                         Our Products
-                      </Link>
-                      <ProductsNavMobileList onNavigate={() => setMenuOpen(false)} />
+                        <span className="nav-dropdown-caret" aria-hidden="true">{productsOpen ? '▴' : '▾'}</span>
+                      </button>
+                      {productsOpen && (
+                        <div id="mobile-products-panel">
+                          <Link href="/products" className="nav-group-title nav-mobile-view-all" onClick={() => setMenuOpen(false)}>
+                            View all products →
+                          </Link>
+                          <ProductsNavMobileList onNavigate={() => setMenuOpen(false)} />
+                        </div>
+                      )}
                     </>
                   ) : (
                     <ProductsNavMenu onNavigate={() => setMenuOpen(false)} />

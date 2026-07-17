@@ -99,7 +99,7 @@ export function ProductsNavMobileList({ onNavigate }: { onNavigate: () => void }
       {groups.map((g) => (
         <div key={g.name}>
           {isDirectLink(g) ? (
-            <Link href={categoryHref(g.categories[0].name)} className="nav-group-link" onClick={onNavigate}>
+            <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
               {g.name}
             </Link>
           ) : (

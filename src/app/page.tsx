@@ -27,7 +27,7 @@ export default async function Home() {
     });
     rows = (
       await Promise.all(
-        orderedCategories.slice(0, 6).map(async (category) => ({
+        orderedCategories.map(async (category) => ({
           category,
           products: (await listProducts({ category, size: 4 })).content,
         })),
