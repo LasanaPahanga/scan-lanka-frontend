@@ -54,6 +54,7 @@ export interface DeliveryAttrs {
   lorryOuterEnabled: boolean;
   lorryOuterWhatsapp: boolean; // outer lorry = contact us (glass, key holders, 6x4/8x4)
   courierOuterBlocked: boolean; // no courier to outstation/faraway (6x3/6x4/8x4)
+  courierEnabled: boolean; // per-item courier switch (V48) — off = courier never offered
   whatsappOnly: boolean;
 }
 
@@ -72,6 +73,7 @@ export interface AdminProductDetail {
   priceMode: PriceMode;
   singlePriceCents: number | null;
   stockQty: number | null;
+  displayOrder: number;
   delivery: DeliveryAttrs;
   imageUrls: string[];
   specGroups: AdminSpecGroup[];
@@ -110,6 +112,7 @@ export interface UpdateProductBody {
   active?: boolean;
   stockQty?: number | null;
   singlePriceCents?: number | null;
+  displayOrder?: number | null; // storefront position (owner sheet order); lower = earlier
   delivery?: DeliveryAttrs;
 }
 

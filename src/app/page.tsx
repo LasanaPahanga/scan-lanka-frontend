@@ -19,7 +19,7 @@ export default async function Home() {
     const [homeData, facets] = await Promise.all([fetchHome(), getFacets()]);
     home = homeData;
     // Pin "White Board" first on the homepage (owner 2026-07-14, 14 FR-MERCH-5);
-    // everything else keeps the existing (alphabetical) order from the API.
+    // everything else keeps the API order — the owner's sheet order (product display_order, V46/V47).
     const orderedCategories = [...facets.categories].sort((a, b) => {
       if (a === PINNED_CATEGORY) return -1;
       if (b === PINNED_CATEGORY) return 1;

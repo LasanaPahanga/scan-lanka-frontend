@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
 import { CountrySelector } from '@/components/CountrySelector';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ProductsNavMenu, ProductsNavMobileList } from '@/components/ProductsNavMenu';
 
 const HOTLINE = '071 781 7447';
 const EMAIL = 'scanlankagroup.info@gmail.com';
@@ -161,16 +162,33 @@ export function Header() {
       <nav id="site-nav" className={`site-nav${menuOpen ? ' is-open' : ''}`} style={navBar} aria-label="Main">
         <div className="container site-nav-inner">
           <div className="site-nav-list">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link${item.highlight ? ' nav-link-highlight' : ''}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {NAV.map((item) =>
+              item.href === '/products' ? (
+                // Grouped category menu (owner sheet taxonomy): dropdown on desktop, inline tree in
+                // the mobile drawer.
+                <span key={item.href} style={{ display: 'contents' }}>
+                  {isMobile ? (
+                    <>
+                      <Link href="/products" className="nav-link" onClick={() => setMenuOpen(false)}>
+                        Our Products
+                      </Link>
+                      <ProductsNavMobileList onNavigate={() => setMenuOpen(false)} />
+                    </>
+                  ) : (
+                    <ProductsNavMenu onNavigate={() => setMenuOpen(false)} />
+                  )}
+                </span>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-link${item.highlight ? ' nav-link-highlight' : ''}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
             {user?.role === 'ADMIN' && (
               <Link href="/admin" className="nav-link nav-link-admin-mobile" onClick={() => setMenuOpen(false)}>
                 Admin
