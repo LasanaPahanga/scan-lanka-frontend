@@ -33,6 +33,7 @@ const emptyDelivery = (): DeliveryAttrs => ({
   lorryOuterEnabled: true,
   lorryOuterWhatsapp: false,
   courierOuterBlocked: false,
+  courierEnabled: true,
   whatsappOnly: false,
 });
 
@@ -68,6 +69,9 @@ export function ProductForm({ existing, categories }: Props) {
   const [details, setDetails] = useState(existing?.details ?? '');
   const [handlingClass, setHandlingClass] = useState(existing?.handlingClass ?? 'STANDARD');
   const [active, setActive] = useState(existing?.active ?? true);
+  const [displayOrder, setDisplayOrder] = useState(
+    existing?.displayOrder != null ? String(existing.displayOrder) : '',
+  );
 
   // SINGLE-price fields
   const [priceRupees, setPriceRupees] = useState(
@@ -115,6 +119,7 @@ export function ProductForm({ existing, categories }: Props) {
           category: category.trim() || null,
           handlingClass,
           active,
+          displayOrder: displayOrder.trim() === '' ? undefined : Number(displayOrder),
           delivery: isVariant ? undefined : delivery,
           stockQty: isVariant ? undefined : stock.trim() === '' ? null : Number(stock),
           singlePriceCents: isVariant ? undefined : rupeesToCents(priceRupees),
@@ -376,6 +381,22 @@ export function ProductForm({ existing, categories }: Props) {
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Active (visible
             in the shop)
           </label>
+        </Field>
+      )}
+
+      {isEdit && (
+        <Field label="Storefront position">
+          <input
+            style={fieldInput}
+            type="number"
+            min="0"
+            value={displayOrder}
+            onChange={(e) => setDisplayOrder(e.target.value)}
+          />
+          <p style={{ ...mutedText, margin: '0.25rem 0 0', fontSize: '0.8rem' }}>
+            Lower shows earlier on the home page and shop listing (seeded from the owner sheet order;
+            new products default to the end).
+          </p>
         </Field>
       )}
 

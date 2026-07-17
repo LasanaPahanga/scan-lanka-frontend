@@ -78,6 +78,8 @@ export interface CatalogFacets {
 export interface CategoryCount {
   name: string;
   count: number;
+  /** Storefront umbrella ("Writing Board" for writing-board categories), null for top-level. */
+  group: string | null;
 }
 
 export interface ProductPage {

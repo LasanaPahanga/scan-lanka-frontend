@@ -8,6 +8,7 @@ import { useAuth } from '@/components/AuthProvider';
 import { useWishlist } from '@/components/WishlistProvider';
 import { CountrySelector } from '@/components/CountrySelector';
 import { NotificationBell } from '@/components/NotificationBell';
+import { ProductsNavMenu, ProductsNavMobileList } from '@/components/ProductsNavMenu';
 
 const HOTLINE = '071 781 7447';
 const EMAIL = 'scanlankagroup.info@gmail.com';
@@ -32,6 +33,7 @@ export function Header() {
   const [q, setQ] = useState('');
   const [logoError, setLogoError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   // Render the notification bell in the brand row on phones (the actions row
   // is replaced by the bottom tab bar there) and in the actions row on desktop.
   // One instance only: each bell polls the inbox on an interval.
@@ -47,10 +49,12 @@ export function Header() {
 
   useEffect(() => {
     setMenuOpen(false);
+    setProductsOpen(false);
   }, [pathname]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : '';
+    if (!menuOpen) setProductsOpen(false);
     return () => {
       document.body.style.overflow = '';
     };
@@ -161,16 +165,47 @@ export function Header() {
       <nav id="site-nav" className={`site-nav${menuOpen ? ' is-open' : ''}`} style={navBar} aria-label="Main">
         <div className="container site-nav-inner">
           <div className="site-nav-list">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link${item.highlight ? ' nav-link-highlight' : ''}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {NAV.map((item) =>
+              item.href === '/products' ? (
+                // Grouped category menu (owner sheet taxonomy): dropdown on desktop, inline tree in
+                // the mobile drawer.
+                <span key={item.href} style={{ display: 'contents' }}>
+                  {isMobile ? (
+                    <>
+                      <button
+                        type="button"
+                        className="nav-link nav-mobile-products-toggle"
+                        aria-expanded={productsOpen}
+                        aria-controls="mobile-products-panel"
+                        onClick={() => setProductsOpen((v) => !v)}
+                      >
+                        Our Products
+                        <span className="nav-dropdown-caret" aria-hidden="true">{productsOpen ? '▴' : '▾'}</span>
+                      </button>
+                      {productsOpen && (
+                        <div id="mobile-products-panel">
+                          <Link href="/products" className="nav-group-title nav-mobile-view-all" onClick={() => setMenuOpen(false)}>
+                            View all products →
+                          </Link>
+                          <ProductsNavMobileList onNavigate={() => setMenuOpen(false)} />
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <ProductsNavMenu onNavigate={() => setMenuOpen(false)} />
+                  )}
+                </span>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`nav-link${item.highlight ? ' nav-link-highlight' : ''}`}
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
             {user?.role === 'ADMIN' && (
               <Link href="/admin" className="nav-link nav-link-admin-mobile" onClick={() => setMenuOpen(false)}>
                 Admin
