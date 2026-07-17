@@ -1,0 +1,52 @@
+# Sync Sadil08 upstream → this fork, then tip-commit as Lasana so Vercel deploys.
+# Vercel is connected to LasanaPahanga/scan-lanka-frontend and expects the tip author to be you.
+
+name: Sync upstream
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          # PAT with contents:write on this fork (required to push to main)
+          token: ${{ secrets.LASANA_SYNC_TOKEN }}
+
+      - name: Configure git author (Vercel tip commit)
+        run: |
+          git config user.name "LasanaPahanga"
+          git config user.email "lpahanga@gmail.com"
+
+      - name: Fetch upstream (Sadil08)
+        run: |
+          git remote add upstream https://github.com/Sadil08/scan-lanka-frontend.git
+          git fetch upstream main
+
+      - name: Merge upstream and push tip commit if needed
+        run: |
+          set -euo pipefail
+          BEHIND=$(git rev-list --count HEAD..upstream/main)
+          if [ "$BEHIND" -eq 0 ]; then
+            echo "Already up to date with upstream/main — no sync commit."
+            exit 0
+          fi
+
+          echo "Fork is $BEHIND commit(s) behind upstream/main — merging."
+          git merge upstream/main --no-edit
+
+          # Tip commit authored as Lasana so Vercel accepts the deploy
+          git commit --allow-empty -m "chore: sync upstream for Vercel"
+
+          git push origin main
