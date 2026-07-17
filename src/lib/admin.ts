@@ -1,6 +1,5 @@
 import { api } from './api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { getApiBase } from './api-base';
 
 export interface DashboardView {
   pendingPayment: number;
@@ -181,7 +180,7 @@ export const putSettings = (body: Partial<SettingsView>) =>
   api<SettingsView>('/api/admin/settings', { method: 'PUT', body: JSON.stringify(body) });
 
 export async function downloadAdminReceipt(orderNumber: string): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/api/admin/orders/${encodeURIComponent(orderNumber)}/receipt.pdf`, {
+  const res = await fetch(`${getApiBase()}/api/admin/orders/${encodeURIComponent(orderNumber)}/receipt.pdf`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Download failed');

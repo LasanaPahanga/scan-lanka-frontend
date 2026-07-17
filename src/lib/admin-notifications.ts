@@ -1,6 +1,5 @@
 import { api } from './api';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { getApiBase } from './api-base';
 
 export interface AdminNotification {
   id: number;
@@ -31,7 +30,7 @@ export const resendNotification = (id: number) =>
   api<void>(`/api/admin/notifications/${id}/resend`, { method: 'POST' });
 
 export async function downloadMyReceiptPdf(orderNumber: string): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/api/orders/${encodeURIComponent(orderNumber)}/receipt.pdf`, {
+  const res = await fetch(`${getApiBase()}/api/orders/${encodeURIComponent(orderNumber)}/receipt.pdf`, {
     credentials: 'include',
   });
   if (!res.ok) throw new Error('Receipt download failed');
@@ -39,7 +38,7 @@ export async function downloadMyReceiptPdf(orderNumber: string): Promise<Blob> {
 }
 
 export async function downloadGuestReceiptPdf(orderNumber: string, email: string): Promise<Blob> {
-  const res = await fetch(`${API_BASE}/api/orders/lookup/receipt.pdf`, {
+  const res = await fetch(`${getApiBase()}/api/orders/lookup/receipt.pdf`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
