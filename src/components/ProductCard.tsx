@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { ProductChip, mediaUrl } from '@/lib/catalog';
 import { formatDisplayPrice, formatDisplayRange } from '@/lib/displayMoney';
 import { useGeo } from '@/components/GeoProvider';
@@ -19,14 +20,16 @@ export function ProductCard({ product, priority = false }: { product: ProductChi
       <div className="product-card-img">
         <WishlistToggle product={product} />
         {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          // next/image resizes to card size + serves WebP/AVIF from the CDN, instead of shipping the
+          // full backend image; the container is position:relative with a fixed aspect-ratio, so `fill` fits.
+          <Image
             src={img}
             alt={product.name}
             className="zoom"
-            loading={priority ? 'eager' : 'lazy'}
-            decoding="async"
-            {...(priority ? { fetchPriority: 'high' as const } : {})}
+            fill
+            sizes="(max-width: 600px) 50vw, (max-width: 1000px) 33vw, 260px"
+            style={{ objectFit: 'cover' }}
+            priority={priority}
           />
         ) : (
           <div className="product-card-noimg">No image</div>
