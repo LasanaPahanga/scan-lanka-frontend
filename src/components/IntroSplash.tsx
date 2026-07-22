@@ -72,7 +72,6 @@ export function IntroSplash() {
         ref={videoRef}
         className="intro-splash-video"
         src="/intro_splash.mp4"
-        poster="/logo.png"
         muted
         playsInline
         preload="auto"

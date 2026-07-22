@@ -1467,14 +1467,6 @@ a.nav-group-title:hover {
   background: #e8eef3;
 }
 
-/* Narrow phone aspect ratios crop the logo mark when cover-fitted; contain-fit keeps
-   the whole mark on screen against the same brand backdrop. */
-@media (max-width: 640px) {
-  .intro-splash-video {
-    object-fit: contain;
-  }
-}
-
 /* Account page */
 .account-page {
   max-width: 760px;
