@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /** Per-request CSP with optional enforce mode (global/02 §7 — report-only → enforce). */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const apiBase = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
   const enforce = process.env.CSP_ENFORCE === 'true';

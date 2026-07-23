@@ -20,15 +20,16 @@ type SearchParams = {
   page?: string;
 };
 
-export default async function ProductsPage({ searchParams }: { searchParams: SearchParams }) {
-  const page = Math.max(0, Number(searchParams.page ?? 0) || 0);
-  const parentId = searchParams.parentId ? Number(searchParams.parentId) : undefined;
-  const sort = (searchParams.sort as 'newest' | 'price_asc' | 'price_desc' | 'name') ?? 'newest';
+export default async function ProductsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const sp = await searchParams;
+  const page = Math.max(0, Number(sp.page ?? 0) || 0);
+  const parentId = sp.parentId ? Number(sp.parentId) : undefined;
+  const sort = (sp.sort as 'newest' | 'price_asc' | 'price_desc' | 'name') ?? 'newest';
 
   const [productPage, facets, categoryCounts] = await Promise.all([
     listProducts({
-      q: searchParams.q,
-      category: searchParams.category,
+      q: sp.q,
+      category: sp.category,
       parentId: Number.isFinite(parentId) ? parentId : undefined,
       sort,
       page,
@@ -39,7 +40,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
   ]);
 
   const { content: products, totalPages, number } = productPage;
-  const hasFilters = Boolean(searchParams.q || searchParams.category || searchParams.parentId);
+  const hasFilters = Boolean(sp.q || sp.category || sp.parentId);
 
   return (
     <main className="page">
@@ -48,12 +49,12 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
         Browse our full range of boards and teaching equipment - manufactured locally, delivered
         island-wide.
       </p>
-      <CategoryTiles categories={categoryCounts} active={searchParams.category} />
+      <CategoryTiles categories={categoryCounts} active={sp.category} />
       <Suspense fallback={null}>
         <ProductBrowseToolbar
           facets={facets}
-          q={searchParams.q}
-          category={searchParams.category}
+          q={sp.q}
+          category={sp.category}
           parentId={Number.isFinite(parentId) ? parentId : undefined}
           sort={sort}
         />

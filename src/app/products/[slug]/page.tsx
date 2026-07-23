@@ -6,11 +6,12 @@ import { JsonLd } from '@/components/JsonLd';
 
 export const revalidate = 60;
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const p = await getProduct(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const p = await getProduct(slug);
   if (!p) return { title: 'Not found - Scan Lanka' };
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-  const url = `${base}/products/${params.slug}`;
+  const url = `${base}/products/${slug}`;
   return {
     title: `${p.name} - Scan Lanka`,
     description: p.description ?? undefined,
@@ -19,8 +20,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProduct(params.slug);
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const product = await getProduct(slug);
   if (!product) notFound();
   const related = await getRelatedProducts(product, 4);
   const priceCents = (product.priceMode === 'SINGLE' ? product.singlePriceCents : product.priceMinCents) ?? 0;
@@ -29,7 +31,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
     '@type': 'Product',
     name: product.name,
     description: product.description,
-    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/products/${params.slug}`,
+    url: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/products/${slug}`,
     offers: {
       '@type': 'Offer',
       priceCurrency: 'LKR',
