@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useCart } from '@/components/CartProvider';
 import { useAuth } from '@/components/AuthProvider';
@@ -9,6 +9,7 @@ import { useWishlist } from '@/components/WishlistProvider';
 import { CountrySelector } from '@/components/CountrySelector';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ProductsNavMenu, ProductsNavMobileList } from '@/components/ProductsNavMenu';
+import { HeaderSearch } from '@/components/HeaderSearch';
 
 const HOTLINE = '071 781 7447';
 const EMAIL = 'scanlankagroup.info@gmail.com';
@@ -28,9 +29,7 @@ export function Header() {
   const { count: cartCount } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
-  const [q, setQ] = useState('');
   const [logoError, setLogoError] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
@@ -59,12 +58,6 @@ export function Header() {
       document.body.style.overflow = '';
     };
   }, [menuOpen]);
-
-  function search(e: React.FormEvent) {
-    e.preventDefault();
-    setMenuOpen(false);
-    router.push(q.trim() ? `/products?q=${encodeURIComponent(q.trim())}` : '/products');
-  }
 
   return (
     <header className="site-header" style={{ position: 'sticky', top: 0, zIndex: 20 }}>
@@ -124,18 +117,7 @@ export function Header() {
             </button>
           </div>
 
-          <form onSubmit={search} className="header-search" style={searchWrap} role="search">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search products…"
-              aria-label="Search products"
-              style={searchInput}
-            />
-            <button type="submit" className="btn btn-primary header-search-btn" style={{ borderRadius: '0 var(--radius) var(--radius) 0' }}>
-              Search
-            </button>
-          </form>
+          <HeaderSearch onNavigate={() => setMenuOpen(false)} />
 
           <div className="header-actions">
             {!isMobile && <NotificationBell />}
@@ -279,18 +261,6 @@ const brandSub = {
   textTransform: 'uppercase' as const,
   letterSpacing: '0.5px',
 };
-
-const searchWrap = { display: 'flex', flex: '1 1 320px', minWidth: 0, maxWidth: 560 } as const;
-const searchInput = {
-  flex: 1,
-  minWidth: 0,
-  padding: '0.6rem 0.85rem',
-  border: '1px solid var(--border)',
-  borderRight: 'none',
-  borderRadius: 'var(--radius) 0 0 var(--radius)',
-  fontSize: '0.95rem',
-  outline: 'none',
-} as const;
 
 const navBar = {
   background: 'var(--surface)',
