@@ -190,16 +190,28 @@ export default function AdminOrderDetailPage() {
           <p>
             Status: {order.payment.status} / {order.payment.slipReviewStatus}
           </p>
+          {order.payment.slipReviewStatus === 'CONFIRMED' && (
+            <p style={{ color: '#128a3d', fontWeight: 600 }}>✓ Payment confirmed</p>
+          )}
+          {order.payment.slipReviewStatus === 'REJECTED' && (
+            <p style={{ color: 'var(--danger)', fontWeight: 600 }}>
+              Slip rejected — awaiting a new slip from the customer.
+            </p>
+          )}
           <div className="admin-toolbar" style={{ marginTop: 0 }}>
             <a href={order.payment.slipUrl} target="_blank" rel="noreferrer" className="admin-btn admin-btn--secondary admin-btn--sm">
               View slip
             </a>
-            <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => bankConfirm(orderNumber).then(reload)}>
-              Confirm payment
-            </button>
-            <button type="button" className="admin-btn admin-btn--danger admin-btn--sm" onClick={() => bankReject(orderNumber).then(reload)}>
-              Reject slip
-            </button>
+            {order.payment.slipReviewStatus === 'PENDING' && (
+              <>
+                <button type="button" className="admin-btn admin-btn--primary admin-btn--sm" onClick={() => bankConfirm(orderNumber).then(reload)}>
+                  Confirm payment
+                </button>
+                <button type="button" className="admin-btn admin-btn--danger admin-btn--sm" onClick={() => bankReject(orderNumber).then(reload)}>
+                  Reject slip
+                </button>
+              </>
+            )}
           </div>
         </AdminSection>
       )}
