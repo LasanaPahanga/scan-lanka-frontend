@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useState } from 'react';
 
 type Props = {
@@ -77,16 +78,16 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
               onMouseMove={onMouseMove}
               onMouseLeave={() => setHoverZoom(false)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              {/* next/image serves a resized WebP/AVIF from the CDN instead of the full backend image,
+                  so the main product photo paints fast. `fill` needs the sized, relative zoomBtn wrapper. */}
+              <Image
                 src={activeImage}
                 alt={alt}
+                fill
+                sizes="(max-width: 900px) 100vw, 600px"
+                priority
                 draggable={false}
-                decoding="async"
-                fetchPriority="high"
                 style={{
-                  width: '100%',
-                  maxHeight: 460,
                   objectFit: 'contain',
                   borderRadius: 'var(--radius-sm)',
                   transform: hoverZoom ? 'scale(2)' : 'scale(1)',
@@ -133,13 +134,12 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
         {hasMultiple && (
           <div style={thumbs}>
             {images.map((src, idx) => (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 key={src}
                 src={src}
                 alt=""
-                loading="lazy"
-                decoding="async"
+                width={64}
+                height={64}
                 onClick={() => setImageIndex(idx)}
                 style={{ ...thumb, outline: idx === imageIndex ? '2px solid var(--primary)' : 'none' }}
               />
@@ -226,6 +226,7 @@ const zoomBtn = {
   position: 'relative' as const,
   display: 'block',
   width: '100%',
+  height: 'min(460px, 78vw)', // defined height so next/image `fill` has a box to fill
   padding: 0,
   border: 'none',
   background: 'transparent',

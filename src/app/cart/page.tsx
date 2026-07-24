@@ -298,6 +298,16 @@ export default function CartPage() {
           return;
         }
       }
+      // Bank transfer: upload the attached slip immediately so the purchase isn't "done" without it.
+      // If the upload fails, the order is still placed (pending) — the placed screen lets them retry.
+      if (needsOnlinePayment && method === 'BANK' && slipFile) {
+        try {
+          await uploadBankSlip(result.orderNumber, slipFile, form.contactEmail);
+          setSlipUploaded(true);
+        } catch {
+          setSlipError('Order placed, but the slip upload failed — please upload it again below.');
+        }
+      }
       setPlaced(result);
     } catch {
       setError('We could not place your order. Please check your details and try again.');
@@ -310,7 +320,7 @@ export default function CartPage() {
     if (!slipFile || !placed) return;
     setSlipError(null);
     try {
-      await uploadBankSlip(placed.orderNumber, slipFile);
+      await uploadBankSlip(placed.orderNumber, slipFile, form.contactEmail);
       setSlipUploaded(true);
     } catch {
       setSlipError('Could not upload the slip. Please try again.');
@@ -359,9 +369,13 @@ export default function CartPage() {
             <h3 style={ch3}>Pay by bank transfer</h3>
             <p style={{ color: 'var(--muted)' }}>
               Transfer <strong>{formatLkr(placed.onlineTotalCents)}</strong> to our account, then upload
-              your slip below.
+              your slip (PDF or image) below.
             </p>
-            <input type="file" accept="image/*" onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)} />
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)}
+            />
             {slipError && <p style={{ color: 'var(--danger)' }}>{slipError}</p>}
             <button type="button" onClick={onUploadSlip} disabled={!slipFile} style={button}>
               Upload slip
@@ -405,11 +419,14 @@ export default function CartPage() {
     );
   }
 
+  // Bank transfer requires the slip up front — you can't complete the purchase without attaching it.
+  const bankSlipRequired = needsOnlinePayment && method === 'BANK';
   const canPlace =
     deliveryMethod &&
     quote?.available &&
     form.postalCode.trim() &&
-    (!needsOnlinePayment || (methods && (methods.payhere || methods.bankTransfer)));
+    (!needsOnlinePayment || (methods && (methods.payhere || methods.bankTransfer))) &&
+    (!bankSlipRequired || !!slipFile);
 
   return (
     <main className="cart-page-main" style={wrap}>
@@ -653,6 +670,20 @@ export default function CartPage() {
                   <input type="radio" checked={method === 'BANK'} onChange={() => setMethod('BANK')} /> Bank
                   transfer (upload slip)
                 </label>
+              )}
+              {method === 'BANK' && (
+                <div style={{ marginTop: '0.75rem' }}>
+                  <p style={{ color: 'var(--muted)', margin: '0 0 0.4rem' }}>
+                    Transfer <strong>{formatLkr(quote?.onlineTotalCents ?? 0)}</strong> to our account and
+                    attach the receipt (PDF or image) — required to place the order.
+                  </p>
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)}
+                  />
+                  {slipError && <p style={{ color: 'var(--danger)', margin: '0.4rem 0 0' }}>{slipError}</p>}
+                </div>
               )}
             </section>
           )}
