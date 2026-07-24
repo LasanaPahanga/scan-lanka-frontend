@@ -104,7 +104,8 @@ export function CustomerCareWidget() {
 
   const closed = chat?.status === 'CLOSED';
 
-  if (!authLoading && user?.role === 'ADMIN') return null;
+  // Shown on storefront for everyone (including admins browsing the shop).
+  // Admin console routes already omit this widget via StorefrontChrome.
 
   return (
     <>
