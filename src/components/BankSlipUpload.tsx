@@ -55,8 +55,8 @@ export function BankSlipUpload({
       {status === 'BANK_SLIP_REJECTED' && (
         <p style={dangerText}>Your previous slip was rejected — please upload a clearer photo of the receipt.</p>
       )}
-      <p style={mutedText}>Paid by bank transfer? Upload your slip here so we can confirm your order.</p>
-      <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+      <p style={mutedText}>Paid by bank transfer? Upload your slip (PDF or image) here so we can confirm your order.</p>
+      <input type="file" accept="image/*,application/pdf" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       {error && <p style={dangerText}>{error}</p>}
       <p>
         <button type="button" onClick={onUpload} disabled={!file || busy} style={primaryButton}>
