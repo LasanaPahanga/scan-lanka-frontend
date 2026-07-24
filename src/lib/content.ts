@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
+import { getApiBase } from './api-base';
 
 export interface ContentPage {
   slug: string;
@@ -9,7 +9,7 @@ export interface ContentPage {
 
 export async function fetchContent(slug: string): Promise<ContentPage | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/content/${encodeURIComponent(slug)}`, {
+    const res = await fetch(`${getApiBase()}/api/content/${encodeURIComponent(slug)}`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
@@ -20,12 +20,12 @@ export async function fetchContent(slug: string): Promise<ContentPage | null> {
 }
 
 export const listContentPages = () =>
-  fetch(`${process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080'}/api/admin/content`, {
+  fetch(`${getApiBase()}/api/admin/content`, {
     credentials: 'include',
   }).then((r) => (r.ok ? r.json() : []));
 
 export const saveContentPage = (slug: string, title: string, bodyHtml: string) =>
-  fetch(`${process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080'}/api/admin/content/${encodeURIComponent(slug)}`, {
+  fetch(`${getApiBase()}/api/admin/content/${encodeURIComponent(slug)}`, {
     method: 'PUT',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
