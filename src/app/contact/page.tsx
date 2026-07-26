@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ContactForm } from '@/components/ContactForm';
+import { ContactHero } from '@/components/ContactHero';
 import { EditableHtml } from '@/components/EditableHtml';
 import { mutedText, pageWrap } from '@/components/formStyles';
 
@@ -13,7 +14,9 @@ export const metadata = {
 export default function ContactPage() {
   return (
     <main style={pageWrap}>
-      <h1 style={{ color: 'var(--primary)' }}>Contact us</h1>
+      <ContactHero />
+
+      <h2 style={{ color: 'var(--primary)', marginTop: '2.5rem' }}>Send us a message</h2>
       <EditableHtml slug="contact" className="prose">
         <p style={mutedText}>
           Questions about products, bulk orders, or international shipping? Send a message - we typically reply

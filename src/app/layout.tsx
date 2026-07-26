@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Playfair_Display } from 'next/font/google';
+import { Sora, Montserrat } from 'next/font/google';
 import '../styles/tokens.css';
 import { AuthProvider } from '@/components/AuthProvider';
 import { CartProvider } from '@/components/CartProvider';
@@ -7,11 +7,20 @@ import { WishlistProvider } from '@/components/WishlistProvider';
 import { GeoProvider } from '@/components/GeoProvider';
 import { StorefrontChrome } from '@/components/StorefrontChrome';
 
-// Elegant serif display face for the homepage hero brand mark/headline only —
-// body/nav copy stays on the sans font in tokens.css (`--font`).
-const playfair = Playfair_Display({
+// Modern, professional sans for the whole storefront (body, nav, headings,
+// homepage category titles). Wired into `--font` via tokens.css.
+const montserrat = Montserrat({
   subsets: ['latin'],
-  weight: ['700', '800'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+// Sleek modern display face for the homepage hero headline/eyebrow only
+// (owner pick). Exposed as `--font-display`.
+const sora = Sora({
+  subsets: ['latin'],
+  weight: ['600', '700', '800'],
   variable: '--font-display',
   display: 'swap',
 });
@@ -46,12 +55,12 @@ export const viewport: Viewport = {
   // some Android browsers (Chrome/Samsung Internet "force dark") auto-invert
   // pages that don't declare a color scheme, muddying the brand palette.
   colorScheme: 'only light',
-  themeColor: '#1a6db5',
+  themeColor: '#00a2e8',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={playfair.variable}>
+    <html lang="en" className={`${montserrat.variable} ${sora.variable}`}>
       <body>
         <AuthProvider>
           <GeoProvider>

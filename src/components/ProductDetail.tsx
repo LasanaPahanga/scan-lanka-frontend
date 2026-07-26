@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ProductDetail, ProductChip, ResolvedVariant, mediaUrl, resolveVariant } from '@/lib/catalog';
@@ -26,7 +26,7 @@ export function ProductDetailView({
   product: ProductDetail;
   related?: ProductChip[];
 }) {
-  const { add, count } = useCart();
+  const { add, count, openDrawer } = useCart();
   const router = useRouter();
   const { geo } = useGeo();
   const quoteHref = `/quote?productId=${product.id}&name=${encodeURIComponent(product.name)}`;
@@ -34,6 +34,10 @@ export function ProductDetailView({
   const [selected, setSelected] = useState<Record<number, number>>({});
   const [resolved, setResolved] = useState<ResolvedVariant | null>(null);
   const [resolveError, setResolveError] = useState(false);
+  const [resolving, setResolving] = useState(false);
+  // Cache resolved variants by option-combo so re-selecting a size is instant
+  // (no repeat network round-trip). Persists for the life of this PDP mount.
+  const resolveCache = useRef<Map<string, ResolvedVariant>>(new Map());
 
   const priceAffecting = useMemo(
     () => product.specGroups.filter((g) => g.priceAffecting),
@@ -44,13 +48,29 @@ export function ProductDetailView({
   useEffect(() => {
     if (product.priceMode !== 'VARIANT' || !allSelected) {
       setResolved(null);
+      setResolving(false);
       return;
     }
     const ids = priceAffecting.map((g) => selected[g.id]);
+    const key = [...ids].sort((a, b) => a - b).join('-');
+    const cached = resolveCache.current.get(key);
+    if (cached) {
+      setResolved(cached);
+      setResolveError(false);
+      setResolving(false);
+      return;
+    }
     let cancelled = false;
+    setResolving(true);
     resolveVariant(product.id, ids)
-      .then((r) => !cancelled && (setResolved(r), setResolveError(false)))
-      .catch(() => !cancelled && (setResolved(null), setResolveError(true)));
+      .then((r) => {
+        if (cancelled) return;
+        resolveCache.current.set(key, r);
+        setResolved(r);
+        setResolveError(false);
+      })
+      .catch(() => !cancelled && (setResolved(null), setResolveError(true)))
+      .finally(() => !cancelled && setResolving(false));
     return () => {
       cancelled = true;
     };
@@ -120,6 +140,11 @@ export function ProductDetailView({
           <h1 className="page-title" style={{ marginTop: 0 }}>{product.name}</h1>
           <div style={{ fontSize: '1.6rem', color: 'var(--primary)', fontWeight: 800, marginBottom: '0.5rem' }}>
             {priceLabel || ''}
+            {resolving && (
+              <span style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 500, marginLeft: '0.6rem' }}>
+                updating…
+              </span>
+            )}
           </div>
           {geo.indicativePricing && (
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>{t('geo.indicative')}</p>
@@ -216,7 +241,7 @@ export function ProductDetailView({
                     variantId: product.priceMode === 'VARIANT' ? (resolved?.variantId ?? null) : null,
                     quantity: 1,
                     name: product.name,
-                  });
+                  }).then(() => openDrawer());
                   setAdded(true);
                   setTimeout(() => setAdded(false), 2000);
                 }}
@@ -247,7 +272,7 @@ export function ProductDetailView({
                 className="pdp-viewcart-btn"
                 aria-label="View cart"
                 title="View cart"
-                onClick={() => router.push('/cart')}
+                onClick={openDrawer}
               >
                 <CartGlyph />
                 {count > 0 && <span className="product-card-action-badge">{count > 99 ? '99+' : count}</span>}

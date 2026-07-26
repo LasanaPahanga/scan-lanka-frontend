@@ -210,7 +210,7 @@ const heroTitle = {
   fontWeight: 800,
   lineHeight: 1.15,
 } as const;
-const heroText = { fontSize: '1.08rem', fontWeight: 600, color: '#33414f', margin: 0, lineHeight: 1.7 } as const;
+const heroText = { fontSize: '1.08rem', fontWeight: 600, color: '#1f1f1f', margin: 0, lineHeight: 1.7 } as const;
 
 const trustItem = { display: 'flex', flexDirection: 'column' as const, gap: '0.15rem' };
 

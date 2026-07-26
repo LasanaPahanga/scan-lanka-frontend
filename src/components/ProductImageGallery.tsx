@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Props = {
   images: string[];
@@ -10,12 +10,19 @@ type Props = {
   cornerAction?: React.ReactNode;
 };
 
+// Past this horizontal drag distance (px) a touch swipe flips to the next image.
+const SWIPE_THRESHOLD = 45;
+
 export function ProductImageGallery({ images, alt, cornerAction }: Props) {
   const [imageIndex, setImageIndex] = useState(0);
-  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [hoverZoom, setHoverZoom] = useState(false);
   const [zoomOrigin, setZoomOrigin] = useState('50% 50%');
   const [lightbox, setLightbox] = useState(false);
+  const [dragX, setDragX] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const movedRef = useRef(false);
+  const thumbsRef = useRef<HTMLDivElement>(null);
 
   const activeImage = images[imageIndex] ?? null;
   const hasMultiple = images.length > 1;
@@ -23,8 +30,21 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
   const showPrev = useCallback(() => setImageIndex((i) => Math.max(0, i - 1)), []);
   const showNext = useCallback(() => setImageIndex((i) => Math.min(images.length - 1, i + 1)), [images.length]);
 
+  // Reset to the first image whenever the image set changes (e.g. a variant with
+  // its own photos is selected) so we never point past the end of a shorter set.
+  useEffect(() => {
+    setImageIndex(0);
+  }, [images]);
+
   useEffect(() => {
     setHoverZoom(false);
+  }, [imageIndex]);
+
+  // Keep the active thumbnail scrolled into view in the horizontal strip.
+  useEffect(() => {
+    const strip = thumbsRef.current;
+    const active = strip?.children[imageIndex] as HTMLElement | undefined;
+    active?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
   }, [imageIndex]);
 
   useEffect(() => {
@@ -56,15 +76,29 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
       <div>
         <div
           style={{ ...mainImg, position: 'relative' }}
-          onTouchStart={(e) => setTouchStartX(e.changedTouches[0]?.clientX ?? null)}
-          onTouchEnd={(e) => {
-            if (touchStartX == null || !hasMultiple) return;
-            const dx = touchStartX - (e.changedTouches[0]?.clientX ?? touchStartX);
-            if (Math.abs(dx) > 40) {
-              if (dx > 0) showNext();
+          onTouchStart={(e) => {
+            if (!hasMultiple) return;
+            touchStartX.current = e.changedTouches[0]?.clientX ?? null;
+            movedRef.current = false;
+            setDragging(true);
+          }}
+          onTouchMove={(e) => {
+            if (touchStartX.current == null) return;
+            let dx = (e.changedTouches[0]?.clientX ?? touchStartX.current) - touchStartX.current;
+            if (Math.abs(dx) > 6) movedRef.current = true;
+            // Rubber-band at the ends so it feels bounded, not stuck.
+            if ((imageIndex === 0 && dx > 0) || (imageIndex === images.length - 1 && dx < 0)) dx *= 0.3;
+            setDragX(dx);
+          }}
+          onTouchEnd={() => {
+            const dx = dragX;
+            setDragging(false);
+            setDragX(0);
+            touchStartX.current = null;
+            if (Math.abs(dx) > SWIPE_THRESHOLD) {
+              if (dx < 0) showNext();
               else showPrev();
             }
-            setTouchStartX(null);
           }}
         >
           {cornerAction && <div style={{ position: 'absolute', top: 8, right: 8, zIndex: 3 }}>{cornerAction}</div>}
@@ -73,8 +107,19 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
             <button
               type="button"
               aria-label="Zoom image"
-              style={zoomBtn}
-              onClick={() => setLightbox(true)}
+              style={{
+                ...zoomBtn,
+                transform: `translateX(${dragX}px)`,
+                transition: dragging ? 'none' : 'transform 0.25s var(--ease)',
+              }}
+              onClick={() => {
+                // Suppress the zoom click that fires at the end of a swipe.
+                if (movedRef.current) {
+                  movedRef.current = false;
+                  return;
+                }
+                setLightbox(true);
+              }}
               onMouseMove={onMouseMove}
               onMouseLeave={() => setHoverZoom(false)}
             >
@@ -100,6 +145,24 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
           ) : (
             <div style={imgPlaceholder}>No image</div>
           )}
+
+          {/* Warm the browser cache for the adjacent images so left/right switching
+              paints instantly instead of fetching on click. Optimized at the same
+              size as the main image, so the switch reuses the cached URL. */}
+          {hasMultiple &&
+            [imageIndex - 1, imageIndex + 1]
+              .filter((i) => i >= 0 && i < images.length)
+              .map((i) => (
+                <Image
+                  key={`preload-${images[i]}`}
+                  src={images[i]}
+                  alt=""
+                  fill
+                  sizes="(max-width: 900px) 100vw, 600px"
+                  aria-hidden
+                  style={{ objectFit: 'contain', opacity: 0, pointerEvents: 'none', visibility: 'hidden' }}
+                />
+              ))}
 
           {hasMultiple && (
             <>
@@ -132,17 +195,18 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
         </div>
 
         {hasMultiple && (
-          <div style={thumbs}>
+          <div className="pdp-thumbs" ref={thumbsRef}>
             {images.map((src, idx) => (
-              <Image
+              <button
+                type="button"
                 key={src}
-                src={src}
-                alt=""
-                width={64}
-                height={64}
+                className={`pdp-thumb${idx === imageIndex ? ' is-active' : ''}`}
+                aria-label={`View image ${idx + 1}`}
+                aria-current={idx === imageIndex}
                 onClick={() => setImageIndex(idx)}
-                style={{ ...thumb, outline: idx === imageIndex ? '2px solid var(--primary)' : 'none' }}
-              />
+              >
+                <Image src={src} alt="" width={64} height={64} style={thumbImg} />
+              </button>
             ))}
           </div>
         )}
@@ -212,15 +276,11 @@ const mainImg = {
   overflow: 'hidden',
 } as const;
 const imgPlaceholder = { padding: '4rem', textAlign: 'center' as const, color: 'var(--muted)' };
-const thumbs = { display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' as const };
-const thumb = {
-  width: 64,
-  height: 64,
-  objectFit: 'cover' as const,
-  borderRadius: 'var(--radius-sm)',
-  border: '1px solid var(--border)',
-  cursor: 'pointer',
-  background: 'var(--surface)',
+const thumbImg = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'contain' as const,
+  display: 'block',
 };
 const zoomBtn = {
   position: 'relative' as const,

@@ -133,18 +133,20 @@ export function Footer() {
 }
 
 const footer = {
-  backgroundColor: '#0c1c27',
+  backgroundColor: '#161616',
   backgroundImage: 'url(/footer.png)',
   backgroundSize: 'cover',
   backgroundPosition: 'center bottom',
   backgroundRepeat: 'no-repeat',
-  color: '#c8d4dd',
+  color: '#d0d0d0',
   flexShrink: 0,
 } as const;
 
+// Neutral dark overlay (owner 2026-07-26: remove the blue cast). Slightly stronger
+// so any blue in the footer.png photo underneath reads neutral too.
 const footerOverlay = {
   background:
-    'linear-gradient(180deg, rgba(12, 28, 39, 0.72) 0%, rgba(12, 28, 39, 0.58) 50%, rgba(12, 28, 39, 0.48) 100%)',
+    'linear-gradient(180deg, rgba(18, 18, 18, 0.82) 0%, rgba(18, 18, 18, 0.72) 50%, rgba(18, 18, 18, 0.66) 100%)',
 } as const;
 
 const grid = {
@@ -164,7 +166,7 @@ const logoChip = {
   padding: '6px 10px',
   flexShrink: 0,
 } as const;
-const blurb = { fontSize: '0.9rem', lineHeight: 1.7, color: '#9fb1bd', maxWidth: 340, margin: 0 } as const;
+const blurb = { fontSize: '0.9rem', lineHeight: 1.7, color: '#a6a6a6', maxWidth: 340, margin: 0 } as const;
 const socialRow = { display: 'flex', gap: '0.6rem', marginTop: '1rem' } as const;
 const social = {
   display: 'inline-flex',
@@ -180,10 +182,10 @@ const social = {
 } as const;
 const colTitle = { color: '#fff', fontSize: '0.95rem', margin: '0 0 1rem', letterSpacing: '0.3px' } as const;
 const list = { listStyle: 'none', padding: 0, margin: 0, display: 'grid', gap: '0.6rem' } as const;
-const contact = { fontStyle: 'normal', fontSize: '0.9rem', lineHeight: 1.6, color: '#9fb1bd' } as const;
+const contact = { fontStyle: 'normal', fontSize: '0.9rem', lineHeight: 1.6, color: '#a6a6a6' } as const;
 const bottomBar = {
   borderTop: '1px solid rgba(255,255,255,0.12)',
-  background: 'rgba(12, 28, 39, 0.72)',
+  background: 'rgba(18, 18, 18, 0.82)',
 } as const;
 const bottomInner = {
   display: 'flex',
@@ -193,5 +195,5 @@ const bottomInner = {
   gap: '0.5rem',
   padding: '1.1rem 0',
   fontSize: '0.82rem',
-  color: '#8aa0ad',
+  color: '#9a9a9a',
 };

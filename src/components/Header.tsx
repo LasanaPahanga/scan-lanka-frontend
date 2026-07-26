@@ -10,9 +10,7 @@ import { CountrySelector } from '@/components/CountrySelector';
 import { NotificationBell } from '@/components/NotificationBell';
 import { ProductsNavMenu, ProductsNavMobileList } from '@/components/ProductsNavMenu';
 import { HeaderSearch } from '@/components/HeaderSearch';
-
-const HOTLINE = '071 781 7447';
-const EMAIL = 'scanlankagroup.info@gmail.com';
+import { HOTLINE, EMAIL } from '@/lib/contactInfo';
 
 const NAV = [
   { href: '/', label: 'Home', highlight: false },
@@ -20,13 +18,12 @@ const NAV = [
   { href: '/products', label: 'Our Products', highlight: false },
   { href: '/clientele', label: 'Clientele', highlight: false },
   { href: '/quote', label: 'Bulk & Special Orders', highlight: true },
-  { href: '/delivery', label: 'Delivery', highlight: false },
   { href: '/returns', label: 'Help Center', highlight: false },
   { href: '/contact', label: 'Contact Us', highlight: false },
 ] as const;
 
 export function Header() {
-  const { count: cartCount } = useCart();
+  const { count: cartCount, openDrawer } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { user, logout } = useAuth();
   const pathname = usePathname();
@@ -124,9 +121,9 @@ export function Header() {
             <Link href="/wishlist" className="icon-link" aria-label="Wishlist">
               ♡ <span style={countPill}>{wishlistCount}</span>
             </Link>
-            <Link href="/cart" className="icon-link" aria-label="Cart">
+            <button type="button" className="icon-link icon-link-btn" aria-label="Cart" onClick={openDrawer}>
               🛒 <span style={countPill}>{cartCount}</span>
-            </Link>
+            </button>
             {user ? (
               <Link href="/account" className="icon-link header-account-link">
                 Account

@@ -86,3 +86,47 @@ export function loadPendingOrder(): { orderNumber: string; email: string } | nul
 export function clearPendingOrder() {
   window.localStorage.removeItem(PENDING_KEY);
 }
+
+/**
+ * Snapshot of the "Order placed" confirmation screen so it survives navigation.
+ * Without this, clicking "Track this order" and pressing Back re-mounts the (now
+ * empty) cart and the confirmation is lost. Kept in sessionStorage (this tab only).
+ */
+export interface PlacedOrderSnapshot {
+  orderNumber: string;
+  onlineTotalCents: number;
+  isCourier: boolean;
+  paymentChoice: 'ONLINE' | 'COD';
+  method: 'CARD' | 'BANK';
+  needsOnlinePayment: boolean;
+  codDueCents: number;
+  slipUploaded: boolean;
+}
+
+const PLACED_KEY = 'sl_placed_order';
+
+export function savePlacedOrder(snapshot: PlacedOrderSnapshot) {
+  try {
+    window.sessionStorage.setItem(PLACED_KEY, JSON.stringify(snapshot));
+  } catch {
+    /* storage unavailable — confirmation just won't survive a back-nav */
+  }
+}
+
+export function loadPlacedOrder(): PlacedOrderSnapshot | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(PLACED_KEY);
+    return raw ? (JSON.parse(raw) as PlacedOrderSnapshot) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPlacedOrder() {
+  try {
+    window.sessionStorage.removeItem(PLACED_KEY);
+  } catch {
+    /* ignore */
+  }
+}

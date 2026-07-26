@@ -11,6 +11,14 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  images: {
+    // Serve modern formats and cache optimized product images aggressively so
+    // repeat views + gallery switching paint instantly. Images are same-origin
+    // (/api/media/... via the rewrite above), so no remotePatterns are needed.
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 2592000, // 30 days
+    qualities: [50, 65, 75, 90], // Next 16 requires explicit qualities when non-default is used
+  },
   async rewrites() {
     if (process.env.NODE_ENV === 'development') {
       return [{ source: '/api/:path*', destination: `${devBackend}/api/:path*` }];

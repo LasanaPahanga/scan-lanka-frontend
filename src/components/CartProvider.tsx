@@ -29,6 +29,10 @@ interface CartState {
   setQuantity: (line: DisplayCartLine, quantity: number) => Promise<void>;
   remove: (line: DisplayCartLine) => Promise<void>;
   clear: () => Promise<void>;
+  /** Mini-cart slide-in drawer visibility. */
+  drawerOpen: boolean;
+  openDrawer: () => void;
+  closeDrawer: () => void;
 }
 
 const CartContext = createContext<CartState | undefined>(undefined);
@@ -47,7 +51,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [serverCart, setServerCart] = useState<ServerCart | null>(null);
   const [priced, setPriced] = useState<PricedCart | null>(null);
   const [loading, setLoading] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const syncedRef = useRef(false);
+
+  const openDrawer = useCallback(() => setDrawerOpen(true), []);
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
   useEffect(() => {
     if (!authLoading && !serverMode) {
@@ -209,7 +217,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <CartContext.Provider
-      value={{ lines, priced, count, loading, isServer: serverMode, add, setQuantity, remove, clear }}
+      value={{ lines, priced, count, loading, isServer: serverMode, add, setQuantity, remove, clear, drawerOpen, openDrawer, closeDrawer }}
     >
       {children}
     </CartContext.Provider>

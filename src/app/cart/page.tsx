@@ -25,7 +25,13 @@ import {
   submitToPayHere,
   uploadBankSlip,
 } from '@/lib/checkout';
-import { savePendingOrder } from '@/lib/orders';
+import {
+  savePendingOrder,
+  savePlacedOrder,
+  loadPlacedOrder,
+  clearPlacedOrder,
+  type PlacedOrderSnapshot,
+} from '@/lib/orders';
 import { fetchPaymentMethods, PaymentMethods } from '@/lib/payments';
 import { useGeo } from '@/components/GeoProvider';
 import { t } from '@/lib/i18n';
@@ -70,6 +76,9 @@ export default function CartPage() {
   const [deliveryOptions, setDeliveryOptions] = useState<DeliveryOptionsResult | null>(null);
   const [quote, setQuote] = useState<QuoteResult | null>(null);
   const [placed, setPlaced] = useState<PlacedResult | null>(null);
+  // Display flags for the confirmation screen, persisted so pressing Back after
+  // "Track this order" returns here instead of the empty-cart page.
+  const [placedSnap, setPlacedSnap] = useState<PlacedOrderSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [postalCodes, setPostalCodes] = useState<PostalCode[]>([]);
@@ -95,6 +104,26 @@ export default function CartPage() {
   const codEligible = deliveryMethod === 'COMPANY_LORRY' && (methods?.deliveryCod ?? true);
   const needsOnlinePayment =
     deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'ONLINE' && (quote?.onlineTotalCents ?? 0) > 0;
+
+  // Restore the "Order placed" confirmation when returning to /cart (e.g. Back from
+  // order lookup). Only when the cart is empty — a fresh shopping trip takes over.
+  useEffect(() => {
+    const snap = loadPlacedOrder();
+    if (snap) {
+      setPlacedSnap(snap);
+      setPlaced({ orderNumber: snap.orderNumber, onlineTotalCents: snap.onlineTotalCents });
+      setSlipUploaded(snap.slipUploaded);
+    }
+  }, []);
+
+  // A new shopping trip (items back in the cart) supersedes an old confirmation.
+  useEffect(() => {
+    if (placed && lines.length > 0) {
+      clearPlacedOrder();
+      setPlaced(null);
+      setPlacedSnap(null);
+    }
+  }, [lines.length, placed]);
 
   useEffect(() => {
     fetchPaymentMethods()
@@ -300,14 +329,28 @@ export default function CartPage() {
       }
       // Bank transfer: upload the attached slip immediately so the purchase isn't "done" without it.
       // If the upload fails, the order is still placed (pending) — the placed screen lets them retry.
+      let slipUploadedNow = false;
       if (needsOnlinePayment && method === 'BANK' && slipFile) {
         try {
           await uploadBankSlip(result.orderNumber, slipFile, form.contactEmail);
           setSlipUploaded(true);
+          slipUploadedNow = true;
         } catch {
           setSlipError('Order placed, but the slip upload failed — please upload it again below.');
         }
       }
+      const snap: PlacedOrderSnapshot = {
+        orderNumber: result.orderNumber,
+        onlineTotalCents: result.onlineTotalCents,
+        isCourier,
+        paymentChoice,
+        method,
+        needsOnlinePayment,
+        codDueCents: deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'COD' ? (quote?.onlineTotalCents ?? 0) : 0,
+        slipUploaded: method === 'BANK' ? slipUploadedNow : false,
+      };
+      setPlacedSnap(snap);
+      savePlacedOrder(snap);
       setPlaced(result);
     } catch {
       setError('We could not place your order. Please check your details and try again.');
@@ -322,25 +365,43 @@ export default function CartPage() {
     try {
       await uploadBankSlip(placed.orderNumber, slipFile, form.contactEmail);
       setSlipUploaded(true);
+      // Persist so the "thanks" state survives a back-nav to this confirmation.
+      if (placedSnap) {
+        const updated = { ...placedSnap, slipUploaded: true };
+        setPlacedSnap(updated);
+        savePlacedOrder(updated);
+      }
     } catch {
       setSlipError('Could not upload the slip. Please try again.');
     }
   }
 
   if (placed) {
+    // Drive the confirmation from the persisted snapshot (survives back-nav); the
+    // live checkout state (quote/deliveryMethod) is gone once the cart is cleared.
+    const c = placedSnap ?? {
+      orderNumber: placed.orderNumber,
+      onlineTotalCents: placed.onlineTotalCents,
+      isCourier,
+      paymentChoice,
+      method,
+      needsOnlinePayment,
+      codDueCents,
+      slipUploaded,
+    };
     return (
       <main className="cart-page-main" style={wrap}>
         <h1 style={{ color: 'var(--primary)' }}>Order placed</h1>
         <p>
           Your order number is <strong>{placed.orderNumber}</strong>.
         </p>
-        {isCourier && (
+        {c.isCourier && (
           <p style={{ color: 'var(--muted)' }}>
             Pay the courier on delivery (approximate total was shown at checkout). We&apos;ll coordinate
             delivery details with you.
           </p>
         )}
-        {!isCourier && (
+        {!c.isCourier && (
           <p style={{ color: 'var(--muted)' }}>
             Company-lorry delivery has no fixed date at checkout. Message us about timing from{' '}
             <Link href="/orders/lookup" style={{ color: 'var(--primary)' }}>
@@ -358,13 +419,13 @@ export default function CartPage() {
             .
           </p>
         )}
-        {!isCourier && paymentChoice === 'COD' && (
+        {!c.isCourier && c.paymentChoice === 'COD' && (
           <p style={{ color: 'var(--muted)' }}>
-            Nothing is charged online - pay <strong>{formatLkr(codDueCents)}</strong> in cash to the driver
+            Nothing is charged online - pay <strong>{formatLkr(c.codDueCents)}</strong> in cash to the driver
             when your order arrives.
           </p>
         )}
-        {needsOnlinePayment && method === 'BANK' && !slipUploaded && (
+        {c.needsOnlinePayment && c.method === 'BANK' && !slipUploaded && (
           <section style={card}>
             <h3 style={ch3}>Pay by bank transfer</h3>
             <p style={{ color: 'var(--muted)' }}>
@@ -382,16 +443,16 @@ export default function CartPage() {
             </button>
           </section>
         )}
-        {needsOnlinePayment && method === 'BANK' && slipUploaded && (
+        {c.needsOnlinePayment && c.method === 'BANK' && slipUploaded && (
           <p style={{ color: 'var(--muted)' }}>Thanks! We&apos;ll confirm your payment and email your receipt.</p>
         )}
-        {needsOnlinePayment && method === 'CARD' && placed.onlineTotalCents > 0 && (
+        {c.needsOnlinePayment && c.method === 'CARD' && placed.onlineTotalCents > 0 && (
           <p style={{ color: 'var(--muted)' }}>We&apos;ll email your receipt once payment is confirmed.</p>
         )}
         <Link href="/orders/lookup" style={{ color: 'var(--primary)', marginRight: '1rem' }}>
           Track this order
         </Link>
-        <Link href="/products" style={{ color: 'var(--primary)' }}>
+        <Link href="/products" onClick={clearPlacedOrder} style={{ color: 'var(--primary)' }}>
           Continue shopping
         </Link>
       </main>

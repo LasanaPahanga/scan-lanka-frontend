@@ -15,7 +15,7 @@ import { useAuth } from '@/components/AuthProvider';
  */
 export function MobileTabBar() {
   const pathname = usePathname() ?? '/';
-  const { count: cartCount } = useCart();
+  const { count: cartCount, openDrawer } = useCart();
   const { count: wishlistCount } = useWishlist();
   const { user } = useAuth();
 
@@ -26,7 +26,8 @@ export function MobileTabBar() {
   const items = [
     { href: '/', label: 'Home', icon: HomeIcon, active: pathname === '/' },
     { href: '/products', label: 'Shop', icon: ShopIcon, active: pathname.startsWith('/products') },
-    { href: '/cart', label: 'Cart', icon: CartIcon, active: pathname.startsWith('/cart'), badge: cartCount },
+    // Cart opens the slide-in mini-cart instead of navigating (owner 2026-07-26).
+    { href: '/cart', label: 'Cart', icon: CartIcon, active: pathname.startsWith('/cart'), badge: cartCount, action: openDrawer },
     { href: '/wishlist', label: 'Wishlist', icon: HeartIcon, active: pathname.startsWith('/wishlist'), badge: wishlistCount },
     {
       href: accountHref,
@@ -38,22 +39,38 @@ export function MobileTabBar() {
 
   return (
     <nav className="mobile-tabbar" aria-label="Quick navigation">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className={`mobile-tab${item.active ? ' is-active' : ''}`}
-          aria-current={item.active ? 'page' : undefined}
-        >
-          <span className="mobile-tab-icon">
-            <item.icon />
-            {item.badge != null && item.badge > 0 && (
-              <span className="mobile-tab-badge">{item.badge > 99 ? '99+' : item.badge}</span>
-            )}
-          </span>
-          <span className="mobile-tab-label">{item.label}</span>
-        </Link>
-      ))}
+      {items.map((item) => {
+        const inner = (
+          <>
+            <span className="mobile-tab-icon">
+              <item.icon />
+              {item.badge != null && item.badge > 0 && (
+                <span className="mobile-tab-badge">{item.badge > 99 ? '99+' : item.badge}</span>
+              )}
+            </span>
+            <span className="mobile-tab-label">{item.label}</span>
+          </>
+        );
+        return item.action ? (
+          <button
+            key={item.href}
+            type="button"
+            className={`mobile-tab mobile-tab-btn${item.active ? ' is-active' : ''}`}
+            onClick={item.action}
+          >
+            {inner}
+          </button>
+        ) : (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`mobile-tab${item.active ? ' is-active' : ''}`}
+            aria-current={item.active ? 'page' : undefined}
+          >
+            {inner}
+          </Link>
+        );
+      })}
     </nav>
   );
 }
