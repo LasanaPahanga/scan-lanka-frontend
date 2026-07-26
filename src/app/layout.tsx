@@ -38,11 +38,12 @@ export const metadata: Metadata = {
     type: 'website',
   },
   icons: {
-    // Google Search needs a square favicon that is a multiple of 48px.
+    // Google prefers a square PNG ≥48px; list that first (favicon.ico is browser fallback).
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
       { url: '/icon-48.png', type: 'image/png', sizes: '48x48' },
+      { url: '/icon-96.png', type: 'image/png', sizes: '96x96' },
       { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/favicon.ico', sizes: 'any' },
     ],
     apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
