@@ -21,6 +21,7 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
   const [dragX, setDragX] = useState(0);
   const [dragging, setDragging] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const dragXRef = useRef(0);
   const movedRef = useRef(false);
   const thumbsRef = useRef<HTMLDivElement>(null);
 
@@ -73,12 +74,13 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
 
   return (
     <>
-      <div>
+      <div className="pdp-gallery">
         <div
-          style={{ ...mainImg, position: 'relative' }}
+          style={{ ...mainImg, position: 'relative', touchAction: 'pan-y' }}
           onTouchStart={(e) => {
             if (!hasMultiple) return;
             touchStartX.current = e.changedTouches[0]?.clientX ?? null;
+            dragXRef.current = 0;
             movedRef.current = false;
             setDragging(true);
           }}
@@ -88,10 +90,11 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
             if (Math.abs(dx) > 6) movedRef.current = true;
             // Rubber-band at the ends so it feels bounded, not stuck.
             if ((imageIndex === 0 && dx > 0) || (imageIndex === images.length - 1 && dx < 0)) dx *= 0.3;
+            dragXRef.current = dx;
             setDragX(dx);
           }}
           onTouchEnd={() => {
-            const dx = dragX;
+            const dx = dragXRef.current;
             setDragging(false);
             setDragX(0);
             touchStartX.current = null;
@@ -129,7 +132,8 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
                 src={activeImage}
                 alt={alt}
                 fill
-                sizes="(max-width: 900px) 100vw, 600px"
+                sizes="(max-width: 900px) 92vw, 600px"
+                quality={70}
                 priority
                 draggable={false}
                 style={{
@@ -158,7 +162,8 @@ export function ProductImageGallery({ images, alt, cornerAction }: Props) {
                   src={images[i]}
                   alt=""
                   fill
-                  sizes="(max-width: 900px) 100vw, 600px"
+                  sizes="(max-width: 900px) 92vw, 600px"
+                  quality={70}
                   aria-hidden
                   style={{ objectFit: 'contain', opacity: 0, pointerEvents: 'none', visibility: 'hidden' }}
                 />
@@ -293,6 +298,7 @@ const zoomBtn = {
   cursor: 'zoom-in',
   overflow: 'hidden',
   borderRadius: 'var(--radius-sm)',
+  touchAction: 'pan-y' as const,
 };
 const zoomHint = {
   position: 'absolute' as const,

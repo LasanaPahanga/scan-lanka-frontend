@@ -1372,6 +1372,12 @@ a.nav-group-title:hover {
     grid-template-columns: 1fr !important;
     gap: 1.5rem !important;
   }
+  /* Grid/flex items default to min-width:auto, which lets the wide thumbnail
+     strip (and long option rows) push the track past the viewport and cause a
+     horizontal overflow. Pin them to 0 so 1fr can actually shrink to the screen. */
+  .product-detail-layout > * {
+    min-width: 0;
+  }
 
   .admin-grid-2cols {
     grid-template-columns: 1fr !important;
@@ -2168,7 +2174,7 @@ a.nav-group-title:hover {
 /* On very narrow phones, three actions + a price block don't all fit comfortably -
    drop the price here (it's already shown higher up the page) so Add to cart / Buy
    now / View cart stay full-size, tappable, and un-clipped (owner: "mobile optimized"). */
-@media (max-width: 380px) {
+@media (max-width: 430px) {
   .pdp-buybar-price {
     display: none;
   }
@@ -2686,12 +2692,21 @@ a.nav-group-title:hover {
 }
 
 /* ── PDP gallery: horizontal thumbnail strip ────────────────────────────── */
+/* The gallery wrapper must be able to shrink to the column so the thumbnail
+   scroller below it stays bounded to the viewport (no page overflow). */
+.pdp-gallery {
+  min-width: 0;
+  max-width: 100%;
+}
 .pdp-thumbs {
   display: flex;
   flex-wrap: nowrap;
   gap: 0.5rem;
   margin-top: 0.75rem;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
