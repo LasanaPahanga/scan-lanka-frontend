@@ -60,6 +60,8 @@ export function buildProductJsonLd(product: ProductDetail, slug: string): Record
       url,
       priceCurrency: 'LKR',
       price: (priceCents / 100).toFixed(2),
+      // Merchant listings: when the current price offer became / remains valid.
+      validFrom: new Date().toISOString().slice(0, 10),
       priceValidUntil: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
       availability,
       itemCondition: 'https://schema.org/NewCondition',
