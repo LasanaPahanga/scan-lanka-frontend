@@ -1150,7 +1150,8 @@ a.nav-group-title:hover {
   }
 
   .header-util-inner {
-    padding: 0.55rem 0 0.7rem;
+    /* Extra horizontal inset so hotline / country text clear the screen edges. */
+    padding: 0.55rem 0.5rem 0.7rem;
     /* Keep the hotline and country selector on a single tidy row instead of
        wrapping onto two lines; the label text below is hidden to make room. */
     flex-wrap: nowrap;
@@ -1398,6 +1399,11 @@ a.nav-group-title:hover {
 @media (max-width: 480px) {
   .container {
     padding: 0 0.75rem;
+  }
+
+  .header-util-inner {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
   }
 
   .util-hotline-text {
