@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 const SPLASH_KEY = 'sl_intro_splash_seen';
-const SPLASH_SECONDS = 2;
+const SPLASH_SECONDS = 5;
 const FADE_MS = 400;
 
 export function IntroSplash() {
