@@ -1314,6 +1314,15 @@ a.nav-group-title:hover {
     display: none;
   }
 
+  .site-nav .nav-link-highlight {
+    align-self: flex-start;
+    min-height: 2.5rem;
+    margin: 0.35rem 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1.5px solid var(--accent);
+    border-radius: 999px;
+  }
+
   .site-nav .nav-mobile-products-toggle {
     justify-content: space-between;
     border-bottom: 1px solid var(--border);
