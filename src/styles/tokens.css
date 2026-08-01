@@ -1140,6 +1140,12 @@ a.nav-group-title:hover {
   background: var(--primary);
 }
 
+@media (min-width: 901px) {
+  .hero-eyebrow {
+    color: #000 !important;
+  }
+}
+
 @media (max-width: 900px) {
   .container {
     padding: 0 1rem;

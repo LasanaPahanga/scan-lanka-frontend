@@ -42,7 +42,7 @@ export function HomePageView({ home, categoryRows = [] }: { home: HomeView; cate
         <HeroVideoCrossfade />
         <div className="container hero-inner" style={heroInner}>
           <div className="animate-up hero-text-panel" style={heroContent}>
-            <p style={heroEyebrow}>Scan Lanka</p>
+            <p className="hero-eyebrow" style={heroEyebrow}>Scan Lanka</p>
             <h1 style={heroTitle}>
               White Boards, Notice Boards <br />&amp; Teaching Equipment
             </h1>
