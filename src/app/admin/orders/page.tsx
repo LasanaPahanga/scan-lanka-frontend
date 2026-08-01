@@ -10,6 +10,7 @@ import { AdminPageHeader } from '@/components/admin/AdminPageHeader';
 
 const VIEWS = [
   { id: 'pending_payment', label: 'Pending payment' },
+  { id: 'unpaid', label: 'Unpaid card' },
   { id: 'paid', label: 'Paid' },
   { id: 'in_fulfilment', label: 'In fulfilment' },
   { id: 'delivered', label: 'Delivered' },

@@ -30,6 +30,10 @@ import {
   savePlacedOrder,
   loadPlacedOrder,
   clearPlacedOrder,
+  saveCardCheckoutAttempt,
+  loadCardCheckoutAttempt,
+  clearCardCheckoutAttempt,
+  cardCheckoutFingerprint,
   type PlacedOrderSnapshot,
 } from '@/lib/orders';
 import { fetchPaymentMethods, PaymentMethods } from '@/lib/payments';
@@ -270,10 +274,47 @@ export default function CartPage() {
       setCodDueCents(quote?.onlineTotalCents ?? 0); // door total: same math as the online total (FR-PAY-16)
     }
     try {
+      const fingerprint =
+        needsOnlinePayment && method === 'CARD'
+          ? cardCheckoutFingerprint({
+              items,
+              contactName: form.contactName,
+              contactPhone: form.contactPhone,
+              contactEmail: form.contactEmail,
+              street: form.street,
+              city: form.city,
+              province: form.province,
+              postalCode: form.postalCode,
+              deliveryMethod,
+              onlineTotalCents: quote?.onlineTotalCents ?? 0,
+            })
+          : null;
+
+      // Retry dedupe: same cart + contact → reuse the existing PENDING_PAYMENT order for PayHere.
+      if (fingerprint) {
+        const existing = loadCardCheckoutAttempt();
+        if (existing && existing.fingerprint === fingerprint) {
+          const init = await initiatePayment(existing.orderNumber).catch(() => null);
+          if (init && init.params.merchant_id) {
+            submitToPayHere(init, {
+              name: form.contactName,
+              email: form.contactEmail,
+              phone: form.contactPhone,
+              address: form.street,
+              city: form.city,
+            });
+            return;
+          }
+          // Initiate failed (expired/cancelled) — fall through and place a fresh order.
+          clearCardCheckoutAttempt();
+        }
+      }
+
       const result = await placeOrder({
         items,
         deliveryMethod,
         paymentChoice: deliveryMethod === 'COMPANY_LORRY' ? paymentChoice : undefined,
+        paymentMethod: needsOnlinePayment ? method : undefined,
         ship: {
           street: form.street,
           city: form.city,
@@ -315,6 +356,14 @@ export default function CartPage() {
       await clear();
 
       if (needsOnlinePayment && method === 'CARD') {
+        if (fingerprint) {
+          saveCardCheckoutAttempt({
+            orderNumber: result.orderNumber,
+            email: form.contactEmail,
+            fingerprint,
+            onlineTotalCents: result.onlineTotalCents,
+          });
+        }
         const init = await initiatePayment(result.orderNumber).catch(() => null);
         if (init && init.params.merchant_id) {
           submitToPayHere(init, {
@@ -339,6 +388,7 @@ export default function CartPage() {
           setSlipError('Order placed, but the slip upload failed — please upload it again below.');
         }
       }
+      clearCardCheckoutAttempt();
       const snap: PlacedOrderSnapshot = {
         orderNumber: result.orderNumber,
         onlineTotalCents: result.onlineTotalCents,

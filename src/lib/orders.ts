@@ -88,6 +88,76 @@ export function clearPendingOrder() {
 }
 
 /**
+ * In-flight PayHere attempt. Reused on retry when the cart + contact fingerprint still matches,
+ * so clicking Place Order again does not mint a second PENDING_PAYMENT row.
+ */
+export interface CardCheckoutAttempt {
+  orderNumber: string;
+  email: string;
+  fingerprint: string;
+  onlineTotalCents: number;
+}
+
+const CARD_ATTEMPT_KEY = 'sl_card_checkout_attempt';
+
+export function saveCardCheckoutAttempt(attempt: CardCheckoutAttempt) {
+  try {
+    window.sessionStorage.setItem(CARD_ATTEMPT_KEY, JSON.stringify(attempt));
+  } catch {
+    /* ignore */
+  }
+}
+
+export function loadCardCheckoutAttempt(): CardCheckoutAttempt | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(CARD_ATTEMPT_KEY);
+    return raw ? (JSON.parse(raw) as CardCheckoutAttempt) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearCardCheckoutAttempt() {
+  try {
+    window.sessionStorage.removeItem(CARD_ATTEMPT_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Stable fingerprint of cart lines + contact/delivery fields used for PayHere retry dedupe. */
+export function cardCheckoutFingerprint(input: {
+  items: { productId: number; variantId?: number | null; quantity: number }[];
+  contactName: string;
+  contactPhone: string;
+  contactEmail: string;
+  street: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  deliveryMethod: string;
+  onlineTotalCents: number;
+}): string {
+  const lines = [...input.items]
+    .map((i) => `${i.productId}:${i.variantId ?? ''}:${i.quantity}`)
+    .sort()
+    .join('|');
+  return [
+    lines,
+    input.contactName.trim().toLowerCase(),
+    input.contactPhone.trim(),
+    input.contactEmail.trim().toLowerCase(),
+    input.street.trim().toLowerCase(),
+    input.city.trim().toLowerCase(),
+    input.province.trim().toLowerCase(),
+    input.postalCode.trim(),
+    input.deliveryMethod,
+    String(input.onlineTotalCents),
+  ].join('::');
+}
+
+/**
  * Snapshot of the "Order placed" confirmation screen so it survives navigation.
  * Without this, clicking "Track this order" and pressing Back re-mounts the (now
  * empty) cart and the confirmation is lost. Kept in sessionStorage (this tab only).

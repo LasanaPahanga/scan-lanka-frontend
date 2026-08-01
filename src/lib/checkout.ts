@@ -139,6 +139,7 @@ export const placeOrder = (body: {
   items: GuestCartItem[];
   deliveryMethod: DeliveryMethod;
   paymentChoice?: PaymentChoice; // lorry only: ONLINE (default) or COD; courier is always COD
+  paymentMethod?: 'CARD' | 'BANK'; // only when paying online
   ship: Address;
   billing?: Billing | null;
   contactName: string;
