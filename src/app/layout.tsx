@@ -6,6 +6,9 @@ import { CartProvider } from '@/components/CartProvider';
 import { WishlistProvider } from '@/components/WishlistProvider';
 import { GeoProvider } from '@/components/GeoProvider';
 import { StorefrontChrome } from '@/components/StorefrontChrome';
+import { JsonLd } from '@/components/JsonLd';
+import { buildSiteJsonLd } from '@/lib/site-jsonld';
+import { SITE_NAME, SITE_TAGLINE, absoluteUrl, siteBase } from '@/lib/site';
 
 // Modern, professional sans for the whole storefront (body, nav, headings,
 // homepage category titles). Wired into `--font` via tokens.css.
@@ -25,17 +28,48 @@ const sora = Sora({
   display: 'swap',
 });
 
+const siteUrl = siteBase();
+const ogImage = absoluteUrl('/CB-free-01herosection.png') ?? absoluteUrl('/icon-512.png');
+
 export const metadata: Metadata = {
-  title: 'Scan Lanka - Boards & Teaching Equipment',
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    template: `%s | ${SITE_NAME}`,
+  },
   description:
-    'Scan Lanka Trading Co. - manufacturer & supplier of boards and teaching equipment since 1998.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+    "Sri Lanka's leading manufacturer and supplier of boards and teaching equipment since 1998 — whiteboards, notice boards, carrom boards, easels and more.",
+  applicationName: SITE_NAME,
+  keywords: [
+    'Scan Lanka',
+    'whiteboard Sri Lanka',
+    'canvas boards',
+    'carrom board',
+    'teaching equipment',
+    'notice board',
+    'Malabe',
+  ],
+  authors: [{ name: SITE_NAME, url: siteUrl }],
   alternates: { canonical: '/', languages: { 'en-LK': '/', 'x-default': '/' } },
+  manifest: '/site.webmanifest',
   openGraph: {
-    title: 'Scan Lanka',
-    description: 'Boards & teaching equipment - Sri Lanka manufacturer since 1998.',
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description:
+      'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
+    url: siteUrl,
+    siteName: SITE_NAME,
     locale: 'en_LK',
     type: 'website',
+    images: ogImage
+      ? [{ url: ogImage, width: 1200, height: 630, alt: `${SITE_NAME} boards & teaching equipment` }]
+      : undefined,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    description:
+      'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
+    images: ogImage ? [ogImage] : undefined,
   },
   icons: {
     // Google prefers a square PNG ≥48px; list that first (favicon.ico is browser fallback).
@@ -61,8 +95,9 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${montserrat.variable} ${sora.variable}`}>
+    <html lang="en-LK" className={`${montserrat.variable} ${sora.variable}`}>
       <body>
+        <JsonLd data={buildSiteJsonLd()} />
         <AuthProvider>
           <GeoProvider>
             <CartProvider>

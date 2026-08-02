@@ -6,7 +6,7 @@ import { PostalCodeSearch } from '@/components/PostalCodeSearch';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'Delivery locations - Scan Lanka',
+  title: 'Delivery locations',
   description: 'Postal codes and zones we deliver to across Sri Lanka.',
 };
 

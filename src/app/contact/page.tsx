@@ -7,8 +7,9 @@ import { mutedText, pageWrap } from '@/components/formStyles';
 export const revalidate = 300;
 
 export const metadata = {
-  title: 'Contact us - Scan Lanka',
-  description: 'Questions about products, bulk orders or international shipping? Get in touch with Scan Lanka.',
+  title: 'Contact us',
+  description:
+    'Questions about products, bulk orders or delivery? Call 071 781 7447 or email Scan Lanka in Malabe, Sri Lanka.',
 };
 
 export default function ContactPage() {

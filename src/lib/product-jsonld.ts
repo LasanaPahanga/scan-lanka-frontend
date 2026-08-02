@@ -1,18 +1,12 @@
 import type { ProductDetail } from '@/lib/catalog';
 import { mediaUrl } from '@/lib/catalog';
-
-function siteBase(): string {
-  const base = (process.env.NEXT_PUBLIC_SITE_URL ?? 'https://www.canvasboards.lk').trim();
-  return base.replace(/\/$/, '');
-}
+import { absoluteUrl as absoluteSiteUrl, siteBase } from '@/lib/site';
 
 /** Absolute URL for schema.org / Open Graph (Google requires absolute image URLs). */
 export function absoluteUrl(pathOrUrl: string | null | undefined): string | null {
   if (!pathOrUrl) return null;
   const path = mediaUrl(pathOrUrl) ?? pathOrUrl;
-  if (/^https?:\/\//i.test(path)) return path;
-  const base = siteBase();
-  return path.startsWith('/') ? `${base}${path}` : `${base}/${path}`;
+  return absoluteSiteUrl(path);
 }
 
 /**

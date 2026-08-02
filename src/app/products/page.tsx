@@ -8,8 +8,10 @@ import { CategoryTiles } from '@/components/CategoryTiles';
 export const revalidate = 60;
 
 export const metadata = {
-  title: 'Products - Scan Lanka',
-  description: 'Browse boards & teaching equipment from Scan Lanka.',
+  title: 'Products',
+  description:
+    'Browse Scan Lanka whiteboards, magnetic boards, carrom boards, notice boards, easels and teaching equipment — prices in LKR, delivery across Sri Lanka.',
+  alternates: { canonical: '/products' },
 };
 
 type SearchParams = {

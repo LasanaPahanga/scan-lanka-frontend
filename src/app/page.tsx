@@ -44,8 +44,10 @@ function orderHomeRow(category: string, products: ProductChip[]): ProductChip[] 
 }
 
 export const metadata = {
-  title: 'Scan Lanka - Boards & Teaching Equipment',
-  description: 'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
+  title: { absolute: 'Scan Lanka | Boards & Teaching Equipment' },
+  description:
+    "Sri Lanka's leading manufacturer and supplier of boards and teaching equipment since 1998 — whiteboards, notice boards, carrom boards, easels and more.",
+  alternates: { canonical: '/' },
 };
 
 export default async function Home() {
