@@ -22,6 +22,7 @@ export function proxy(request: NextRequest) {
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
+    "media-src 'self'",
     isLocalDev ? "connect-src 'self'" : `connect-src 'self' ${apiBase}`,
     "frame-ancestors 'none'",
     "base-uri 'none'",

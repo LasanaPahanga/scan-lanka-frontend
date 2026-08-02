@@ -32,11 +32,17 @@ export function IntroSplash() {
     if (!video) return;
 
     let finished = false;
+    let retryTimer: number | undefined;
 
     const finish = () => {
       if (finished) return;
       finished = true;
-      video.pause();
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+      try {
+        video.pause();
+      } catch {
+        /* ignore */
+      }
       setPhase('fading');
       window.setTimeout(() => {
         sessionStorage.setItem(SPLASH_KEY, '1');
@@ -45,17 +51,47 @@ export function IntroSplash() {
       }, FADE_MS);
     };
 
+    const tryPlay = () => {
+      if (finished) return;
+      video.muted = true;
+      const playPromise = video.play();
+      if (playPromise) {
+        void playPromise.catch(() => {
+          // Do not dismiss the splash on autoplay failure — retry when more data is ready.
+          if (!finished) {
+            retryTimer = window.setTimeout(tryPlay, 250);
+          }
+        });
+      }
+    };
+
     const onTimeUpdate = () => {
       if (video.currentTime >= SPLASH_SECONDS) finish();
     };
+    const onEnded = () => finish();
+    const onReady = () => tryPlay();
 
+    video.muted = true;
     video.addEventListener('timeupdate', onTimeUpdate);
-    const fallback = window.setTimeout(finish, (SPLASH_SECONDS + 0.75) * 1000);
+    video.addEventListener('ended', onEnded);
+    video.addEventListener('canplay', onReady);
+    video.addEventListener('loadeddata', onReady);
 
-    void video.play().catch(() => finish());
+    if (video.readyState >= 2) {
+      tryPlay();
+    } else {
+      video.preload = 'auto';
+      tryPlay();
+    }
+
+    const fallback = window.setTimeout(finish, (SPLASH_SECONDS + 1.25) * 1000);
 
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
+      video.removeEventListener('ended', onEnded);
+      video.removeEventListener('canplay', onReady);
+      video.removeEventListener('loadeddata', onReady);
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
       window.clearTimeout(fallback);
     };
   }, [phase]);
@@ -74,6 +110,7 @@ export function IntroSplash() {
         src="/intro_splash.mp4"
         muted
         playsInline
+        autoPlay
         preload="auto"
       />
     </div>
