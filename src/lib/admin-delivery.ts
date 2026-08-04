@@ -63,6 +63,20 @@ export const setDeliveryMethod = (method: DeliveryMethod, enabled: boolean) =>
     body: JSON.stringify({ enabled }),
   });
 
+export interface PostalZonePage {
+  items: PostalZoneView[];
+  total: number; // matches across all pages, not just this one
+  page: number;
+  size: number;
+}
+
+/** Blank `q` lists every mapped code; otherwise matches code prefix or district/province substring. */
+export const listPostalZones = (q: string, page: number, size: number) => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) });
+  if (q.trim()) params.set('q', q.trim());
+  return api<PostalZonePage>(`/api/admin/postal-zones?${params.toString()}`);
+};
+
 export const getPostalZone = (postalCode: string) =>
   api<PostalZoneView>(`/api/admin/postal-zones/${encodeURIComponent(postalCode)}`);
 

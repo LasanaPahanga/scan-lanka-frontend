@@ -43,6 +43,7 @@ export interface AdminVariant {
 
 export interface DeliveryAttrs {
   boardSizeTier: 'UNDER_2FT' | 'BETWEEN_2FT_6FT' | null; // null = not couriable (lorry only)
+  weightKg: number | null; // drives the Domex weight rate; null = billed as 1 kg
   lorryColomboCents: number | null;
   lorrySuburbCents: number | null;
   lorryOuterCents: number | null;

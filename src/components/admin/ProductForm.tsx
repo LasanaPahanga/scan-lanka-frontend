@@ -22,6 +22,7 @@ import { ProductDeliveryFields } from './ProductDeliveryFields';
 
 const emptyDelivery = (): DeliveryAttrs => ({
   boardSizeTier: null,
+  weightKg: null,
   lorryColomboCents: null,
   lorrySuburbCents: null,
   lorryOuterCents: null,
@@ -528,8 +529,8 @@ function VariantManager({
     <div style={builderBox}>
       <strong>Sizes &amp; shipping</strong>
       <p style={mutedText}>
-        Add a size that was missed, or delete a wrong one. Set the board size tier and lorry charges per size below.
-        A size that has already been ordered can&apos;t be deleted.
+        Add a size that was missed, or delete a wrong one. Set the weight, board size tier and lorry
+        charges per size below. A size that has already been ordered can&apos;t be deleted.
       </p>
       {msg && <p style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>{msg}</p>}
       {error && <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>{error}</p>}
@@ -592,7 +593,8 @@ function VariantManager({
           </button>
         </div>
         <p style={{ ...mutedText, marginTop: '0.4rem' }}>
-          New sizes start with no lorry charges — set their shipping in the list above after adding.
+          New sizes start with no weight and no lorry charges — set their shipping in the list above
+          after adding, or the courier will bill the size as 1 kg.
         </p>
       </div>
     </div>

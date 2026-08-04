@@ -21,6 +21,12 @@ function rupeesToCents(v: string): number | null {
   return Number.isFinite(n) ? Math.round(n * 100) : null;
 }
 
+function parseWeight(v: string): number | null {
+  if (v.trim() === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 1000) / 1000 : null;
+}
+
 /**
  * Lorry-pricing overview (08/17, owner 2026-07-07): one row per size across the WHOLE catalog, so the
  * admin can see and edit every product's Colombo/Suburb/Outer lorry cell in one place instead of
@@ -90,8 +96,10 @@ export default function LorryPricingPage() {
       </p>
       <h1>Lorry pricing overview</h1>
       <p style={mutedText}>
-        Every size&apos;s in-house lorry cell in one table — price, minimum bill, and on/off per zone.
-        Changes save per row; nothing is submitted until you press Save on that row.
+        Every size&apos;s courier weight and in-house lorry cell in one table — weight, price, minimum
+        bill, and on/off per zone. A red weight box means the courier is on for that size but no weight
+        is recorded, so Domex would bill it as 1 kg. Changes save per row; nothing is submitted until
+        you press Save on that row.
       </p>
       {msg && <p style={{ color: 'var(--primary)' }}>{msg}</p>}
 
@@ -108,6 +116,7 @@ export default function LorryPricingPage() {
             <tr style={{ background: 'var(--primary-light)' }}>
               <th style={th}>Product</th>
               <th style={th}>Size</th>
+              <th style={th}>Weight (kg)</th>
               <th style={th} colSpan={3}>
                 Colombo
               </th>
@@ -122,6 +131,7 @@ export default function LorryPricingPage() {
               <th style={th}></th>
             </tr>
             <tr style={{ background: 'var(--primary-light)', fontSize: '0.75rem', color: 'var(--muted)' }}>
+              <th style={th} />
               <th style={th} />
               <th style={th} />
               <th style={th}>On</th>
@@ -147,6 +157,26 @@ export default function LorryPricingPage() {
                 <tr key={key} style={{ background: dirty ? 'var(--primary-light)' : undefined }}>
                   <td style={td}>{r.productName}</td>
                   <td style={td}>{r.sizeLabel ?? '—'}</td>
+                  <td style={td}>
+                    <input
+                      style={{
+                        ...cellInput,
+                        // A couriable item with no weight is billed as 1 kg — flag it here, where
+                        // the whole catalog is visible, rather than only on the product form.
+                        borderColor: d.courierEnabled && d.weightKg == null ? 'var(--danger)' : undefined,
+                      }}
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      title={
+                        d.courierEnabled && d.weightKg == null
+                          ? 'Courier is on but no weight is set — Domex will bill this as 1 kg'
+                          : undefined
+                      }
+                      value={d.weightKg ?? ''}
+                      onChange={(e) => patch(r, { weightKg: parseWeight(e.target.value) })}
+                    />
+                  </td>
 
                   {(
                     [

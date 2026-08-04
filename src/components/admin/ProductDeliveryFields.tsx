@@ -19,6 +19,13 @@ function rupeesToCents(v: string): number | null {
   return Number.isFinite(n) ? Math.round(n * 100) : null;
 }
 
+/** Blank ⇒ null (no weight recorded, courier falls back to 1 kg). Kept to 3 dp like the column. */
+function parseWeight(v: string): number | null {
+  if (v.trim() === '') return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 ? Math.round(n * 1000) / 1000 : null;
+}
+
 type ZoneKey = 'Colombo' | 'Suburb' | 'Outer';
 
 const ZONES: { key: ZoneKey; label: string }[] = [
@@ -116,6 +123,23 @@ export function ProductDeliveryFields({ value, onChange, compact }: Props) {
           />
           Courier offered for this item (off = in-house lorry only)
         </label>
+        <label style={{ display: 'grid', gap: '0.25rem', fontSize: '0.85rem' }}>
+          Weight (kg)
+          <input
+            style={fieldInput}
+            type="number"
+            step="0.1"
+            min="0"
+            placeholder="e.g. 2.5"
+            value={value.weightKg ?? ''}
+            onChange={(e) => onChange({ ...value, weightKg: parseWeight(e.target.value) })}
+          />
+        </label>
+        {value.courierEnabled && value.weightKg == null && (
+          <p style={{ color: 'var(--danger)', margin: 0, fontSize: '0.8rem' }}>
+            No weight set — the courier will bill this as 1 kg, which undercharges anything heavier.
+          </p>
+        )}
         <select
           style={fieldInput}
           value={value.boardSizeTier ?? ''}
