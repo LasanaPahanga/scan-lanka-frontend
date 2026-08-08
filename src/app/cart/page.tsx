@@ -714,6 +714,25 @@ export default function CartPage() {
                   onSelect={() => setDeliveryMethod(opt.method)}
                 />
               ))}
+              {deliveryOptions.postalServiceable &&
+                deliveryOptions.options.length > 0 &&
+                deliveryOptions.options.every((o) => !o.available) && (
+                  <p style={{ color: 'var(--danger)', marginTop: '0.75rem' }}>
+                    No online delivery option is available for this cart and postal code. Check the
+                    postal code matches the city (e.g. Malabe is usually 10115), remove oversized
+                    items, or{' '}
+                    {whatsappHref ? (
+                      <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
+                        arrange on WhatsApp
+                      </a>
+                    ) : (
+                      <Link href="/contact" style={{ color: 'var(--primary)' }}>
+                        contact us
+                      </Link>
+                    )}
+                    .
+                  </p>
+                )}
               <p style={{ ...mutedNote, marginTop: '0.5rem' }}>
                 Questions before ordering?{' '}
                 {whatsappHref ? (

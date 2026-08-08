@@ -158,21 +158,22 @@ export function railLabel(method: DeliveryMethod): string {
 const rupees = (cents: number) => `Rs ${(cents / 100).toLocaleString('en-LK')}`;
 
 export function railReason(code: string | null | undefined, option?: DeliveryOption): string {
+  const blockers = option?.blockingItems?.join(', ') ?? 'some items';
   switch (code) {
     case 'MIN_BILL_NOT_MET':
       return option && option.addMoreCents > 0
         ? `Add ${rupees(option.addMoreCents)} more to unlock company lorry delivery, or use the courier.`
         : 'Order is below the minimum bill for company lorry. Add items or use the courier.';
     case 'UNAVAILABLE_ITEMS':
-      return `Company lorry is not available to your area for: ${
-        option?.blockingItems.join(', ') ?? 'some items'
-      }. Use the courier instead.`;
+      // Same reason code is used for either rail when per-item switches turn it off.
+      if (option?.method === 'COURIER') {
+        return `Courier is not available for: ${blockers}. Use company lorry, or contact us.`;
+      }
+      return `Company lorry is not available to your area for: ${blockers}. Use the courier instead.`;
     case 'WHATSAPP_OUTER':
       return 'Lorry delivery to your area for these items is arranged separately - please contact us.';
     case 'OVERSIZE_OUTER':
-      return `Too large for courier to your area: ${
-        option?.blockingItems.join(', ') ?? 'some items'
-      }. Remove them, use the company lorry, or contact us.`;
+      return `Too large for courier to your area: ${blockers}. Remove them, use the company lorry, or contact us.`;
     case 'MISSING_SIZE_TIER':
       return 'One or more items cannot be sent by courier (lorry delivery only).';
     case 'NOT_SERVICEABLE_POSTAL':
