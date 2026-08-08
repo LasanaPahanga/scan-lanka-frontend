@@ -22,6 +22,7 @@ import {
   quoteCheckout,
   railLabel,
   railReason,
+  checkoutBlockedReason,
   submitToPayHere,
   uploadBankSlip,
 } from '@/lib/checkout';
@@ -539,6 +540,17 @@ export default function CartPage() {
     (!needsOnlinePayment || (methods && (methods.payhere || methods.bankTransfer))) &&
     (!bankSlipRequired || !!slipFile);
 
+  const blockedReason = !canPlace
+    ? checkoutBlockedReason({
+        postalCode: form.postalCode,
+        deliveryMethod,
+        options: deliveryOptions,
+        quote,
+        bankSlipRequired,
+        hasSlipFile: !!slipFile,
+      })
+    : null;
+
   return (
     <main className="cart-page-main" style={wrap}>
       <h1 className="page-title">Your cart</h1>
@@ -563,8 +575,8 @@ export default function CartPage() {
               <span className="cart-qty-value" aria-live="polite">
                 {line.quantity}
               </span>
-              <button
-                type="button"
+                  <button
+                    type="button"
                 aria-label="Increase quantity"
                 onClick={() => void setQuantity(line, line.quantity + 1)}
               >
@@ -575,8 +587,8 @@ export default function CartPage() {
               {line.lineTotalCents != null ? formatLkr(line.lineTotalCents) : '-'}
             </div>
             <button type="button" className="cart-remove" onClick={() => void remove(line)}>
-              Remove
-            </button>
+                    Remove
+                  </button>
           </li>
         ))}
       </ul>
@@ -700,11 +712,16 @@ export default function CartPage() {
             <section style={card}>
               <h3 style={ch3}>Delivery method</h3>
               {!deliveryOptions.postalServiceable && (
-                <p style={{ color: 'var(--danger)' }}>
-                  Sorry, we don&apos;t deliver to that postal code.{' '}
+                <div style={errorBox}>
+                  <strong style={{ display: 'block', marginBottom: '0.35rem' }}>
+                    Postal code not recognised
+                  </strong>
+                  We don&apos;t deliver to postal code{' '}
+                  <strong>{form.postalCode.trim()}</strong>. Please check that the code matches
+                  your city (for example, Malabe is usually <strong>10115</strong> — not 70100).{' '}
                   <Link href="/delivery">See delivery areas</Link> or{' '}
                   <Link href="/contact">contact us</Link>.
-                </p>
+                </div>
               )}
               {deliveryOptions.options.map((opt) => (
                 <RailCard
@@ -717,21 +734,38 @@ export default function CartPage() {
               {deliveryOptions.postalServiceable &&
                 deliveryOptions.options.length > 0 &&
                 deliveryOptions.options.every((o) => !o.available) && (
-                  <p style={{ color: 'var(--danger)', marginTop: '0.75rem' }}>
-                    No online delivery option is available for this cart and postal code. Check the
-                    postal code matches the city (e.g. Malabe is usually 10115), remove oversized
-                    items, or{' '}
-                    {whatsappHref ? (
-                      <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
-                        arrange on WhatsApp
-                      </a>
-                    ) : (
-                      <Link href="/contact" style={{ color: 'var(--primary)' }}>
-                        contact us
-                      </Link>
-                    )}
-                    .
-                  </p>
+                  <div style={errorBox}>
+                    <strong style={{ display: 'block', marginBottom: '0.35rem' }}>
+                      Cannot place this order online
+                    </strong>
+                    <p style={{ margin: '0 0 0.5rem' }}>
+                      Neither company lorry nor courier is available for this cart with postal
+                      code <strong>{form.postalCode.trim()}</strong>.
+                    </p>
+                    <ul style={{ margin: '0 0 0.75rem', paddingLeft: '1.2rem' }}>
+                      {deliveryOptions.options.map((o) =>
+                        o.reason ? (
+                          <li key={o.method} style={{ marginBottom: '0.4rem' }}>
+                            <strong>{railLabel(o.method)}:</strong> {railReason(o.reason, o)}
+                          </li>
+                        ) : null,
+                      )}
+                    </ul>
+                    <p style={{ margin: 0 }}>
+                      What you can do: confirm the postal code matches your city, remove items that
+                      block delivery, or{' '}
+                      {whatsappHref ? (
+                        <a href={whatsappHref} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)' }}>
+                          arrange delivery on WhatsApp
+                        </a>
+                      ) : (
+                        <Link href="/contact" style={{ color: 'var(--primary)' }}>
+                          contact us
+                        </Link>
+                      )}
+                      .
+                    </p>
+                  </div>
                 )}
               <p style={{ ...mutedNote, marginTop: '0.5rem' }}>
                 Questions before ordering?{' '}
@@ -813,7 +847,7 @@ export default function CartPage() {
                     onChange={(e) => setSlipFile(e.target.files?.[0] ?? null)}
                   />
                   {slipError && <p style={{ color: 'var(--danger)', margin: '0.4rem 0 0' }}>{slipError}</p>}
-                </div>
+      </div>
               )}
             </section>
           )}
@@ -857,13 +891,32 @@ export default function CartPage() {
                 )}
               </>
             ) : quote && !quote.available ? (
-              <p style={{ color: 'var(--danger)' }}>{railReason(quote.reason)}</p>
+              <div style={errorBox}>
+                <strong style={{ display: 'block', marginBottom: '0.35rem' }}>Delivery not available</strong>
+                {railReason(quote.reason)}
+              </div>
             ) : (
-              <p style={{ color: 'var(--muted)' }}>Enter your postal code and choose a delivery method…</p>
+              <p style={{ color: 'var(--muted)' }}>
+                {form.postalCode.trim()
+                  ? 'Select an available delivery method to see totals.'
+                  : 'Enter your postal code and choose a delivery method…'}
+              </p>
             )}
           </section>
 
-          {error && <p style={{ color: 'var(--danger)' }}>{error}</p>}
+          {error && (
+            <div style={errorBox} role="alert">
+              {error}
+            </div>
+          )}
+          {!canPlace && blockedReason && (
+            <div style={errorBox} role="status">
+              <strong style={{ display: 'block', marginBottom: '0.35rem' }}>
+                Why you can&apos;t place the order yet
+              </strong>
+              <span style={{ whiteSpace: 'pre-line' }}>{blockedReason}</span>
+            </div>
+          )}
           <button type="submit" disabled={busy || !canPlace} style={{ ...button, opacity: busy || !canPlace ? 0.5 : 1 }}>
             {busy
               ? 'Placing order…'
@@ -918,7 +971,8 @@ function RailCard({
         </span>
       )}
       {disabled && opt.reason && (
-        <div style={{ color: 'var(--danger)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+        <div style={{ color: 'var(--danger)', fontSize: '0.9rem', marginTop: '0.4rem', lineHeight: 1.45 }}>
+          <strong>Not available — </strong>
           {railReason(opt.reason, opt)}
         </div>
       )}
@@ -965,6 +1019,16 @@ const button = {
   cursor: 'pointer',
 } as const;
 const mutedNote = { color: 'var(--muted)', fontSize: '0.85rem', margin: 0 } as const;
+const errorBox = {
+  background: 'color-mix(in srgb, var(--danger) 8%, #fff)',
+  border: '1px solid color-mix(in srgb, var(--danger) 35%, var(--border))',
+  borderRadius: 'var(--radius-sm)',
+  color: 'var(--danger)',
+  padding: '0.85rem 1rem',
+  fontSize: '0.92rem',
+  lineHeight: 1.5,
+  marginTop: '0.35rem',
+} as const;
 const savedHint = {
   color: 'var(--muted)',
   fontSize: '0.85rem',

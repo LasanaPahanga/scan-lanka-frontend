@@ -152,7 +152,7 @@ export const placeOrder = (body: {
   });
 
 export function railLabel(method: DeliveryMethod): string {
-  return method === 'COMPANY_LORRY' ? 'Company lorry' : 'Courier (Domex)';
+  return method === 'COMPANY_LORRY' ? 'Company lorry (in-house delivery)' : 'Courier (Domex)';
 }
 
 const rupees = (cents: number) => `Rs ${(cents / 100).toLocaleString('en-LK')}`;
@@ -162,29 +162,75 @@ export function railReason(code: string | null | undefined, option?: DeliveryOpt
   switch (code) {
     case 'MIN_BILL_NOT_MET':
       return option && option.addMoreCents > 0
-        ? `Add ${rupees(option.addMoreCents)} more to unlock company lorry delivery, or use the courier.`
-        : 'Order is below the minimum bill for company lorry. Add items or use the courier.';
+        ? `Your order is below the minimum for company lorry. Add ${rupees(option.addMoreCents)} more, or choose courier.`
+        : 'Your order is below the minimum for company lorry. Add more items, or choose courier.';
     case 'UNAVAILABLE_ITEMS':
-      // Same reason code is used for either rail when per-item switches turn it off.
       if (option?.method === 'COURIER') {
-        return `Courier is not available for: ${blockers}. Use company lorry, or contact us.`;
+        return `Courier cannot deliver: ${blockers}. These items need company lorry (or contact us).`;
       }
-      return `Company lorry is not available to your area for: ${blockers}. Use the courier instead.`;
+      return `Company lorry cannot deliver to this area for: ${blockers}. Try courier, or contact us.`;
     case 'WHATSAPP_OUTER':
-      return 'Lorry delivery to your area for these items is arranged separately - please contact us.';
+      return 'These large items cannot be ordered online to this outer area. Please contact us on WhatsApp to arrange company lorry delivery.';
     case 'OVERSIZE_OUTER':
-      return `Too large for courier to your area: ${blockers}. Remove them, use the company lorry, or contact us.`;
+      return `These items are too large for courier to this area: ${blockers}. Use company lorry if available, or contact us.`;
     case 'MISSING_SIZE_TIER':
-      return 'One or more items cannot be sent by courier (lorry delivery only).';
+      return 'One or more items can only go by company lorry (not courier).';
     case 'NOT_SERVICEABLE_POSTAL':
-      return 'We do not deliver to this postal code.';
+      return 'We do not deliver to this postal code. Check the code, or contact us.';
     case 'METHOD_DISABLED':
-      return 'This delivery option is currently unavailable.';
+      return 'This delivery option is temporarily unavailable.';
     case 'WHATSAPP_ONLY':
-      return 'These items are sold via WhatsApp or quote only.';
+      return 'These items must be ordered via WhatsApp or a quote — online checkout is not available.';
     case 'COURIER_IS_COD_ONLY':
-      return 'Courier orders are paid on delivery - online payment is not available.';
+      return 'Courier orders are paid on delivery — online card payment is not used for courier.';
     default:
-      return code ?? 'Unavailable';
+      return code ?? 'This delivery option is unavailable.';
   }
+}
+
+/** Short English explanation of why Place order is still locked. */
+export function checkoutBlockedReason(input: {
+  postalCode: string;
+  deliveryMethod: DeliveryMethod | null;
+  options: DeliveryOptionsResult | null;
+  quote: QuoteResult | null;
+  bankSlipRequired?: boolean;
+  hasSlipFile?: boolean;
+}): string | null {
+  const postal = input.postalCode.trim();
+  if (!postal) {
+    return 'Enter a valid postal code to see delivery options.';
+  }
+  if (!input.options) {
+    return 'Checking delivery options for this postal code…';
+  }
+  if (input.options.whatsappOnly) {
+    return 'Online checkout is not available for items in this cart. Please order on WhatsApp or request a quote.';
+  }
+  if (!input.options.postalServiceable) {
+    return `Postal code ${postal} is not in our delivery list. Double-check the code matches your city (for example Malabe is usually 10115, not 70100).`;
+  }
+  const available = input.options.options.filter((o) => o.available);
+  if (available.length === 0) {
+    const parts = input.options.options
+      .filter((o) => o.reason)
+      .map((o) => `${railLabel(o.method)}: ${railReason(o.reason, o)}`);
+    if (parts.length) {
+      return `You cannot place this order online yet.\n\n${parts.join('\n\n')}\n\nTip: make sure the postal code matches the city. Outer-area codes block large boards from online company-lorry checkout — contact us on WhatsApp to arrange delivery.`;
+    }
+    return 'No delivery method is available for this cart and postal code. Check the postal code, or contact us on WhatsApp.';
+  }
+  if (!input.deliveryMethod) {
+    return 'Select a delivery method above to continue.';
+  }
+  if (input.quote && !input.quote.available) {
+    return railReason(input.quote.reason);
+  }
+  if (!input.quote) {
+    return 'Calculating delivery total…';
+  }
+  if (input.bankSlipRequired && !input.hasSlipFile) {
+    return 'Attach your bank transfer receipt (PDF or image) before placing the order.';
+  }
+  return null;
 }
