@@ -8,6 +8,7 @@ import { GuestCartItem } from '@/lib/cart';
 import { listAddresses, SavedAddress } from '@/lib/addresses';
 import { fetchPostalCodes, PostalCode } from '@/lib/delivery';
 import { fetchWhatsApp } from '@/lib/geo';
+import { HOTLINE } from '@/lib/contactInfo';
 import { formatLkr } from '@/lib/money';
 import {
   DeliveryMethod,
@@ -69,6 +70,7 @@ export default function CartPage() {
   const [slipUploaded, setSlipUploaded] = useState(false);
   const [slipError, setSlipError] = useState<string | null>(null);
   const [whatsappHref, setWhatsappHref] = useState<string | null>(null);
+  const [whatsappNumber, setWhatsappNumber] = useState(HOTLINE);
   const [form, setForm] = useState({
     contactName: '',
     contactPhone: '',
@@ -144,10 +146,14 @@ export default function CartPage() {
     fetchPostalCodes().then(setPostalCodes).catch(() => setPostalCodes([]));
     fetchWhatsApp(geo.country)
       .then((w) => {
-        const num = w.number.replace(/\D/g, '');
-        setWhatsappHref(`https://wa.me/94${num.replace(/^0/, '')}?text=${encodeURIComponent(w.prefill)}`);
+        const digits = w.number.replace(/\D/g, '');
+        setWhatsappNumber(w.number.trim() || HOTLINE);
+        setWhatsappHref(`https://wa.me/94${digits.replace(/^0/, '')}?text=${encodeURIComponent(w.prefill)}`);
       })
-      .catch(() => setWhatsappHref(null));
+      .catch(() => {
+        setWhatsappHref(null);
+        setWhatsappNumber(HOTLINE);
+      });
   }, [geo.country]);
 
   useEffect(() => {
@@ -551,6 +557,13 @@ export default function CartPage() {
       })
     : null;
 
+  const isOuterRegion = deliveryOptions?.lorryZone === 'OUTER';
+  const outerWhatsappHref =
+    whatsappHref ??
+    `https://wa.me/94717817447?text=${encodeURIComponent(
+      `Hi Scan Lanka, I want to order for outer area postal code ${form.postalCode.trim()}.`,
+    )}`;
+
   return (
     <main className="cart-page-main" style={wrap}>
       <h1 className="page-title">Your cart</h1>
@@ -686,6 +699,28 @@ export default function CartPage() {
               ))}
             </datalist>
           </section>
+
+          {isOuterRegion && (
+            <section style={outerBox}>
+              <h3 style={{ ...ch3, color: '#0b6b3a', marginBottom: '0.5rem' }}>Outer region</h3>
+              <p style={{ margin: '0 0 0.75rem', color: '#145c36', lineHeight: 1.5 }}>
+                This postal code is in an <strong>outer region</strong>. Your items are available,
+                but online checkout may not complete delivery for this area. To order, please
+                contact us on WhatsApp and we will arrange delivery for you.
+              </p>
+              <p style={{ margin: '0 0 1rem', color: '#145c36', fontSize: '1.05rem' }}>
+                WhatsApp: <strong>{whatsappNumber}</strong>
+              </p>
+              <a
+                href={outerWhatsappHref}
+                target="_blank"
+                rel="noreferrer"
+                style={outerButton}
+              >
+                Contact now on WhatsApp
+              </a>
+            </section>
+          )}
 
           {deliveryOptions?.whatsappOnly && (
             <section style={{ ...card, borderColor: 'var(--primary)' }}>
@@ -1028,6 +1063,23 @@ const errorBox = {
   fontSize: '0.92rem',
   lineHeight: 1.5,
   marginTop: '0.35rem',
+} as const;
+const outerBox = {
+  background: '#e8f7ee',
+  border: '1px solid #8fd4a8',
+  borderRadius: 'var(--radius)',
+  boxShadow: 'var(--shadow)',
+  padding: '1.25rem 1.5rem',
+} as const;
+const outerButton = {
+  display: 'inline-block',
+  padding: '0.75rem 1.15rem',
+  background: '#128c7e',
+  color: '#fff',
+  borderRadius: 'var(--radius)',
+  fontWeight: 700,
+  fontSize: '0.95rem',
+  textDecoration: 'none',
 } as const;
 const savedHint = {
   color: 'var(--muted)',

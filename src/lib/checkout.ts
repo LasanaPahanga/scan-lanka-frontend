@@ -19,6 +19,8 @@ export interface DeliveryOption {
 export interface DeliveryOptionsResult {
   whatsappOnly: boolean;
   postalServiceable: boolean;
+  /** COLOMBO | SUBURB | OUTER when the postal code is mapped, else null/omitted. */
+  lorryZone?: string | null;
   options: DeliveryOption[];
 }
 
