@@ -42,8 +42,7 @@ import { fetchPaymentMethods, PaymentMethods } from '@/lib/payments';
 import { useGeo } from '@/components/GeoProvider';
 import { t } from '@/lib/i18n';
 import { loadGuestCheckoutDetails, saveGuestCheckoutDetails, clearGuestCheckoutDetails } from '@/lib/guestCheckoutStorage';
-import { splitBankTransfer } from '@/lib/bankTransferAccounts';
-import { BankTransferDetails, BankTransferDetailsFromAmounts } from '@/components/BankTransferDetails';
+import { BankTransferDetails } from '@/components/BankTransferDetails';
 
 type PaymentMethod = 'CARD' | 'BANK';
 
@@ -113,13 +112,6 @@ export default function CartPage() {
   const codEligible = deliveryMethod === 'COMPANY_LORRY' && (methods?.deliveryCod ?? true);
   const needsOnlinePayment =
     deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'ONLINE' && (quote?.onlineTotalCents ?? 0) > 0;
-
-  const bankSplit = useMemo(() => {
-    const bankLines = (priced?.lines ?? [])
-      .filter((l) => l.status === 'OK' || l.status === 'CAPPED')
-      .map((l) => ({ name: l.name ?? '', lineTotalCents: l.lineTotalCents }));
-    return splitBankTransfer(bankLines, quote);
-  }, [priced, quote]);
 
   // Restore the "Order placed" confirmation when returning to /cart (e.g. Back from
   // order lookup). Only when the cart is empty — a fresh shopping trip takes over.
@@ -369,7 +361,6 @@ export default function CartPage() {
           billing: showBilling ? billing : null,
         });
       }
-      const orderBankSplit = bankSplit;
       await clear();
 
       if (needsOnlinePayment && method === 'CARD') {
@@ -415,16 +406,6 @@ export default function CartPage() {
         needsOnlinePayment,
         codDueCents: deliveryMethod === 'COMPANY_LORRY' && paymentChoice === 'COD' ? (quote?.onlineTotalCents ?? 0) : 0,
         slipUploaded: method === 'BANK' ? slipUploadedNow : false,
-        bankTransfer:
-          method === 'BANK'
-            ? {
-                sportsCents: orderBankSplit.sports.transferCents,
-                tradingCents: orderBankSplit.trading.transferCents,
-                hasSports: orderBankSplit.hasSports,
-                hasTrading: orderBankSplit.hasTrading,
-                mixed: orderBankSplit.mixed,
-              }
-            : undefined,
       };
       setPlacedSnap(snap);
       savePlacedOrder(snap);
@@ -509,14 +490,7 @@ export default function CartPage() {
               Order <strong>{placed.orderNumber}</strong> — transfer to the account(s) below, then upload your
               slip (PDF or image).
             </p>
-            {c.bankTransfer ? (
-              <BankTransferDetailsFromAmounts
-                sportsCents={c.bankTransfer.sportsCents}
-                tradingCents={c.bankTransfer.tradingCents}
-              />
-            ) : (
-              <BankTransferDetails split={bankSplit} showItemLists={false} />
-            )}
+            <BankTransferDetails totalCents={placed.onlineTotalCents} />
             <input
               type="file"
               accept="image/*,application/pdf"
@@ -900,7 +874,7 @@ export default function CartPage() {
               )}
               {method === 'BANK' && (
                 <div style={{ marginTop: '0.75rem' }}>
-                  <BankTransferDetails split={bankSplit} />
+                  <BankTransferDetails totalCents={quote?.onlineTotalCents} />
                   <p style={{ color: 'var(--muted)', margin: '0.85rem 0 0.4rem', fontSize: '0.9rem' }}>
                     Attach your bank transfer receipt (PDF or image) — required to place the order.
                   </p>

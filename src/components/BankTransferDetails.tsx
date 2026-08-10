@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { formatLkr } from '@/lib/money';
-import {
-  accountForKey,
-  BankAccount,
-  BankTransferSplit,
-  SPORTS_BANK,
-  TRADING_BANK,
-} from '@/lib/bankTransferAccounts';
+import { BankAccount, SPORTS_BANK, TRADING_BANK } from '@/lib/bankTransferAccounts';
 
 function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
@@ -30,17 +24,7 @@ function CopyButton({ value, label }: { value: string; label: string }) {
   );
 }
 
-function AccountCard({
-  account,
-  transferCents,
-  lines,
-  showItems,
-}: {
-  account: BankAccount;
-  transferCents: number;
-  lines: { name: string; lineTotalCents: number }[];
-  showItems: boolean;
-}) {
+function AccountCard({ account }: { account: BankAccount }) {
   const rows: { label: string; value: string; copy?: string }[] = [
     { label: 'Company name', value: account.companyName },
     { label: 'Bank name / code', value: `${account.bankName} (${account.bankCode})` },
@@ -58,10 +42,6 @@ function AccountCard({
           <h4 style={accountTitle}>{account.companyName}</h4>
           <p style={accountHint}>{account.itemHint}</p>
         </div>
-        <div style={amountBox}>
-          <span style={amountLabel}>Transfer amount</span>
-          <strong style={amountValue}>{formatLkr(transferCents)}</strong>
-        </div>
       </header>
 
       <table style={detailTable}>
@@ -77,104 +57,55 @@ function AccountCard({
           ))}
         </tbody>
       </table>
-
-      {showItems && lines.length > 0 && (
-        <div style={itemsBox}>
-          <p style={itemsHeading}>Items in your cart for this account</p>
-          <ul style={itemsList}>
-            {lines.map((line) => (
-              <li key={line.name}>
-                {line.name} — {formatLkr(line.lineTotalCents)}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
     </article>
   );
 }
 
+/**
+ * Always shows both company bank accounts. Customers choose based on what they ordered —
+ * the site does not auto-detect sports vs other items.
+ */
 export function BankTransferDetails({
-  split,
-  showItemLists = true,
+  totalCents,
   compactIntro = false,
 }: {
-  split: BankTransferSplit;
-  showItemLists?: boolean;
+  /** Full amount to transfer (shown once above both accounts). */
+  totalCents?: number;
   compactIntro?: boolean;
 }) {
-  if (!split.hasSports && !split.hasTrading) return null;
-
   return (
     <div style={wrap}>
       {!compactIntro && (
         <p style={intro}>
-          {split.mixed ? (
+          Transfer your payment to the <strong>correct account</strong> for the items you ordered. Both
+          accounts are listed below — use <strong>Scan Lanka Sports</strong> for sports &amp; game boards, and{' '}
+          <strong>Scan Lanka Trading Co.</strong> for all other products.
+          {typeof totalCents === 'number' && totalCents > 0 && (
             <>
-              Your order includes <strong>sports items</strong> and <strong>other products</strong>. Transfer to{' '}
-              <strong>both accounts below</strong> using the amounts shown — delivery and tax are split proportionally.
-            </>
-          ) : split.hasSports ? (
-            <>
-              Your cart contains sports &amp; game-board items. Transfer the full amount to the{' '}
-              <strong>Scan Lanka Sports</strong> account below.
-            </>
-          ) : (
-            <>
-              Transfer the full amount to the <strong>Scan Lanka Trading Co.</strong> account below.
+              {' '}
+              Total to transfer: <strong>{formatLkr(totalCents)}</strong>.
             </>
           )}
         </p>
       )}
 
-      {split.hasSports && (
-        <AccountCard
-          account={SPORTS_BANK}
-          transferCents={split.sports.transferCents}
-          lines={split.sports.lines}
-          showItems={showItemLists}
-        />
-      )}
-
-      {split.hasTrading && (
-        <AccountCard
-          account={TRADING_BANK}
-          transferCents={split.trading.transferCents}
-          lines={split.trading.lines}
-          showItems={showItemLists}
-        />
-      )}
-
-      {split.mixed && (
-        <p style={mixedNote}>
-          Total to transfer:{' '}
-          <strong>{formatLkr(split.sports.transferCents + split.trading.transferCents)}</strong> (split across both
-          accounts). Use your order number as the payment reference when possible.
+      {compactIntro && typeof totalCents === 'number' && totalCents > 0 && (
+        <p style={intro}>
+          Total to transfer: <strong>{formatLkr(totalCents)}</strong>. Choose the account that matches your
+          items.
         </p>
       )}
+
+      <AccountCard account={SPORTS_BANK} />
+      <AccountCard account={TRADING_BANK} />
+
+      <p style={mixedNote}>
+        Use your order number as the payment reference when possible. If your order mixes sports and other
+        items, transfer each portion to the matching account (or contact us if you need help).
+      </p>
     </div>
   );
 }
-
-/** Convenience when only amounts are known (e.g. post-checkout snapshot). */
-export function BankTransferDetailsFromAmounts({
-  sportsCents,
-  tradingCents,
-}: {
-  sportsCents: number;
-  tradingCents: number;
-}) {
-  const split: BankTransferSplit = {
-    sports: { lines: [], transferCents: sportsCents },
-    trading: { lines: [], transferCents: tradingCents },
-    hasSports: sportsCents > 0,
-    hasTrading: tradingCents > 0,
-    mixed: sportsCents > 0 && tradingCents > 0,
-  };
-  return <BankTransferDetails split={split} showItemLists={false} />;
-}
-
-export { accountForKey, SPORTS_BANK, TRADING_BANK };
 
 const wrap = {
   display: 'grid',
@@ -230,23 +161,6 @@ const accountHint = {
   maxWidth: '28rem',
 } as const;
 
-const amountBox = {
-  textAlign: 'right' as const,
-  alignSelf: 'flex-start',
-} as const;
-
-const amountLabel = {
-  display: 'block',
-  fontSize: '0.78rem',
-  color: 'var(--muted)',
-  marginBottom: '0.15rem',
-} as const;
-
-const amountValue = {
-  fontSize: '1.2rem',
-  color: 'var(--primary)',
-} as const;
-
 const detailTable = {
   width: '100%',
   borderCollapse: 'collapse' as const,
@@ -280,26 +194,6 @@ const copyBtn = {
   background: '#fff',
   cursor: 'pointer',
   color: 'var(--primary)',
-} as const;
-
-const itemsBox = {
-  padding: '0.75rem 1.1rem 1rem',
-  background: 'color-mix(in srgb, var(--border) 25%, #fff)',
-} as const;
-
-const itemsHeading = {
-  margin: '0 0 0.35rem',
-  fontSize: '0.82rem',
-  fontWeight: 600,
-  color: 'var(--muted)',
-} as const;
-
-const itemsList = {
-  margin: 0,
-  paddingLeft: '1.1rem',
-  fontSize: '0.85rem',
-  lineHeight: 1.5,
-  color: 'var(--text)',
 } as const;
 
 const mixedNote = {
