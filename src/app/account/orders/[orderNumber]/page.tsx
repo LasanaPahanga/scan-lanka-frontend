@@ -89,6 +89,8 @@ function OrderDetailView() {
         status={order.status}
         deliveryMethod={order.deliveryMethod}
         deliveryPayment={order.deliveryPayment}
+        orderLines={order.lines.map((l) => ({ name: l.name, lineTotalCents: l.lineTotalCents }))}
+        orderTotalCents={order.totalCents}
       />
 
       <section style={{ marginTop: '1.5rem' }}>

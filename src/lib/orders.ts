@@ -171,6 +171,14 @@ export interface PlacedOrderSnapshot {
   needsOnlinePayment: boolean;
   codDueCents: number;
   slipUploaded: boolean;
+  /** Bank-transfer split when the order used two company accounts. */
+  bankTransfer?: {
+    sportsCents: number;
+    tradingCents: number;
+    hasSports: boolean;
+    hasTrading: boolean;
+    mixed: boolean;
+  };
 }
 
 const PLACED_KEY = 'sl_placed_order';

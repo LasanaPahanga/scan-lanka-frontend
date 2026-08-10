@@ -80,6 +80,8 @@ export default function OrderLookupPage() {
             deliveryMethod={detail.deliveryMethod}
             deliveryPayment={detail.deliveryPayment}
             email={email.trim()}
+            orderLines={detail.lines.map((l) => ({ name: l.name, lineTotalCents: l.lineTotalCents }))}
+            orderTotalCents={detail.totalCents}
           />
           <ul style={{ paddingLeft: '1.2rem' }}>
             {detail.lines.map((l) => (
