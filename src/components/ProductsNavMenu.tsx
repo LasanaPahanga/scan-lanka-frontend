@@ -1,46 +1,24 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
-import { CategoryCount, ProductChip } from '@/lib/catalog';
+import { useEffect, useState } from 'react';
 
-/**
- * "Our Products" nav entry with the grouped category menu (V46/V47 taxonomy): the owner sheet's
- * top-level groups ("Writing Boards" … "Portable Partition"), each holding its categories,
- * in sheet order. Groups with a single category (e.g. Pin Up Board) expand to individual
- * product links, matching how multi-category groups list their sub-categories.
- */
-export interface NavGroup {
+/** One top-level group in the Our Products nav (from /api/catalog/nav-menu). */
+export interface NavMenuGroup {
   name: string;
-  categories: CategoryCount[];
+  categories: { name: string; count: number }[];
+  products: { slug: string; name: string }[];
 }
 
-interface NavProduct {
-  slug: string;
-  name: string;
-}
-
-/** Preferred display order for storefront groups (owner sheet numbering). */
-const GROUP_ORDER = [
-  'Writing Boards',
-  'Pin Up Board / Notice Board',
-  'Art Supplies',
-  'Menu Board And Other Restaurant Items',
-  'Sport / Game Boards',
-  'Kids Corner',
-  'Key Holder',
-  'Portable Partition',
-];
-
-export function useCategoryGroups(): NavGroup[] {
-  const [categories, setCategories] = useState<CategoryCount[]>([]);
+function useNavMenu(): NavMenuGroup[] {
+  const [groups, setGroups] = useState<NavMenuGroup[]>([]);
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/catalog/categories')
+    fetch('/api/catalog/nav-menu')
       .then((r) => (r.ok ? r.json() : []))
-      .then((rows: CategoryCount[]) => {
-        if (!cancelled && Array.isArray(rows)) setCategories(rows);
+      .then((rows: NavMenuGroup[]) => {
+        if (!cancelled && Array.isArray(rows)) setGroups(rows);
       })
       .catch(() => {});
     return () => {
@@ -48,86 +26,15 @@ export function useCategoryGroups(): NavGroup[] {
     };
   }, []);
 
-  return useMemo(() => {
-    const groups: NavGroup[] = [];
-    const byName = new Map<string, NavGroup>();
-    for (const c of categories) {
-      const key = c.group ?? c.name;
-      let g = byName.get(key);
-      if (!g) {
-        g = { name: key, categories: [] };
-        byName.set(key, g);
-        groups.push(g);
-      }
-      g.categories.push(c);
-    }
-    return groups.sort((a, b) => {
-      const ai = GROUP_ORDER.indexOf(a.name);
-      const bi = GROUP_ORDER.indexOf(b.name);
-      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
-      if (ai === -1) return 1;
-      if (bi === -1) return -1;
-      return ai - bi;
-    });
-  }, [categories]);
-}
-
-/** For groups with one category, load individual products (Pin Board, Cork Board, …). */
-function useGroupProducts(groups: NavGroup[]): Map<string, NavProduct[]> {
-  const [byGroup, setByGroup] = useState<Map<string, NavProduct[]>>(new Map());
-
-  useEffect(() => {
-    const singles = groups.filter((g) => g.categories.length === 1);
-    if (singles.length === 0) {
-      setByGroup(new Map());
-      return;
-    }
-
-    let cancelled = false;
-    Promise.all(
-      singles.map(async (g) => {
-        const category = g.categories[0].name;
-        try {
-          const r = await fetch(
-            `/api/products?category=${encodeURIComponent(category)}&size=50&sort=name`,
-          );
-          if (!r.ok) return [g.name, []] as const;
-          const page = await r.json();
-          const items: NavProduct[] = (page.content ?? []).map((p: ProductChip) => ({
-            slug: p.slug,
-            name: p.name,
-          }));
-          return [g.name, items] as const;
-        } catch {
-          return [g.name, []] as const;
-        }
-      }),
-    ).then((entries) => {
-      if (!cancelled) setByGroup(new Map(entries));
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [groups]);
-
-  return byGroup;
+  return groups;
 }
 
 const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name)}`;
 const productHref = (slug: string) => `/products/${encodeURIComponent(slug)}`;
 
-function GroupBlock({
-  g,
-  products,
-  onNavigate,
-}: {
-  g: NavGroup;
-  products: NavProduct[];
-  onNavigate: () => void;
-}) {
-  const expandProducts = g.categories.length === 1 && products.length > 0;
+function GroupBlock({ g, onNavigate }: { g: NavMenuGroup; onNavigate: () => void }) {
   const categoryLink = g.categories[0]?.name;
+  const showProducts = g.products.length > 0;
 
   return (
     <div className="nav-dropdown-group">
@@ -138,8 +45,8 @@ function GroupBlock({
       ) : (
         <span className="nav-group-title">{g.name}</span>
       )}
-      {expandProducts
-        ? products.map((p) => (
+      {showProducts
+        ? g.products.map((p) => (
             <Link key={p.slug} href={productHref(p.slug)} className="nav-group-link" onClick={onNavigate}>
               {p.name}
             </Link>
@@ -154,8 +61,7 @@ function GroupBlock({
 }
 
 export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
-  const groups = useCategoryGroups();
-  const productsByGroup = useGroupProducts(groups);
+  const groups = useNavMenu();
 
   return (
     <div className="nav-dropdown">
@@ -165,12 +71,7 @@ export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
       {groups.length > 0 && (
         <div className="nav-dropdown-panel" role="menu" aria-label="Product categories">
           {groups.map((g) => (
-            <GroupBlock
-              key={g.name}
-              g={g}
-              products={productsByGroup.get(g.name) ?? []}
-              onNavigate={onNavigate}
-            />
+            <GroupBlock key={g.name} g={g} onNavigate={onNavigate} />
           ))}
         </div>
       )}
@@ -178,22 +79,29 @@ export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
   );
 }
 
-/** The same tree, flattened for the mobile drawer (always expanded under "Our Products"). */
 export function ProductsNavMobileList({ onNavigate }: { onNavigate: () => void }) {
-  const groups = useCategoryGroups();
-  const productsByGroup = useGroupProducts(groups);
+  const groups = useNavMenu();
   if (groups.length === 0) return null;
 
   return (
     <div className="nav-mobile-categories">
       {groups.map((g) => (
-        <GroupBlock
-          key={g.name}
-          g={g}
-          products={productsByGroup.get(g.name) ?? []}
-          onNavigate={onNavigate}
-        />
+        <GroupBlock key={g.name} g={g} onNavigate={onNavigate} />
       ))}
     </div>
   );
+}
+
+/** @deprecated Use NavMenuGroup from nav-menu API. Kept for any external imports. */
+export interface NavGroup {
+  name: string;
+  categories: { name: string; count: number; group?: string | null }[];
+}
+
+export function useCategoryGroups(): NavGroup[] {
+  const groups = useNavMenu();
+  return groups.map((g) => ({
+    name: g.name,
+    categories: g.categories.map((c) => ({ ...c, group: g.name })),
+  }));
 }
