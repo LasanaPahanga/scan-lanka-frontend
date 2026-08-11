@@ -6,14 +6,25 @@ import { CategoryCount } from '@/lib/catalog';
 
 /**
  * "Our Products" nav entry with the grouped category menu (V46/V47 taxonomy): the owner sheet's
- * eight top-level groups ("Writing Boards" … "Portable Partition"), each holding its categories,
- * in sheet order (the API returns categories ordered by their best-selling product). Desktop shows
- * a hover/focus dropdown; the mobile drawer renders the same tree inline.
+ * top-level groups ("Writing Boards" … "Portable Partition"), each holding its categories,
+ * in sheet order. Desktop shows a hover/focus dropdown; the mobile drawer renders the same tree.
  */
 export interface NavGroup {
   name: string;
   categories: CategoryCount[];
 }
+
+/** Preferred display order for storefront groups (owner sheet numbering). */
+const GROUP_ORDER = [
+  'Writing Boards',
+  'Pin Up Board / Notice Board',
+  'Art Supplies',
+  'Menu Board And Other Restaurant Items',
+  'Sport / Game Boards',
+  'Kids Corner',
+  'Key Holder',
+  'Portable Partition',
+];
 
 export function useCategoryGroups(): NavGroup[] {
   const [categories, setCategories] = useState<CategoryCount[]>([]);
@@ -44,15 +55,34 @@ export function useCategoryGroups(): NavGroup[] {
       }
       g.categories.push(c);
     }
-    return groups;
+    return groups.sort((a, b) => {
+      const ai = GROUP_ORDER.indexOf(a.name);
+      const bi = GROUP_ORDER.indexOf(b.name);
+      if (ai === -1 && bi === -1) return a.name.localeCompare(b.name);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
   }, [categories]);
 }
 
 const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name)}`;
 
-/** A group whose only category IS the group (Key Holder, Portable Partition) links directly. */
-function isDirectLink(g: NavGroup): boolean {
-  return g.categories.length === 1;
+function GroupBlock({ g, onNavigate }: { g: NavGroup; onNavigate: () => void }) {
+  // Always show the group title + every category link (even when there is only one).
+  // Collapsing single-category groups to a bare title made Pin Up / Menu Board look blank.
+  return (
+    <div className="nav-dropdown-group">
+      <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
+        {g.name}
+      </Link>
+      {g.categories.map((c) => (
+        <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
+          {c.name}
+        </Link>
+      ))}
+    </div>
+  );
 }
 
 export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
@@ -66,22 +96,7 @@ export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
       {groups.length > 0 && (
         <div className="nav-dropdown-panel" role="menu" aria-label="Product categories">
           {groups.map((g) => (
-            <div key={g.name} className="nav-dropdown-group">
-              {isDirectLink(g) ? (
-                <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
-                  {g.name}
-                </Link>
-              ) : (
-                <>
-                  <span className="nav-group-title">{g.name}</span>
-                  {g.categories.map((c) => (
-                    <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
-                      {c.name}
-                    </Link>
-                  ))}
-                </>
-              )}
-            </div>
+            <GroupBlock key={g.name} g={g} onNavigate={onNavigate} />
           ))}
         </div>
       )}
@@ -98,20 +113,14 @@ export function ProductsNavMobileList({ onNavigate }: { onNavigate: () => void }
     <div className="nav-mobile-categories">
       {groups.map((g) => (
         <div key={g.name}>
-          {isDirectLink(g) ? (
-            <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
-              {g.name}
+          <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
+            {g.name}
+          </Link>
+          {g.categories.map((c) => (
+            <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
+              {c.name}
             </Link>
-          ) : (
-            <>
-              <span className="nav-group-title">{g.name}</span>
-              {g.categories.map((c) => (
-                <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
-                  {c.name}
-                </Link>
-              ))}
-            </>
-          )}
+          ))}
         </div>
       ))}
     </div>
