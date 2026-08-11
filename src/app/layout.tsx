@@ -8,7 +8,7 @@ import { GeoProvider } from '@/components/GeoProvider';
 import { StorefrontChrome } from '@/components/StorefrontChrome';
 import { JsonLd } from '@/components/JsonLd';
 import { buildSiteJsonLd } from '@/lib/site-jsonld';
-import { SITE_NAME, SITE_TAGLINE, absoluteUrl, siteBase } from '@/lib/site';
+import { SITE_NAME, SITE_DEFAULT_TITLE, SITE_SEO_NAME, absoluteUrl, siteBase } from '@/lib/site';
 
 // Modern, professional sans for the whole storefront (body, nav, headings,
 // homepage category titles). Wired into `--font` via tokens.css.
@@ -34,13 +34,14 @@ const ogImage = absoluteUrl('/CB-free-01herosection.png') ?? absoluteUrl('/icon-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${SITE_NAME} | ${SITE_TAGLINE}`,
-    template: `%s | ${SITE_NAME}`,
+    default: SITE_DEFAULT_TITLE,
+    template: `%s | ${SITE_SEO_NAME}`,
   },
   description:
     "Sri Lanka's leading manufacturer and supplier of boards and teaching equipment since 1998 — whiteboards, notice boards, carrom boards, easels and more.",
-  applicationName: SITE_NAME,
+  applicationName: SITE_SEO_NAME,
   keywords: [
+    'Whiteboard Online Store',
     'Scan Lanka',
     'whiteboard Sri Lanka',
     'canvas boards',
@@ -53,20 +54,20 @@ export const metadata: Metadata = {
   alternates: { canonical: '/', languages: { 'en-LK': '/', 'x-default': '/' } },
   manifest: '/site.webmanifest',
   openGraph: {
-    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    title: SITE_DEFAULT_TITLE,
     description:
       'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
     url: siteUrl,
-    siteName: SITE_NAME,
+    siteName: SITE_SEO_NAME,
     locale: 'en_LK',
     type: 'website',
     images: ogImage
-      ? [{ url: ogImage, width: 1200, height: 630, alt: `${SITE_NAME} boards & teaching equipment` }]
+      ? [{ url: ogImage, width: 1200, height: 630, alt: `${SITE_SEO_NAME} — boards & teaching equipment` }]
       : undefined,
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} | ${SITE_TAGLINE}`,
+    title: SITE_DEFAULT_TITLE,
     description:
       'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
     images: ogImage ? [ogImage] : undefined,
