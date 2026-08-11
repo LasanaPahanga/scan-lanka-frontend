@@ -887,7 +887,8 @@ textarea:focus {
   position: absolute;
   top: 100%;
   left: 50%;
-  transform: translateX(-50%);
+  /* Shift right: centering on the narrow trigger alone pulled the panel too far left */
+  transform: translateX(calc(-50% + 12rem));
   z-index: 30;
   width: min(1140px, calc(100vw - 2rem));
   padding: 1rem 1.35rem 1.1rem;
