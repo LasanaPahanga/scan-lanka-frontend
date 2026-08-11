@@ -32,6 +32,22 @@ function useNavMenu(): NavMenuGroup[] {
 const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name)}`;
 const productHref = (slug: string) => `/products/${encodeURIComponent(slug)}`;
 
+/** Shorter labels for the nav only — keeps the 4-column layout readable. */
+function navLinkLabel(name: string): string {
+  const n = name.trim();
+  if (n.startsWith('Mobile Partition Double Sided White and Notice Board'))
+    return 'White + notice board 5×3ft (3 panels)';
+  if (n.startsWith('Mobile Partition Double Sided Notice Board'))
+    return 'Double sided notice board 5×3ft (3 panels)';
+  if (n.startsWith('Mobile Partition Double Sided White Board'))
+    return 'Double sided white board 5×3ft (3 panels)';
+  if (n.startsWith('Partition board covered with Fabric'))
+    return 'Fabric partition 5×3ft (3 panels)';
+  if (n === n.toUpperCase() && /[A-Z]/.test(n))
+    return n.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  return n;
+}
+
 function GroupBlock({ g, onNavigate }: { g: NavMenuGroup; onNavigate: () => void }) {
   const categoryLink = g.categories[0]?.name;
   const showProducts = g.products.length > 0;
@@ -48,7 +64,7 @@ function GroupBlock({ g, onNavigate }: { g: NavMenuGroup; onNavigate: () => void
       {showProducts
         ? g.products.map((p) => (
             <Link key={p.slug} href={productHref(p.slug)} className="nav-group-link" onClick={onNavigate}>
-              {p.name}
+              {navLinkLabel(p.name)}
             </Link>
           ))
         : g.categories.map((c) => (
