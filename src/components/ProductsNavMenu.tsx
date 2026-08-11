@@ -2,16 +2,22 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { CategoryCount } from '@/lib/catalog';
+import { CategoryCount, ProductChip } from '@/lib/catalog';
 
 /**
  * "Our Products" nav entry with the grouped category menu (V46/V47 taxonomy): the owner sheet's
  * top-level groups ("Writing Boards" … "Portable Partition"), each holding its categories,
- * in sheet order. Desktop shows a hover/focus dropdown; the mobile drawer renders the same tree.
+ * in sheet order. Groups with a single category (e.g. Pin Up Board) expand to individual
+ * product links, matching how multi-category groups list their sub-categories.
  */
 export interface NavGroup {
   name: string;
   categories: CategoryCount[];
+}
+
+interface NavProduct {
+  slug: string;
+  name: string;
 }
 
 /** Preferred display order for storefront groups (owner sheet numbering). */
@@ -46,7 +52,7 @@ export function useCategoryGroups(): NavGroup[] {
     const groups: NavGroup[] = [];
     const byName = new Map<string, NavGroup>();
     for (const c of categories) {
-      const key = c.group ?? c.name; // ungrouped category stands alone as its own top-level entry
+      const key = c.group ?? c.name;
       let g = byName.get(key);
       if (!g) {
         g = { name: key, categories: [] };
@@ -66,27 +72,90 @@ export function useCategoryGroups(): NavGroup[] {
   }, [categories]);
 }
 
-const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name)}`;
+/** For groups with one category, load individual products (Pin Board, Cork Board, …). */
+function useGroupProducts(groups: NavGroup[]): Map<string, NavProduct[]> {
+  const [byGroup, setByGroup] = useState<Map<string, NavProduct[]>>(new Map());
 
-function GroupBlock({ g, onNavigate }: { g: NavGroup; onNavigate: () => void }) {
-  // Always show the group title + every category link (even when there is only one).
-  // Collapsing single-category groups to a bare title made Pin Up / Menu Board look blank.
+  useEffect(() => {
+    const singles = groups.filter((g) => g.categories.length === 1);
+    if (singles.length === 0) {
+      setByGroup(new Map());
+      return;
+    }
+
+    let cancelled = false;
+    Promise.all(
+      singles.map(async (g) => {
+        const category = g.categories[0].name;
+        try {
+          const r = await fetch(
+            `/api/products?category=${encodeURIComponent(category)}&size=50&sort=name`,
+          );
+          if (!r.ok) return [g.name, []] as const;
+          const page = await r.json();
+          const items: NavProduct[] = (page.content ?? []).map((p: ProductChip) => ({
+            slug: p.slug,
+            name: p.name,
+          }));
+          return [g.name, items] as const;
+        } catch {
+          return [g.name, []] as const;
+        }
+      }),
+    ).then((entries) => {
+      if (!cancelled) setByGroup(new Map(entries));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [groups]);
+
+  return byGroup;
+}
+
+const categoryHref = (name: string) => `/products?category=${encodeURIComponent(name)}`;
+const productHref = (slug: string) => `/products/${encodeURIComponent(slug)}`;
+
+function GroupBlock({
+  g,
+  products,
+  onNavigate,
+}: {
+  g: NavGroup;
+  products: NavProduct[];
+  onNavigate: () => void;
+}) {
+  const expandProducts = g.categories.length === 1 && products.length > 0;
+  const categoryLink = g.categories[0]?.name;
+
   return (
     <div className="nav-dropdown-group">
-      <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
-        {g.name}
-      </Link>
-      {g.categories.map((c) => (
-        <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
-          {c.name}
+      {categoryLink ? (
+        <Link href={categoryHref(categoryLink)} className="nav-group-title" onClick={onNavigate}>
+          {g.name}
         </Link>
-      ))}
+      ) : (
+        <span className="nav-group-title">{g.name}</span>
+      )}
+      {expandProducts
+        ? products.map((p) => (
+            <Link key={p.slug} href={productHref(p.slug)} className="nav-group-link" onClick={onNavigate}>
+              {p.name}
+            </Link>
+          ))
+        : g.categories.map((c) => (
+            <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
+              {c.name}
+            </Link>
+          ))}
     </div>
   );
 }
 
 export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
   const groups = useCategoryGroups();
+  const productsByGroup = useGroupProducts(groups);
 
   return (
     <div className="nav-dropdown">
@@ -96,7 +165,12 @@ export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
       {groups.length > 0 && (
         <div className="nav-dropdown-panel" role="menu" aria-label="Product categories">
           {groups.map((g) => (
-            <GroupBlock key={g.name} g={g} onNavigate={onNavigate} />
+            <GroupBlock
+              key={g.name}
+              g={g}
+              products={productsByGroup.get(g.name) ?? []}
+              onNavigate={onNavigate}
+            />
           ))}
         </div>
       )}
@@ -107,21 +181,18 @@ export function ProductsNavMenu({ onNavigate }: { onNavigate: () => void }) {
 /** The same tree, flattened for the mobile drawer (always expanded under "Our Products"). */
 export function ProductsNavMobileList({ onNavigate }: { onNavigate: () => void }) {
   const groups = useCategoryGroups();
+  const productsByGroup = useGroupProducts(groups);
   if (groups.length === 0) return null;
 
   return (
     <div className="nav-mobile-categories">
       {groups.map((g) => (
-        <div key={g.name}>
-          <Link href={categoryHref(g.categories[0].name)} className="nav-group-title" onClick={onNavigate}>
-            {g.name}
-          </Link>
-          {g.categories.map((c) => (
-            <Link key={c.name} href={categoryHref(c.name)} className="nav-group-link" onClick={onNavigate}>
-              {c.name}
-            </Link>
-          ))}
-        </div>
+        <GroupBlock
+          key={g.name}
+          g={g}
+          products={productsByGroup.get(g.name) ?? []}
+          onNavigate={onNavigate}
+        />
       ))}
     </div>
   );
