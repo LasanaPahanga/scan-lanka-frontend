@@ -198,8 +198,9 @@ export default function AdminDeliveryPage() {
             onSubmit={async (e) => {
               e.preventDefault();
               const fd = new FormData(e.currentTarget);
+              const percent = Number(fd.get('ratePercent'));
               await putTaxConfig({
-                rateBps: Number(fd.get('rateBps')),
+                rateBps: Math.round(percent * 100),
                 label: String(fd.get('label')),
               });
               setMsg('Tax config saved.');
@@ -208,7 +209,15 @@ export default function AdminDeliveryPage() {
             style={{ display: 'grid', gap: '0.5rem', maxWidth: 420 }}
           >
             <input style={fieldInput} name="label" defaultValue={tax.label} placeholder="Tax label" />
-            <input style={fieldInput} name="rateBps" type="number" defaultValue={tax.rateBps} placeholder="Rate (bps)" />
+            <input
+              style={fieldInput}
+              name="ratePercent"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={tax.rateBps / 100}
+              placeholder="Rate (%)"
+            />
             <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
               Save tax
             </button>
