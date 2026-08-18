@@ -52,6 +52,7 @@ export interface OrderDetail {
   subtotalCents: number;
   deliveryCents: number;
   taxCents: number;
+  payhereFeeCents: number; // PayHere card surcharge, 0 unless paid by CARD
   totalCents: number;
   deliveryCodCents: number;
   actualDeliveryCents: number | null;
@@ -81,6 +82,11 @@ export interface DeliveryConfigView {
 }
 
 export interface TaxConfigView {
+  rateBps: number;
+  label: string;
+}
+
+export interface PayHereFeeConfigView {
   rateBps: number;
   label: string;
 }
@@ -174,6 +180,10 @@ export const putDeliveryConfig = (body: DeliveryConfigView) =>
 export const getTaxConfig = () => api<TaxConfigView>('/api/admin/tax-config');
 export const putTaxConfig = (body: TaxConfigView) =>
   api<TaxConfigView>('/api/admin/tax-config', { method: 'PUT', body: JSON.stringify(body) });
+
+export const getPayHereFeeConfig = () => api<PayHereFeeConfigView>('/api/admin/payhere-fee-config');
+export const putPayHereFeeConfig = (body: PayHereFeeConfigView) =>
+  api<PayHereFeeConfigView>('/api/admin/payhere-fee-config', { method: 'PUT', body: JSON.stringify(body) });
 
 export const getSettings = () => api<SettingsView>('/api/admin/settings');
 export const putSettings = (body: Partial<SettingsView>) =>

@@ -153,6 +153,7 @@ export default function AdminOrderDetailPage() {
           <p>Lorry delivery: {formatLkr(order.deliveryCents)}</p>
         )}
         <p>Tax: {formatLkr(order.taxCents)}</p>
+        {order.payhereFeeCents > 0 && <p>PayHere card fee: {formatLkr(order.payhereFeeCents)}</p>}
         <p>
           <strong>Paid online: {formatLkr(order.totalCents)}</strong>
         </p>

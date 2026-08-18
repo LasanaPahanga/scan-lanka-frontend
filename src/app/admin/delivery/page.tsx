@@ -14,7 +14,14 @@ import {
   upsertCourierRate,
 } from '@/lib/admin-delivery';
 import Link from 'next/link';
-import { getTaxConfig, putTaxConfig, TaxConfigView } from '@/lib/admin';
+import {
+  getPayHereFeeConfig,
+  getTaxConfig,
+  PayHereFeeConfigView,
+  putPayHereFeeConfig,
+  putTaxConfig,
+  TaxConfigView,
+} from '@/lib/admin';
 import { adminMain, fieldInput, mutedText, primaryButton } from '@/components/formStyles';
 
 const COURIER_ZONES: CourierZone[] = ['CITY_LIMITS', 'SUBURBS', 'OUTSTATION', 'FARAWAY'];
@@ -32,6 +39,7 @@ export default function AdminDeliveryPage() {
   const [settings, setSettings] = useState<DeliverySettingsView | null>(null);
   const [methods, setMethods] = useState<DeliveryMethodView[]>([]);
   const [tax, setTax] = useState<TaxConfigView | null>(null);
+  const [payhereFee, setPayhereFee] = useState<PayHereFeeConfigView | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
   async function reload() {
@@ -39,6 +47,7 @@ export default function AdminDeliveryPage() {
     setSettings(await getDeliverySettings());
     setMethods(await listDeliveryMethods());
     setTax(await getTaxConfig());
+    setPayhereFee(await getPayHereFeeConfig());
   }
 
   useEffect(() => {
@@ -220,6 +229,44 @@ export default function AdminDeliveryPage() {
             />
             <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
               Save tax
+            </button>
+          </form>
+        )}
+      </section>
+
+      <section style={section}>
+        <h2 style={h2}>PayHere card fee</h2>
+        <p style={mutedText}>
+          Extra surcharge added on top of the full bill (subtotal + delivery + tax) when a customer pays online by
+          card via PayHere. Never applied to bank transfer or cash-on-delivery orders.
+        </p>
+        {payhereFee && (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const fd = new FormData(e.currentTarget);
+              const percent = Number(fd.get('ratePercent'));
+              await putPayHereFeeConfig({
+                rateBps: Math.round(percent * 100),
+                label: String(fd.get('label')),
+              });
+              setMsg('PayHere fee config saved.');
+              await reload();
+            }}
+            style={{ display: 'grid', gap: '0.5rem', maxWidth: 420 }}
+          >
+            <input style={fieldInput} name="label" defaultValue={payhereFee.label} placeholder="Fee label" />
+            <input
+              style={fieldInput}
+              name="ratePercent"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={payhereFee.rateBps / 100}
+              placeholder="Rate (%)"
+            />
+            <button type="submit" style={{ ...primaryButton, width: 'auto' }}>
+              Save PayHere fee
             </button>
           </form>
         )}

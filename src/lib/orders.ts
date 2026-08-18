@@ -34,6 +34,7 @@ export interface OrderDetail {
   subtotalCents: number;
   deliveryCents: number;
   taxCents: number;
+  payhereFeeCents: number; // PayHere card surcharge, 0 unless paid by CARD
   totalCents: number;
   refundTotalCents: number;
   deliveryCodCents: number;
