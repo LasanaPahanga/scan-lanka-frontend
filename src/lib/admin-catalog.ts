@@ -152,6 +152,12 @@ export const adminUpdateVariantDelivery = (productId: number, variantId: number,
     body: JSON.stringify({ delivery }),
   });
 
+export const adminUpdateVariantPrice = (productId: number, variantId: number, priceCents: number) =>
+  api<void>(`/api/admin/products/${productId}/variants/${variantId}/price`, {
+    method: 'PATCH',
+    body: JSON.stringify({ priceCents }),
+  });
+
 export const adminUpdateProductDelivery = (productId: number, delivery: DeliveryAttrs) =>
   api<void>(`/api/admin/products/${productId}/delivery`, {
     method: 'PATCH',

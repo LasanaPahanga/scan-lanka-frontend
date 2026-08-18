@@ -15,6 +15,7 @@ import {
   adminDeleteVariant,
   adminUpdateProduct,
   adminUpdateVariantDelivery,
+  adminUpdateVariantPrice,
 } from '@/lib/admin-catalog';
 import { fieldInput, primaryButton, secondaryButton, mutedText } from '@/components/formStyles';
 import { ProductImageManager } from './ProductImageManager';
@@ -539,9 +540,7 @@ function VariantManager({
         {variants.map((v) => (
           <li key={v.id} style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <strong style={{ fontSize: '0.9rem' }}>
-                {sizeLabel(v.optionsSignature)} — Rs {Math.round(v.priceCents / 100).toLocaleString('en-LK')}
-              </strong>
+              <strong style={{ fontSize: '0.9rem' }}>{sizeLabel(v.optionsSignature)}</strong>
               <button
                 type="button"
                 style={{ ...secondaryButton, width: 'auto', padding: '0.3rem 0.6rem', fontSize: '0.8rem', color: 'var(--danger)', borderColor: 'var(--danger)' }}
@@ -551,6 +550,17 @@ function VariantManager({
               >
                 {busyId === v.id ? 'Deleting…' : 'Delete size'}
               </button>
+            </div>
+            <div style={{ marginTop: '0.5rem' }}>
+              <VariantPriceEditor
+                productId={productId}
+                variantId={v.id}
+                priceCents={v.priceCents}
+                onSaved={(newPriceCents) => {
+                  setVariants((prev) => prev.map((x) => (x.id === v.id ? { ...x, priceCents: newPriceCents } : x)));
+                  setMsg(`Saved price for ${sizeLabel(v.optionsSignature)}.`);
+                }}
+              />
             </div>
             <div style={{ marginTop: '0.5rem' }}>
               <VariantDeliveryEditor
@@ -597,6 +607,63 @@ function VariantManager({
           after adding, or the courier will bill the size as 1 kg.
         </p>
       </div>
+    </div>
+  );
+}
+
+function VariantPriceEditor({
+  productId,
+  variantId,
+  priceCents,
+  onSaved,
+}: {
+  productId: number;
+  variantId: number;
+  priceCents: number;
+  onSaved: (newPriceCents: number) => void;
+}) {
+  const [rupees, setRupees] = useState(String(priceCents / 100));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+      <label style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>
+        Price (Rs)
+        <input
+          style={{ ...fieldInput, display: 'block', width: 140, padding: '0.4rem' }}
+          type="number"
+          min="0"
+          step="0.01"
+          value={rupees}
+          onChange={(e) => setRupees(e.target.value)}
+        />
+      </label>
+      <button
+        type="button"
+        style={{ ...secondaryButton, width: 'auto', padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}
+        disabled={busy}
+        onClick={async () => {
+          const cents = rupeesToCents(rupees);
+          if (cents == null || cents <= 0) {
+            setError('Enter a valid price.');
+            return;
+          }
+          setError(null);
+          setBusy(true);
+          try {
+            await adminUpdateVariantPrice(productId, variantId, cents);
+            onSaved(cents);
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Could not save the price.');
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? 'Saving…' : 'Save price'}
+      </button>
+      {error && <span style={{ color: 'var(--danger)', fontSize: '0.8rem' }}>{error}</span>}
     </div>
   );
 }
