@@ -50,7 +50,12 @@ export function buildSiteJsonLd(): Record<string, unknown> {
           '@type': 'Country',
           name: 'Sri Lanka',
         },
-        sameAs: ['https://scanlanka.com'],
+        sameAs: [
+          'https://scanlanka.com',
+          'https://www.facebook.com/scanwhiteboards/',
+          'https://www.instagram.com/scanlanka_official1/',
+          'https://www.tiktok.com/@scan_lankaofficial',
+        ],
       },
       {
         '@type': 'WebSite',

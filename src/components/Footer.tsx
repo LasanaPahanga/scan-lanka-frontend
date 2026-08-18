@@ -18,17 +18,14 @@ export function Footer() {
               1998 - whiteboards, notice boards, carrom boards, easels and more, delivered island-wide.
             </p>
             <div style={socialRow}>
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" style={social} aria-label="Facebook">
+              <a href="https://www.facebook.com/scanwhiteboards/" target="_blank" rel="noreferrer" style={social} aria-label="Facebook">
                 f
               </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" style={social} aria-label="Instagram">
+              <a href="https://www.instagram.com/scanlanka_official1/" target="_blank" rel="noreferrer" style={social} aria-label="Instagram">
                 ◎
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noreferrer" style={social} aria-label="YouTube">
-                ▶
-              </a>
-              <a href="https://x.com" target="_blank" rel="noreferrer" style={social} aria-label="X">
-                𝕏
+              <a href="https://www.tiktok.com/@scan_lankaofficial" target="_blank" rel="noreferrer" style={social} aria-label="TikTok">
+                ♪
               </a>
             </div>
           </div>
