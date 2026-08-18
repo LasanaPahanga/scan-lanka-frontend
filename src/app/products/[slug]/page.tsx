@@ -17,17 +17,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const description =
     p.description?.trim() ||
     `Buy ${p.name} from ${SITE_NAME} — quality boards & teaching equipment in Sri Lanka since 1998.`;
+  const seoTitle = `${p.name} Price in Sri Lanka`;
   return {
-    title: p.name,
+    title: seoTitle,
     description,
     alternates: { canonical: url, languages: { 'en-LK': url, 'x-default': url } },
     openGraph: {
-      title: p.name,
+      title: seoTitle,
       description,
       url,
       siteName: SITE_NAME,
       type: 'website',
       images: ogImage ? [{ url: ogImage }] : undefined,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: seoTitle,
+      description,
+      images: ogImage ? [ogImage] : undefined,
     },
   };
 }

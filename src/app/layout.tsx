@@ -40,16 +40,6 @@ export const metadata: Metadata = {
   description:
     "Sri Lanka's leading manufacturer and supplier of boards and teaching equipment since 1998 — whiteboards, notice boards, carrom boards, easels and more.",
   applicationName: SITE_SEO_NAME,
-  keywords: [
-    'Whiteboard Online Store',
-    'Scan Lanka',
-    'whiteboard Sri Lanka',
-    'canvas boards',
-    'carrom board',
-    'teaching equipment',
-    'notice board',
-    'Malabe',
-  ],
   authors: [{ name: SITE_NAME, url: siteUrl }],
   alternates: { canonical: '/', languages: { 'en-LK': '/', 'x-default': '/' } },
   manifest: '/site.webmanifest',
@@ -58,7 +48,7 @@ export const metadata: Metadata = {
     description:
       'Manufacturer & supplier of boards and teaching equipment in Sri Lanka since 1998.',
     url: siteUrl,
-    siteName: SITE_SEO_NAME,
+    siteName: SITE_NAME,
     locale: 'en_LK',
     type: 'website',
     images: ogImage

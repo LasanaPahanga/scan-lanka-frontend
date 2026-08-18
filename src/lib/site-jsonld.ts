@@ -13,7 +13,7 @@ export function buildSiteJsonLd(): Record<string, unknown> {
     '@context': 'https://schema.org',
     '@graph': [
       {
-        '@type': 'Organization',
+        '@type': ['Store', 'Organization'],
         '@id': `${base}/#organization`,
         name: SITE_NAME,
         legalName: SITE_LEGAL_NAME,
@@ -30,11 +30,25 @@ export function buildSiteJsonLd(): Record<string, unknown> {
         email: EMAIL,
         telephone: HOTLINE.replace(/\s/g, ''),
         foundingDate: '1998',
+        priceRange: 'Rs 216 - Rs 87,800',
+        currenciesAccepted: 'LKR',
+        paymentAccepted: 'Cash, Bank Transfer, Credit Card',
         address: {
           '@type': 'PostalAddress',
           streetAddress: 'No 385, Kaduwela Road',
           addressLocality: 'Malabe',
+          addressRegion: 'Western Province',
+          postalCode: '10115',
           addressCountry: 'LK',
+        },
+        geo: {
+          '@type': 'GeoCoordinates',
+          latitude: 6.9036,
+          longitude: 79.9547,
+        },
+        areaServed: {
+          '@type': 'Country',
+          name: 'Sri Lanka',
         },
         sameAs: ['https://scanlanka.com'],
       },
