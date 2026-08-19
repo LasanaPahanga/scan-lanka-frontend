@@ -19,11 +19,40 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - run: npm ci
-      - run: npm run build
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.canvasboards.lk
+          # Empty so the browser talks same-origin /api; Nginx + Next rewrite proxy to Spring.
+          NEXT_PUBLIC_API_BASE: ''
+          API_PROXY_TARGET: http://127.0.0.1:8080
+          SERVER_API_BASE: http://127.0.0.1:8080
       # Remaining highs are transitive via next/sharp until upstream bumps deps.
       - name: npm audit (report only)
         run: npm audit --audit-level=high
         continue-on-error: true
+
+      - name: Pack standalone Next.js output
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          set -euo pipefail
+          test -d .next/standalone
+          mkdir -p deploy-pack
+          cp -a .next/standalone/. deploy-pack/
+          mkdir -p deploy-pack/.next
+          cp -a .next/static deploy-pack/.next/static
+          if [ -d public ]; then cp -a public deploy-pack/public; fi
+          tar -C deploy-pack -czf frontend.tar.gz .
+          ls -lh frontend.tar.gz
+
+      - name: Upload frontend artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-pack
+          path: frontend.tar.gz
+          retention-days: 3
+          if-no-files-found: error
 
   secrets:
     runs-on: ubuntu-latest
@@ -34,3 +63,65 @@ jobs:
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    name: Deploy to Hetzner
+    needs: [build, secrets]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: deploy
+          sparse-checkout-cone-mode: true
+
+      - name: Download frontend pack
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-pack
+
+      - name: Write SSH key
+        env:
+          HETZNER_SSH_KEY: ${{ secrets.HETZNER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$HETZNER_SSH_KEY" | tr -d '\r' > ~/.ssh/hetzner.pem
+          chmod 600 ~/.ssh/hetzner.pem
+          ssh-keyscan -H "${{ secrets.HETZNER_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload pack and unit file
+        run: |
+          scp -i ~/.ssh/hetzner.pem -o StrictHostKeyChecking=yes \
+            frontend.tar.gz \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/tmp/frontend.tar.gz"
+          scp -i ~/.ssh/hetzner.pem -o StrictHostKeyChecking=yes \
+            deploy/scanlanka-web.service \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}:/tmp/scanlanka-web.service"
+
+      - name: Unpack, restart, health-check
+        run: |
+          ssh -i ~/.ssh/hetzner.pem -o StrictHostKeyChecking=yes \
+            "${{ secrets.HETZNER_USER }}@${{ secrets.HETZNER_HOST }}" bash -s <<'EOF'
+          set -euo pipefail
+          APP_DIR=/opt/scanlanka-web
+          sudo mv /tmp/scanlanka-web.service /etc/systemd/system/scanlanka-web.service
+          sudo mkdir -p "$APP_DIR"
+          sudo tar -C "$APP_DIR" -xzf /tmp/frontend.tar.gz
+          sudo chown -R scanlanka:scanlanka "$APP_DIR" || sudo chown -R "$(whoami):$(whoami)" "$APP_DIR"
+          rm -f /tmp/frontend.tar.gz
+          sudo systemctl daemon-reload
+          sudo systemctl enable scanlanka-web
+          sudo systemctl restart scanlanka-web
+          echo "Waiting for Next.js..."
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000 >/dev/null 2>&1; then
+              echo "Frontend UP"
+              sudo systemctl is-active scanlanka-web
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "Health check failed"
+          sudo journalctl -u scanlanka-web -n 80 --no-pager || true
+          exit 1
+          EOF

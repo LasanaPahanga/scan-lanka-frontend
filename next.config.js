@@ -7,6 +7,7 @@ const devBackend = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:8080';
 const prodBackend = process.env.API_PROXY_TARGET;
 
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
   turbopack: {
     root: __dirname,

@@ -1,0 +1,21 @@
+[Unit]
+Description=Scan Lanka storefront (Next.js)
+After=network.target scanlanka.service
+Wants=scanlanka.service
+
+[Service]
+Type=simple
+User=scanlanka
+WorkingDirectory=/opt/scanlanka-web
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=127.0.0.1
+Environment=NEXT_PUBLIC_SITE_URL=https://www.canvasboards.lk
+Environment=SERVER_API_BASE=http://127.0.0.1:8080
+Environment=API_PROXY_TARGET=http://127.0.0.1:8080
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
