@@ -29,7 +29,7 @@ const sora = Sora({
 });
 
 const siteUrl = siteBase();
-const ogImage = absoluteUrl('/herosectionimg.png') ?? absoluteUrl('/icon-512.png');
+const ogImage = absoluteUrl('/og-share.png') ?? absoluteUrl('/icon-512.png');
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
