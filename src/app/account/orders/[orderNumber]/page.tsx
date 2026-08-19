@@ -112,6 +112,7 @@ function OrderDetailView() {
           <Row label="Lorry delivery" value={formatLkr(order.deliveryCents)} />
         )}
         <Row label="Tax" value={formatLkr(order.taxCents)} />
+        {order.payhereFeeCents > 0 && <Row label="PayHere card fee" value={formatLkr(order.payhereFeeCents)} />}
         <Row label="Total paid online" value={formatLkr(order.totalCents)} bold />
         {order.deliveryPayment === 'COD' &&
           (order.deliveryMethod === 'COURIER' ? (

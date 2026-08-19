@@ -29,6 +29,7 @@ export interface QuoteResult {
   deliveryCents: number;
   taxCents: number;
   onlineTotalCents: number;
+  payHereFeeCents: number; // PayHere card surcharge on top of onlineTotalCents; 0 unless paying by CARD
   courierEstimateCents: number;
   approxTotalCents: number;
   someArranged: boolean;
@@ -73,10 +74,17 @@ export const quoteCheckout = (
   deliveryMethod: DeliveryMethod,
   postalCode: string,
   city?: string,
+  paymentMethod?: 'CARD' | 'BANK',
 ) =>
   api<QuoteResult>('/api/checkout/quote', {
     method: 'POST',
-    body: JSON.stringify({ items: toItems(items), deliveryMethod, postalCode, city: city?.trim() || undefined }),
+    body: JSON.stringify({
+      items: toItems(items),
+      deliveryMethod,
+      postalCode,
+      city: city?.trim() || undefined,
+      paymentMethod,
+    }),
   });
 
 export async function uploadBankSlip(orderNumber: string, file: File, email?: string): Promise<void> {

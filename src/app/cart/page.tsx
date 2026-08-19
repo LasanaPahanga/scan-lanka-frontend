@@ -242,13 +242,13 @@ export default function CartPage() {
       return;
     }
     let cancelled = false;
-    quoteCheckout(items, deliveryMethod, form.postalCode.trim(), form.city.trim() || undefined)
+    quoteCheckout(items, deliveryMethod, form.postalCode.trim(), form.city.trim() || undefined, method)
       .then((q) => !cancelled && setQuote(q))
       .catch(() => !cancelled && setQuote(null));
     return () => {
       cancelled = true;
     };
-  }, [items, deliveryMethod, form.postalCode, form.city, placed]);
+  }, [items, deliveryMethod, form.postalCode, form.city, placed, method]);
 
   function applyAddress(a: SavedAddress) {
     setForm((f) => ({
@@ -924,7 +924,18 @@ export default function CartPage() {
                     <Row label="Cash on delivery" value={formatLkr(quote.onlineTotalCents)} bold />
                   </>
                 ) : (
-                  <Row label="Pay now" value={formatLkr(quote.onlineTotalCents)} bold />
+                  <>
+                    {method === 'CARD' && quote.payHereFeeCents > 0 && (
+                      <Row label="PayHere card fee" value={formatLkr(quote.payHereFeeCents)} />
+                    )}
+                    <Row
+                      label="Pay now"
+                      value={formatLkr(
+                        quote.onlineTotalCents + (method === 'CARD' ? quote.payHereFeeCents : 0),
+                      )}
+                      bold
+                    />
+                  </>
                 )}
               </>
             ) : quote && !quote.available ? (
